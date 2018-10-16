@@ -1,2 +1,6 @@
 [submodule "contrib/docker/src/ckanext-harvest"]
 	url = https://github.com/canadian-ioos/ckanext-harvest.git
+[submodule "contrib/docker/src/ckanext-cioos_theme"]
+	url = https://github.com/canadian-ioos/ckanext-cioos_theme.git
+[submodule "contrib/docker/src/ckanext-spatial"]
+	url = https://github.com/canadian-ioos/ckanext-spatial.git
