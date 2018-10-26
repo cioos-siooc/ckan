@@ -6,15 +6,23 @@ sudo apt-get install docker
 ```
 
 ### Install latest docker-compose
-```
-sudo curl -L "https://github.com/docker/compose/releases/download/1.22.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-sudo chmod +x /usr/local/bin/docker-compose
-docker-compose --version
-```
-or
+For Ubunut 18.04+
 ```
 sudo apt-get update
 sudo apt-get install docker-compose
+```
+or if your version of ubuntu does not support a new enough docker-compose you can pull the latest from github. Make sure to remove the apt version first.
+```
+sudo curl -L "https://github.com/docker/compose/releases/download/1.22.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+sudo docker-compose --version
+```
+
+### Install Apache
+If proxying docker behind Apache (recommended) you will need to have that installed as well. nginx will also work but is not covered in this guide.
+```
+sudo apt-get update
+sudo apt-get install apache2
 ```
 
 ---
@@ -75,30 +83,30 @@ Currently ckan is configured to run in the ckan sub folder on port 5000 so if ac
 If you wish to host ckan at the domain root aka http://localhost:5000 you will need to modify the config files. See ‘Host CKAN on root path’ for more information.
 
 ```
-sudo docker-compose up -d --build
+  sudo docker-compose up -d --build
 ```
 if this fails try manually pulling the images first e.g.:
 ```
- docker pull --disable-content-trust clementmouchet/datapusher
- docker pull --disable-content-trust redis:latest
+  sudo docker pull --disable-content-trust clementmouchet/datapusher
+  sudo docker pull --disable-content-trust redis:latest
 ```
 Sometimes the containers start in the wrong order. This often results in strange sql errors in the db logs. If this happens you can manually start the containers by first building then using docker-compose up
 ```
-sudo docker-compose build
-sudo docker-compose up db
-sudo docker-compose up solr redis
-sudo docker-compose up ckan
-sudo docker-compose up datapusher
-sudo docker-compose up ckan_gather_harvester ckan_fetch_harvester ckan_run_harvester
+  sudo docker-compose build
+  sudo docker-compose up -d db
+  sudo docker-compose up -d solr redis
+  sudo docker-compose up -d ckan
+  sudo docker-compose up -d datapusher
+  sudo docker-compose up -d ckan_gather_harvester ckan_fetch_harvester ckan_run_harvester
 ```
 if you need to change the production.ini in the repo and rebuild then you may need to  delete the volume first. volume does not update during dockerfile run if it already exists.
 ```
-docker-compose down
-docker volume rm docker_ckan_config
+  sudo docker-compose down
+  sudo docker volume rm docker_ckan_config
 ```
 update ckan/contrib/docker/production.ini
 ```
-sudo nano $VOL_CKAN_CONFIG/production.ini
+  sudo nano $VOL_CKAN_CONFIG/production.ini
 ```
 
 # Setup Apache proxy
@@ -119,12 +127,18 @@ or
       		    ProxyPassReverse http://localhost:5000/
    		</location>
 ```
-If you use rewrite rules to redirect none ssl trafic to https and you are using a non-root install, such as /ckan, then you will likely need to add a no escape flag to your rewite rules. something like the following should work, not the NE.
+If you use rewrite rules to redirect none ssl trafic to https and you are using a non-root install, such as /ckan, then you will likely need to add a no escape flag to your rewrite rules. something like the following should work, note the NE.
 ```
   RewriteEngine on
   ReWriteCond %{SERVER_PORT} !^443$
   RewriteRule ^/(.*) https://%{HTTP_HOST}/$1 [NC,R,L,NE]
 ```
+
+restart apache
+```
+  sudo service apache2 restart
+```
+
 # Create ckan admin user
 ```
 sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckan sysadmin -c /etc/ckan/production.ini add admin
@@ -262,12 +276,12 @@ sudo docker exec -it ckan //usr/local/bin/ckan-paster --plugin=ckan search-index
 ### you have done several builds of ckan and now you are running out of hard drive space? With ckan running you can
 clean up docker images, containers, etc.
 ```
-  docker system prune -a
+  sudo docker system prune -a
 ```
 or remove only the images you want with
 ```
-	docker image ls
-	docker rmi [image name]
+	sudo docker image ls
+	sudo docker rmi [image name]
 ```
 
 ### When creating orginizations or updating admin config settings you get a 500 Internal Server Error
