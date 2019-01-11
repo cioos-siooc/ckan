@@ -107,7 +107,14 @@ services:
       context: ../../
       dockerfile: contrib/docker/solr/Dockerfile
 
-
   redis:
     container_name: redis
     image: redis:latest
+
+  pycsw:
+    container_name: pycsw
+    image: geopython/pycsw:2.2
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./pycsw/pycsw.cfg:/etc/pycsw/pycsw.cfg
