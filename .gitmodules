@@ -8,4 +8,5 @@
 	path = contrib/docker/src/ckanext-cioos_theme
 	url = https://github.com/canadian-ioos/ckanext-cioos_theme.git
 [submodule "contrib/docker/src/pycsw"]
+	path = contrib/docker/src/pycsw
 	url = https://github.com/geopython/pycsw.git

@@ -367,6 +367,7 @@ cd ~/ckan/contrib/docker
 sudo cp -r src/ckanext-cioos_theme/ $VOL_CKAN_HOME/venv/src/
 sudo cp -r src/ckanext-harvest/ $VOL_CKAN_HOME/venv/src/
 sudo cp -r src/ckanext-spatial/ $VOL_CKAN_HOME/venv/src/
+sudo cp -r src/pycsw/ $VOL_CKAN_HOME/venv/src/
 ```
 
 ### update permissions
