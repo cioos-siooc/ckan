@@ -22,7 +22,8 @@ build/*
 tmp/*
 solr_runtime/*
 fl_notes.txt
-*.ini
+production.ini
+who.ini
 .noseids
 *~
 .idea
@@ -45,3 +46,5 @@ node_modules/
 
 # docker
 contrib/docker/.env
+
+contrib/docker/pycsw/pycsw\.cfg
