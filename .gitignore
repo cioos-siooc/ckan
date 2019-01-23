@@ -47,4 +47,3 @@ node_modules/
 # docker
 contrib/docker/.env
 
-contrib/docker/pycsw/pycsw\.cfg
