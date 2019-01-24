@@ -10,7 +10,9 @@ RUN apt-get -q -y update \
         python-pip \
         python-virtualenv \
         python-wheel \
+        python-lxml \
         libpq-dev \
+        zlib1g-dev \
         libxml2-dev \
         libxslt-dev \
         libgeos-dev \
@@ -77,6 +79,7 @@ COPY ./contrib/docker/src/ckanext-cioos_theme $CKAN_VENV/src/ckanext-cioos_theme
 RUN  chown -R ckan:ckan $CKAN_HOME $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH
 
 RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src && ckan-pip install -e pycsw"
+RUN chown -R ckan:ckan $CKAN_HOME $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH
 RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/pycsw && python setup.py build && python setup.py install && python setup.py develop"
 
 RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src && ckan-pip install -r ckanext-harvest/pip-requirements.txt"
