@@ -10,3 +10,6 @@
 [submodule "contrib/docker/src/pycsw"]
 	path = contrib/docker/src/pycsw
 	url = https://github.com/geopython/pycsw.git
+[submodule "contrib/docker/src/ckanext-doi"]
+	path = contrib/docker/src/ckanext-doi
+	url = https://github.com/NaturalHistoryMuseum/ckanext-doi.git
