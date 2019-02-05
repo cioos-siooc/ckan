@@ -13,3 +13,6 @@
 [submodule "contrib/docker/src/ckanext-doi"]
 	path = contrib/docker/src/ckanext-doi
 	url = https://github.com/NaturalHistoryMuseum/ckanext-doi.git
+[submodule "contrib/docker/src/ckanext-scheming"]
+	path = contrib/docker/src/ckanext-scheming
+	url = https://github.com/ckan/ckanext-scheming.git
