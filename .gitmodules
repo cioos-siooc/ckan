@@ -16,6 +16,3 @@
 [submodule "contrib/docker/src/ckanext-scheming"]
 	path = contrib/docker/src/ckanext-scheming
 	url = https://github.com/ckan/ckanext-scheming.git
-[submodule "contrib/docker/OWSLib"]
-	path = contrib/docker/OWSLib
-	url = git://github.com/geopython/OWSLib.git
