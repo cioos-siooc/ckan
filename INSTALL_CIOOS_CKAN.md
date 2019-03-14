@@ -40,7 +40,7 @@ sudo service apache2 restart
 ### Clone with ssh key
 ```
 cd ~
-git clone -b cioos git@github.com:canadian-ioos/ckan.git
+git clone -b cioos git@github.com:cioos-siooc/ckan.git
 cd ckan
 git checkout cioos
 ```
@@ -48,7 +48,7 @@ git checkout cioos
 ### Clone with https
 ```
 cd ~
-git clone -b cioos https://github.com/canadian-ioos/ckan.git
+git clone -b cioos https://github.com/cioos-siooc/ckan.git
 cd ckan
 git checkout cioos
 ```

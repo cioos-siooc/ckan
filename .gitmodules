@@ -1,12 +1,12 @@
 [submodule "contrib/docker/src/ckanext-harvest"]
 	path = contrib/docker/src/ckanext-harvest
-	url = https://github.com/canadian-ioos/ckanext-harvest.git
+	url = https://github.com/cioos-siooc/ckanext-harvest.git
 [submodule "contrib/docker/src/ckanext-spatial"]
 	path = contrib/docker/src/ckanext-spatial
-	url = https://github.com/canadian-ioos/ckanext-spatial.git
+	url = https://github.com/cioos-siooc/ckanext-spatial.git
 [submodule "contrib/docker/src/ckanext-cioos_theme"]
 	path = contrib/docker/src/ckanext-cioos_theme
-	url = https://github.com/canadian-ioos/ckanext-cioos_theme.git
+	url = https://github.com/cioos-siooc/ckanext-cioos_theme.git
 [submodule "contrib/docker/src/pycsw"]
 	path = contrib/docker/src/pycsw
 	url = https://github.com/geopython/pycsw.git
