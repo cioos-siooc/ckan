@@ -1,22 +1,17 @@
 # Setup
 
+These instructions are for CentOS 7
+
 #### Install Docker
 
-```
-sudo apt-get update
-sudo apt-get install docker
-```
-
-#### Install latest docker-compose
-
-For Ubuntu 18.04+
-
-```
-sudo apt-get update
-sudo apt-get install docker-compose
+```bash
+sudo yum install -y yum-utils device-mapper-persistent-data   lvm2
+sudo yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
+sudo yum install docker-ce docker-ce-cli containerd.io
+sudo systemctl start docker
 ```
 
-or if your version of ubuntu does not support a new enough docker-compose you can pull the latest from github. Make sure to remove the apt version first.
+#### Install docker-compose
 
 ```
 sudo curl -L "https://github.com/docker/compose/releases/download/1.22.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
@@ -24,52 +19,14 @@ sudo chmod +x /usr/local/bin/docker-compose
 sudo docker-compose --version
 ```
 
-#### Install Apache
-
-If proxying docker behind Apache (recommended) you will need to have that installed as well. nginx will also work but is not covered in this guide.
-
-```
-sudo apt-get update
-sudo apt-get install apache2
-```
-
-#### Add Apache modules
-
-We will use apache to proxy our docker containers so will need a few modules to make that work
-
-```
-sudo a2enmod ssl
-sudo a2enmod proxy
-sudo a2enmod proxy_http
-sudo service apache2 restart
-```
-
 ---
 
-#### Download CKAN git repo
-
-Clone with ssh key
+#### Download CKAN git repo and submodules
 
 ```
-cd ~
-git clone -b cioos git@github.com:cioos-siooc/ckan.git
-cd ckan
-git checkout cioos
-```
-
-Clone with https
-
-```
-cd ~
 git clone -b cioos https://github.com/cioos-siooc/ckan.git
 cd ckan
 git checkout cioos
-```
-
-add submodules
-
-```
-cd ~/ckan
 git submodule init
 git submodule update
 ```
@@ -78,7 +35,7 @@ git submodule update
 
 #### Create config files
 
-create environment file and populate with appropriate values
+Create environment file and populate with appropriate values
 
 ```
 cd ~/ckan/contrib/docker/
@@ -86,15 +43,7 @@ cp .env.template .env
 nano .env
 ```
 
-create ckan config files for later import into ckan
-
-```
-cd ~/ckan/contrib/docker/
-cp production_non_root_url.ini production.ini
-cp who_non_root_url.ini who.ini
-```
-
-or
+If your CKAN installation will run at the root of your domain, use:
 
 ```
 cd ~/ckan/contrib/docker/
@@ -102,7 +51,15 @@ cp production_root_url.ini production.ini
 cp who_root_url.ini who.ini
 ```
 
-copy pyCSW config file and update the database password. This ist he same password enetered in your .env file
+**Or** Use this setup if your site will run at yourdomain.com**/ckan**
+
+```
+cd ~/ckan/contrib/docker/
+cp production_non_root_url.ini production.ini
+cp who_non_root_url.ini who.ini
+```
+
+copy pyCSW config file and update the database password. This is the same password enetered in your .env file
 
 ```
 cd ~/ckan/contrib/docker/pycsw
@@ -120,92 +77,19 @@ Change to ckan docker config folder
   cd ~/ckan/contrib/docker
 ```
 
-Build containers
+Build containers, this takes a while
 
 ```
   sudo docker-compose up -d --build
 ```
 
-if this fails try manually pulling the images first e.g.:
+If you don't see any error messages, check http://localhost:5000 to see if the installation worked.
 
 ```
-  sudo docker pull --disable-content-trust clementmouchet/datapusher
-  sudo docker pull --disable-content-trust redis:latest
+curl localhost:5000
 ```
 
-Sometimes the containers start in the wrong order. This often results in strange sql errors in the db logs. If this happens you can manually start the containers by first building then using docker-compose up
-
-```
-  sudo docker-compose build
-  sudo docker-compose up -d db
-  sudo docker-compose up -d solr redis
-  sudo docker-compose up -d ckan
-  sudo docker-compose up -d datapusher
-  sudo docker-compose up -d ckan_gather_harvester ckan_fetch_harvester ckan_run_harvester
-```
-
-if you need to change the production.ini in the repo and rebuild then you may need to delete the volume first. volume does not update during dockerfile run if it already exists.
-
-```
-  sudo docker-compose down
-  sudo docker volume rm docker_ckan_config
-```
-
-update ckan/contrib/docker/production.ini
-
-```
-  export VOL_CKAN_CONFIG=`sudo docker volume inspect docker_ckan_config | jq -r -c '.[] | .Mountpoint'`
-  sudo nano $VOL_CKAN_CONFIG/production.ini
-```
-
-#### Setup Apache proxy
-
-add the following to your sites configs
-
-```
-    # CKAN
-		<location /ckan>
-  	    ProxyPass http://localhost:5000/
-  	    ProxyPassReverse http://localhost:5000/
-   	</location>
-
-    # pycsw
-     <location /ckan/csw>
-         ProxyPass http://localhost:8000/pycsw/csw.js
-         ProxyPassReverse http://localhost:8000/pycsw/csw.js
-    </location>
-```
-
-or
-
-```
-    # CKAN
-    <location />
-        ProxyPass http://localhost:5000/
-        ProxyPassReverse http://localhost:5000/
-    </location>
-
-    # pycsw
-    <location /csw>
-        ProxyPass http://localhost:8000/pycsw/csw.js
-        ProxyPassReverse http://localhost:8000/pycsw/csw.js
-    </location>
-
-```
-
-If you use rewrite rules to redirect none ssl traffic to https and you are using a non-root install, such as /ckan, then you will likely need to add a no escape flag to your rewrite rules. something like the following should work, note the NE.
-
-```
-  RewriteEngine on
-  ReWriteCond %{SERVER_PORT} !^443$
-  RewriteRule ^/(.*) https://%{HTTP_HOST}/$1 [NC,R,L,NE]
-```
-
-restart apache
-
-```
-  sudo service apache2 restart
-```
+If there was an error message, see Troubleshooting below.
 
 Create ckan admin user
 
@@ -409,7 +293,110 @@ CREATE INDEX ix_records_abstract ON records((md5(abstract)));
 
 ---
 
+#### Setup Apache proxy
+
+CKAN by default will install to localhost:5000. You can use Apache to forward requests from yourdomain.com or yourdomain.com/ckan to localhost:5000.
+
+#### Install Apache
+
+If proxying docker behind Apache (recommended) you will need to have that installed as well. nginx will also work but is not covered in this guide.
+
+```
+sudo yum install httpd mod_ssl
+sudo systemctl enable httpd
+sudo systemctl start httpd
+```
+
+add the following to your sites configs
+
+```
+    # CKAN
+		<location /ckan>
+  	    ProxyPass http://localhost:5000/
+  	    ProxyPassReverse http://localhost:5000/
+   	</location>
+
+    # pycsw
+     <location /ckan/csw>
+         ProxyPass http://localhost:8000/pycsw/csw.js
+         ProxyPassReverse http://localhost:8000/pycsw/csw.js
+    </location>
+```
+
+or
+
+```
+    # CKAN
+    <location />
+        ProxyPass http://localhost:5000/
+        ProxyPassReverse http://localhost:5000/
+    </location>
+
+    # pycsw
+    <location /csw>
+        ProxyPass http://localhost:8000/pycsw/csw.js
+        ProxyPassReverse http://localhost:8000/pycsw/csw.js
+    </location>
+
+```
+
+Redirect HTTP to HTTPS
+
+```
+<VirtualHost *:80>
+   Redirect / https://yourdomain.org
+</VirtualHost>
+```
+
+Allow Apache to make network connections:
+
+```
+sudo /usr/sbin/setsebool -P httpd_can_network_connect 1
+```
+
+Restart apache
+
+```
+  sudo apachectl restart
+```
+
+---
+
 # Troubleshooting
+
+Issues building/starting CKAN:
+
+Try manually pulling the images first e.g.:
+
+```
+  sudo docker pull --disable-content-trust clementmouchet/datapusher
+  sudo docker pull --disable-content-trust redis:latest
+```
+
+Sometimes the containers start in the wrong order. This often results in strange sql errors in the db logs. If this happens you can manually start the containers by first building then using docker-compose up
+
+```
+  sudo docker-compose build
+  sudo docker-compose up -d db
+  sudo docker-compose up -d solr redis
+  sudo docker-compose up -d ckan
+  sudo docker-compose up -d datapusher
+  sudo docker-compose up -d ckan_gather_harvester ckan_fetch_harvester ckan_run_harvester
+```
+
+if you need to change the production.ini in the repo and rebuild then you may need to delete the volume first. volume does not update during dockerfile run if it already exists.
+
+```
+  sudo docker-compose down
+  sudo docker volume rm docker_ckan_config
+```
+
+update ckan/contrib/docker/production.ini
+
+```
+  export VOL_CKAN_CONFIG=`sudo docker volume inspect docker_ckan_config | jq -r -c '.[] | .Mountpoint'`
+  sudo nano $VOL_CKAN_CONFIG/production.ini
+```
 
 Is ckan running? Check container is running and view logs
 
@@ -433,7 +420,7 @@ Connect to container as root to debug
 If you rebuilt the ckan container and no records are showing up, you need to reindex the records.
 
 ```
-sudo docker exec -it ckan //usr/local/bin/ckan-paster --plugin=ckan search-index rebuild --config=/etc/ckan/production.ini
+sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckan search-index rebuild --config=/etc/ckan/production.ini
 ```
 
 you have done several builds of ckan and now you are running out of hard drive space? With ckan running you can clean up docker images, containers, etc.
