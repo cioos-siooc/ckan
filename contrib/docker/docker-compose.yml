@@ -43,6 +43,9 @@ volumes:
 
 services:
   ckan:
+    depends_on:
+      - solr
+      - redis
     <<: *ckan_app
     <<: *ckan_build
 
@@ -84,6 +87,8 @@ services:
 
   datapusher:
     container_name: datapusher
+    depends_on:
+      - ckan
     image: clementmouchet/datapusher
     ports:
       - "8800:8800"
@@ -105,12 +110,16 @@ services:
 
   solr:
     container_name: solr
+    depends_on:
+      - db
     build:
       context: ../../
       dockerfile: contrib/docker/solr/Dockerfile
 
   redis:
     container_name: redis
+    depends_on:
+      - db
     image: redis:latest
 
   pycsw:
