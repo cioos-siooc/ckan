@@ -28,3 +28,9 @@
 [submodule "contrib/docker/src/ckanext_fluent"]
 	path = contrib/docker/src/ckanext_fluent
 	url = https://github.com/ckan/ckanext-fluent.git
+[submodule "contrib/docker/src/ckanext-repeating"]
+	path = contrib/docker/src/ckanext-repeating
+	url = https://github.com/open-data/ckanext-repeating.git
+[submodule "contrib/docker/src/ckanext-composite"]
+	path = contrib/docker/src/ckanext-composite
+	url = https://github.com/EnviDat/ckanext-composite.git
