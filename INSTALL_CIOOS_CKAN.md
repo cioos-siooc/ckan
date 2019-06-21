@@ -500,7 +500,10 @@ sudo cp -r src/ckanext-spatial/ $VOL_CKAN_HOME/venv/src/
 sudo cp -r src/pycsw/ $VOL_CKAN_HOME/venv/src/
 sudo cp -r src/ckanext-doi/ $VOL_CKAN_HOME/venv/src/
 sudo cp -r src/ckanext-scheming/ $VOL_CKAN_HOME/venv/src/
+sudo cp -r src/ckanext-repeating/ $VOL_CKAN_HOME/venv/src/
+sudo cp -r src/ckanext-composite/ $VOL_CKAN_HOME/venv/src/
 sudo cp -r src/ckanext-package_converter/ $VOL_CKAN_HOME/venv/src/
+sudo cp -r src/ckanext_fluent/ $VOL_CKAN_HOME/venv/src/
 ```
 
 update permissions
