@@ -34,3 +34,6 @@
 [submodule "contrib/docker/src/cioos-siooc-schema"]
 	path = contrib/docker/src/cioos-siooc-schema
 	url = https://github.com/cioos-siooc/cioos-siooc-schema.git
+[submodule "contrib/docker/src/ckanext-composite"]
+	path = contrib/docker/src/ckanext-composite
+	url = https://github.com/cioos-siooc/ckanext-composite.git
