@@ -40,6 +40,11 @@ write_config () {
   ckan-paster make-config --no-interactive ckan "$CONFIG"
 }
 
+# Wait for PostgreSQL
+while ! pg_isready -h db -U postgres; do
+  sleep 1;
+done
+
 # If we don't already have a config file, bootstrap
 if [ ! -e "$CONFIG" ]; then
   write_config
@@ -66,4 +71,5 @@ set_environment
 ckan-paster --plugin=ckan db init -c "${CKAN_CONFIG}/production.ini"
 ckan-paster --plugin=ckanext-harvest harvester initdb -c "${CKAN_CONFIG}/production.ini"
 ckan-paster --plugin=ckanext-spatial spatial initdb -c "${CKAN_CONFIG}/production.ini"
+ckan-paster --plugin=ckan datastore set-permissions -c /etc/ckan/production.ini | psql postgresql://ckan:$POSTGRES_PASSWORD@db
 exec "$@"

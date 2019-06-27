@@ -22,8 +22,8 @@
 [submodule "contrib/docker/src/ckanext-package_converter"]
 	path = contrib/docker/src/ckanext-package_converter
 	url = https://github.com/cioos-siooc/ckanext-package_converter.git
-[submodule "contrib/docker/src/ckanext_fluent"]
-	path = contrib/docker/src/ckanext_fluent
+[submodule "contrib/docker/src/ckanext-fluent"]
+	path = contrib/docker/src/ckanext-fluent
 	url = https://github.com/ckan/ckanext-fluent.git
 [submodule "contrib/docker/src/ckanext-repeating"]
 	path = contrib/docker/src/ckanext-repeating
