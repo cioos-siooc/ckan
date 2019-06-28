@@ -22,9 +22,6 @@
 [submodule "contrib/docker/src/ckanext-package_converter"]
 	path = contrib/docker/src/ckanext-package_converter
 	url = https://github.com/cioos-siooc/ckanext-package_converter.git
-[submodule "contrib/docker/src/ckanext-fluent"]
-	path = contrib/docker/src/ckanext-fluent
-	url = https://github.com/ckan/ckanext-fluent.git
 [submodule "contrib/docker/src/ckanext-repeating"]
 	path = contrib/docker/src/ckanext-repeating
 	url = https://github.com/open-data/ckanext-repeating.git
@@ -37,6 +34,12 @@
 [submodule "contrib/docker/src/ckanext-composite"]
 	path = contrib/docker/src/ckanext-composite
 	url = https://github.com/cioos-siooc/ckanext-composite.git
+<<<<<<< HEAD
 [submodule "contrib/docker/src/ckanext-dictionary"]
 	path = contrib/docker/src/ckanext-dictionary
 	url = https://github.com/cmuphillycapstone/ckanext-dictionary.git
+=======
+[submodule "contrib/docker/src/ckanext-fluent"]
+	path = contrib/docker/src/ckanext-fluent
+	url = https://github.com/ckan/ckanext-fluent.git
+>>>>>>> cioos-siooc
