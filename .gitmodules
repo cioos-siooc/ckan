@@ -34,12 +34,9 @@
 [submodule "contrib/docker/src/ckanext-composite"]
 	path = contrib/docker/src/ckanext-composite
 	url = https://github.com/cioos-siooc/ckanext-composite.git
-<<<<<<< HEAD
-[submodule "contrib/docker/src/ckanext-dictionary"]
-	path = contrib/docker/src/ckanext-dictionary
-	url = https://github.com/cmuphillycapstone/ckanext-dictionary.git
-=======
 [submodule "contrib/docker/src/ckanext-fluent"]
 	path = contrib/docker/src/ckanext-fluent
 	url = https://github.com/ckan/ckanext-fluent.git
->>>>>>> cioos-siooc
+[submodule "contrib/docker/src/ckanext-dictionary"]
+	path = contrib/docker/src/ckanext-dictionary
+	url = https://github.com/cmuphillycapstone/ckanext-dictionary.git
