@@ -10,8 +10,8 @@
 [submodule "contrib/docker/src/pycsw"]
 	path = contrib/docker/src/pycsw
 	url = https://github.com/geopython/pycsw.git
-[submodule "contrib/docker/src//OWSLib"]
-	path = contrib/docker/src//OWSLib
+[submodule "contrib/docker/src/OWSLib"]
+	path = contrib/docker/src/OWSLib
 	url = https://github.com/geopython/OWSLib.git
 [submodule "contrib/docker/src/ckanext-geoview"]
 	path = contrib/docker/src/ckanext-geoview
