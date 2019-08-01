@@ -89,7 +89,7 @@ schema. In this case the version should be set to the next CKAN version number.
     <field name="maxx" type="float" indexed="true" stored="true" />
     <field name="maxy" type="float" indexed="true" stored="true" />
     <field name="minx" type="float" indexed="true" stored="true" />
-    <field name="miny" type="float" indexed="true" stored="true" />  
+    <field name="miny" type="float" indexed="true" stored="true" />
     <field name="index_id" type="string" indexed="true" stored="true" required="true" />
     <field name="id" type="string" indexed="true" stored="true" required="true" />
     <field name="site_id" type="string" indexed="true" stored="true" required="true" />
@@ -113,6 +113,8 @@ schema. In this case the version should be set to the next CKAN version number.
     <field name="ratings_count" type="int" indexed="true" stored="false" />
     <field name="ratings_average" type="float" indexed="true" stored="false" />
     <field name="tags" type="string" indexed="true" stored="true" multiValued="true"/>
+    <field name="tags_en" type="string" indexed="true" stored="true" multiValued="true"/>
+    <field name="tags_fr" type="string" indexed="true" stored="true" multiValued="true"/>
     <field name="groups" type="string" indexed="true" stored="true" multiValued="true"/>
     <field name="organization" type="string" indexed="true" stored="true" multiValued="false"/>
 
