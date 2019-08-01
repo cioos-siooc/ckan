@@ -442,6 +442,13 @@ or remove only the images you want with
 	sudo docker rmi [image name]
 ```
 
+When building ckan, in windows, you get the error `standard_init_linux.go:207: exec user process caused "no such file or directory"`
+  delete c:/user/[your username]/lock.gitconfig
+Then change git line end characters to unix/linux style ones
+  git config --global core.eol lf
+  git config --global core.autocrlf input
+Delete and re clone the ckan repo. You may want to backup config files first.
+
 #### When creating organizations or updating admin config settings you get a 500 Internal Server Error
 
 This can be caused by ckan not having permissions to write to the internal storage of the ckan container. This should be setup during the build process. You can debug this by setting debug = true in the production.ini file. No error messages will be reported in the ckan logs for this issue without turning on debug.

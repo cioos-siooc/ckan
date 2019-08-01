@@ -28,6 +28,7 @@ RUN apt-get -q -y update \
         python-mock \
         supervisor \
         cron \
+        libsaxonb-java \
     && apt-get -q clean \
     && rm -rf /var/lib/apt/lists/*
 
