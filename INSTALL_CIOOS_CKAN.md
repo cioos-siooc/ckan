@@ -467,6 +467,14 @@ Likely the issue is that docker is passing the wrong DNS lookup addresses to the
 containers on build. See issue this issue on stack overflow https://stackoverflow.com/a/45644890
 for a solution.
 
+#### Saving the admin config via the gui causes an internal server errors
+
+To diagnose issue turn on debuging in the production.ini file ad restart ckan. The problem is likely caused by file permissions or a missing upload directory. Change file permissions using chown or create folderas as needed. Exact paths will be reported in ckan error log.
+
+- view ckan error log: `docker-compose logs -f --tail 100 ckan`
+- create upload folder: `sudo mkdir $VOL_CKAN_STIRAGE/storage/upload`
+- change file permissions: `sudo chown 900:900 -R $VOL_CKAN_HOME $VOL_CKAN_STORAGE`
+
 ---
 
 # Update CKAN and its extensions
@@ -509,10 +517,32 @@ sudo cp src/cioos-siooc-schema/cioos-siooc_schema.json $VOL_CKAN_HOME/venv/src/c
 sudo cp src/cioos-siooc-schema/organization.json $VOL_CKAN_HOME/venv/src/ckanext-scheming/ckanext/scheming/organization.json
 ```
 
-update permissions
+Exporting volumes on windows does not work so another option for copying files to the volumes is to use the `docker cp` command. You must know the path of the named volume in the container you are connecting to and the container must be running for this to work
+
+```bash
+cd ~/ckan/contrib/docker
+sudo cp -r src/ckanext-cioos_theme/ ckan:/usr/lib/ckan/venv/src/
+sudo cp -r src/ckanext-harvest/ ckan:/usr/lib/ckan/venv/src/
+sudo cp -r src/ckanext-spatial/ ckan:/usr/lib/ckan/venv/src/
+sudo cp -r src/pycsw/ ckan:/usr/lib/ckan/venv/src/
+sudo cp -r src/ckanext-scheming/ ckan:/usr/lib/ckan/venv/src/
+sudo cp -r src/ckanext-repeating/ ckan:/usr/lib/ckan/venv/src/
+sudo cp -r src/ckanext-composite/ ckan:/usr/lib/ckan/venv/src/
+sudo cp -r src/ckanext-package_converter/ ckan:/usr/lib/ckan/venv/src/
+sudo cp -r src/ckanext-fluent/ ckan:/usr/lib/ckan/venv/src/
+sudo cp src/cioos-siooc-schema/cioos-siooc_schema.json ckan:/usr/lib/ckan/venv/src/ckanext-scheming/ckanext/scheming/cioos_siooc_schema.json
+sudo cp src/cioos-siooc-schema/organization.json ckan:/usr/lib/ckan/venv/src/ckanext-scheming/ckanext/scheming/organization.json
+```
+
+update permissions (optional)
 
 ```bash
 sudo chown 900:900 -R $VOL_CKAN_HOME/venv/src/
+```
+or on windows run the command directly in the ckan container
+
+```bash
+docker exec -it ckan chown 900:900 -R $CKAN_HOME
 ```
 
 restart the container affected by the change. If changing html files you may not need to restart anything
