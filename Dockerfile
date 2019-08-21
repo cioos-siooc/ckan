@@ -83,8 +83,8 @@ COPY ./contrib/docker/src/ckanext-composite $CKAN_VENV/src/ckanext-composite
 COPY ./contrib/docker/src/ckanext-repeating $CKAN_VENV/src/ckanext-repeating
 COPY ./contrib/docker/src/ckanext-fluent $CKAN_VENV/src/ckanext-fluent
 COPY ./contrib/docker/src/ckanext-package_converter $CKAN_VENV/src/ckanext-package_converter
-COPY ./contrib/docker/src/cioos-siooc-schema/cioos-siooc_schema.json $CKAN_VENV/src/ckanext-scheming/ckanext/scheming/cioos_siooc_schema.json
-COPY ./contrib/docker/src/cioos-siooc-schema/organization.json $CKAN_VENV/src/ckanext-scheming/ckanext/scheming/organization.json
+COPY ./contrib/docker/src/hakai-schema/hakai_schema.json $CKAN_VENV/src/ckanext-scheming/ckanext/scheming/hakai_schema.json
+# COPY ./contrib/docker/src/hakai-schema/organization.json $CKAN_VENV/src/ckanext-scheming/ckanext/scheming/organization.json
 RUN  chown -R ckan:ckan $CKAN_HOME $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH
 
 # Install Extensions
