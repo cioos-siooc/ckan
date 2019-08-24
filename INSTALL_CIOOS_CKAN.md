@@ -505,6 +505,7 @@ copy updated extension code to the volumes
 ```bash
 cd ~/ckan/contrib/docker
 sudo cp -r src/ckanext-cioos_theme/ $VOL_CKAN_HOME/venv/src/
+sudo cp -r src/ckanext-cioos_harvest/ $VOL_CKAN_HOME/venv/src/
 sudo cp -r src/ckanext-harvest/ $VOL_CKAN_HOME/venv/src/
 sudo cp -r src/ckanext-spatial/ $VOL_CKAN_HOME/venv/src/
 sudo cp -r src/pycsw/ $VOL_CKAN_HOME/venv/src/
@@ -513,8 +514,8 @@ sudo cp -r src/ckanext-repeating/ $VOL_CKAN_HOME/venv/src/
 sudo cp -r src/ckanext-composite/ $VOL_CKAN_HOME/venv/src/
 sudo cp -r src/ckanext-package_converter/ $VOL_CKAN_HOME/venv/src/
 sudo cp -r src/ckanext-fluent/ $VOL_CKAN_HOME/venv/src/
-sudo cp src/cioos-siooc-schema/cioos-siooc_schema.json $VOL_CKAN_HOME/venv/src/ckanext-scheming/ckanext/scheming/cioos_siooc_schema.json
-sudo cp src/cioos-siooc-schema/organization.json $VOL_CKAN_HOME/venv/src/ckanext-scheming/ckanext/scheming/organization.json
+sudo cp src/hakai-schema/cioos-siooc_schema.json $VOL_CKAN_HOME/venv/src/ckanext-scheming/ckanext/scheming/hakai_schema.json
+sudo cp src/hakai-schema/organization.json $VOL_CKAN_HOME/venv/src/ckanext-scheming/ckanext/scheming/organization.json
 ```
 
 Exporting volumes on windows does not work so another option for copying files to the volumes is to use the `docker cp` command. You must know the path of the named volume in the container you are connecting to and the container must be running for this to work
@@ -522,6 +523,7 @@ Exporting volumes on windows does not work so another option for copying files t
 ```bash
 cd ~/ckan/contrib/docker
 docker cp -r src/ckanext-cioos_theme/ ckan:/usr/lib/ckan/venv/src/
+docker cp -r src/ckanext-cioos_harvest/ ckan:/venv/src/
 docker cp -r src/ckanext-harvest/ ckan:/usr/lib/ckan/venv/src/
 docker cp -r src/ckanext-spatial/ ckan:/usr/lib/ckan/venv/src/
 docker cp -r src/pycsw/ ckan:/usr/lib/ckan/venv/src/
@@ -530,8 +532,8 @@ docker cp -r src/ckanext-repeating/ ckan:/usr/lib/ckan/venv/src/
 docker cp -r src/ckanext-composite/ ckan:/usr/lib/ckan/venv/src/
 docker cp -r src/ckanext-package_converter/ ckan:/usr/lib/ckan/venv/src/
 docker cp -r src/ckanext-fluent/ ckan:/usr/lib/ckan/venv/src/
-docker cp src/cioos-siooc-schema/cioos-siooc_schema.json ckan:/usr/lib/ckan/venv/src/ckanext-scheming/ckanext/scheming/cioos_siooc_schema.json
-docker cp src/cioos-siooc-schema/organization.json ckan:/usr/lib/ckan/venv/src/ckanext-scheming/ckanext/scheming/organization.json
+docker cp src/hakai-schema/hakai_schema.json ckan:/usr/lib/ckan/venv/src/ckanext-scheming/ckanext/scheming/hakai_schema.json
+docker cp src/hakai-schema/organization.json ckan:/usr/lib/ckan/venv/src/ckanext-scheming/ckanext/scheming/organization.json
 ```
 
 update permissions (optional)
