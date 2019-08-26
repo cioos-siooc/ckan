@@ -514,7 +514,7 @@ sudo cp -r src/ckanext-repeating/ $VOL_CKAN_HOME/venv/src/
 sudo cp -r src/ckanext-composite/ $VOL_CKAN_HOME/venv/src/
 sudo cp -r src/ckanext-package_converter/ $VOL_CKAN_HOME/venv/src/
 sudo cp -r src/ckanext-fluent/ $VOL_CKAN_HOME/venv/src/
-sudo cp src/hakai-schema/cioos-siooc_schema.json $VOL_CKAN_HOME/venv/src/ckanext-scheming/ckanext/scheming/hakai_schema.json
+sudo cp src/hakai-schema/hakai_schema.json $VOL_CKAN_HOME/venv/src/ckanext-scheming/ckanext/scheming/hakai_schema.json
 sudo cp src/hakai-schema/organization.json $VOL_CKAN_HOME/venv/src/ckanext-scheming/ckanext/scheming/organization.json
 ```
 
