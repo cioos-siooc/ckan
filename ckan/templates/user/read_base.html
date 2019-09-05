@@ -2,7 +2,7 @@
 
 {% set user = user_dict %}
 
-{% block subtitle %}{{ user.display_name }} - {{ _('Users') }}{% endblock %}
+{% block subtitle %}{{ user.display_name }} {{ g.template_title_delimiter }} {{ _('Users') }}{% endblock %}
 
 {% block breadcrumb_content %}
   {{ h.build_nav('user.index', _('Users')) }}
@@ -16,8 +16,8 @@
 {% endblock %}
 
 {% block content_primary_nav %}
-  {{ h.build_nav_icon('user.read', _('Datasets'), id=user.name) }}
-  {{ h.build_nav_icon('user.activity', _('Activity Stream'), id=user.name) }}
+  {{ h.build_nav_icon('user.read', _('Datasets'), id=user.name, icon='sitemap') }}
+  {{ h.build_nav_icon('user.activity', _('Activity Stream'), id=user.name, icon='clock-o') }}
 {% endblock %}
 
 {% block secondary_content %}
@@ -97,8 +97,8 @@
             <dd class="value"><code>{{ user.apikey }}</code></dd>
           </dl>
         {% endif %}
-        {% endblock %}
       </div>
+      {% endblock %}
     {% endblock %}
   </section>
 </div>

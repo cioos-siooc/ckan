@@ -2,18 +2,22 @@
 # Copyright (C) 2018 ORGANIZATION
 # This file is distributed under the same license as the ckan project.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2018.
-#
+# 
+# Translators:
+# Adrià Mercader <adria.mercader@okfn.org>, 2018
+# wh pai <white_xp@hotmail.com>, 2018
+# 
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: ckan 2.8.0b0\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2017-06-21 15:47+0100\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: Adrià Mercader <adria.mercader@okfn.org>, 2018\n"
+"POT-Creation-Date: 2018-03-27 16:10+0200\n"
+"PO-Revision-Date: 2018-03-27 14:15+0000\n"
+"Last-Translator: wh pai <white_xp@hotmail.com>, 2018\n"
 "Language-Team: Chinese (Taiwan) (https://www.transifex.com/okfn/teams/11162/zh_TW/)\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=utf-8\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.5.3\n"
 "Language: zh_TW\n"
@@ -105,7 +109,7 @@ msgstr "DataStore"
 #: ckanext/datastore/controller.py:46
 #, python-format
 msgid "format: must be one of %s"
-msgstr ""
+msgstr "格式: 必須為 %s 其中之一"
 
 #: ckanext/datastore/controller.py:58
 msgid "DataStore resource not found"
@@ -115,7 +119,7 @@ msgstr "資料儲存之資源不存在"
 msgid ""
 "Data Dictionary saved. Any type overrides will take effect when the resource"
 " is next uploaded to DataStore"
-msgstr ""
+msgstr "已儲存資料字典，下次將資源上載到DataStore時，任何類型覆蓋都將生效"
 
 #: ckanext/datastore/backend/postgres.py:1032
 msgid ""
@@ -146,10 +150,7 @@ msgid ""
 " Further information in the <a       "
 "href=\"http://docs.ckan.org/en/latest/maintaining/datastore.html\" "
 "target=\"_blank\">main CKAN Data API and DataStore documentation</a>.</p> "
-msgstr ""
-"進一步的資訊位於 <a "
-"href=\"http://docs.ckan.org/en/latest/maintaining/datastore.html\" "
-"target=\"_blank\"> CKAN 資料 API 與 DataStore 文件</a>。</p>"
+msgstr " 進一步的資訊位於  CKAN Data API 及 DataStore 文件</a>.</p> "
 
 #: ckanext/datastore/templates/ajax_snippets/api_info.html:33
 msgid "Endpoints"
@@ -207,13 +208,19 @@ msgstr "範例：Python"
 
 #: ckanext/datastore/templates/datastore/dictionary.html:16
 msgid "Field {num}."
-msgstr ""
+msgstr "欄位 {num}."
 
-#: ckanext/datastore/templates/datastore/dictionary.html:18
-#: ckanext/datastore/templates/package/resource_read.html:20
+#: ckanext/datastore/templates/datastore/snippets/dictionary_form.html:12
+msgid "Type Override"
+msgstr "覆蓋類型"
+
+#: ckanext/datastore/templates-bs2/datastore/dictionary.html:18
+#: ckanext/datastore/templates-bs2/package/resource_read.html:20
+#: ckanext/datastore/templates/datastore/snippets/dictionary_form.html:20
+#: ckanext/datastore/templates/package/resource_read.html:21
 #: ckanext/datatablesview/templates/datatables/datatables_form.html:18
 msgid "Label"
-msgstr ""
+msgstr "標籤"
 
 #: ckan/templates/group/snippets/group_form.html:20
 #: ckan/templates/organization/snippets/organization_form.html:20
@@ -233,16 +240,16 @@ msgstr "儲存"
 #: ckanext/datastore/templates/package/resource_edit_base.html:6
 #: ckanext/datastore/templates/package/resource_read.html:14
 msgid "Data Dictionary"
-msgstr ""
+msgstr "資料字典"
 
 #: ckanext/datastore/templates/package/resource_read.html:18
 #: ckanext/datatablesview/templates/datatables/datatables_form.html:17
 msgid "Column"
-msgstr ""
+msgstr "欄位"
 
 #: ckanext/datastore/templates/package/resource_read.html:19
 msgid "Type"
-msgstr ""
+msgstr "型式"
 
 #: ckan/public/base/javascript/modules/activity-stream.js:97
 #: ckan/public/base/javascript/modules/popover-context.js:62
@@ -279,15 +286,15 @@ msgstr "表格"
 
 #: ckanext/datatablesview/templates/datatables/datatables_form.html:6
 msgid "Responsive display"
-msgstr ""
+msgstr "響應式顯示"
 
 #: ckanext/datatablesview/templates/datatables/datatables_form.html:12
 msgid "Show Columns"
-msgstr ""
+msgstr "顯示欄位"
 
 #: ckanext/datatablesview/templates/datatables/datatables_view.html:28
 msgid "Hide/Unhide Columns"
-msgstr ""
+msgstr "隱藏/顯示欄位"
 
 #: ckanext/example_iconfigurer/templates/admin/config.html:11
 msgid "Datasets per page"
@@ -459,19 +466,19 @@ msgstr "讀取資料檢視發生錯誤"
 
 #: ckanext/reclineview/theme/public/recline_view.js:75
 msgid "Could not load view"
-msgstr ""
+msgstr "無法載入檢視器"
 
 #: ckanext/reclineview/theme/public/recline_view.js:77
 msgid "DataStore returned an error"
-msgstr ""
+msgstr "DataStore 錯誤"
 
 #: ckanext/reclineview/theme/public/recline_view.js:79
 msgid "DataProxy returned an error"
-msgstr ""
+msgstr "DataProxy 錯誤"
 
 #: ckanext/reclineview/theme/public/recline_view.js:193
 msgid "Grid"
-msgstr ""
+msgstr "網格"
 
 #: ckan/templates/package/snippets/view_form_filters.html:46
 #: ckanext/reclineview/theme/public/recline_view.js:215
@@ -981,9 +988,14 @@ msgstr "%s 已被刪除。"
 #: ckan/controllers/group.py:653
 #, python-format
 msgid "User %r not authorized to edit members of %s"
-msgstr ""
+msgstr "使用者 %r 無權修改 %s 的成員"
 
-#: ckan/controllers/group.py:705
+#: ckan/controllers/group.py:670
+#, python-format
+msgid "Unauthorized to create group %s members"
+msgstr "無法授權 %s 為群組成員"
+
+#: ckan/controllers/group.py:712
 #, python-format
 msgid "Unauthorized to add member to group %s"
 msgstr "沒有在群組%s中新增成員的權限"
@@ -1070,7 +1082,7 @@ msgstr "無效的版本格式：%r"
 
 #: ckan/controllers/package.py:396
 msgid "Viewing datasets of type \"{package_type}\" is not supported ({file_!r})."
-msgstr ""
+msgstr "資料集閱讀器 \"{package_type}\" 無法解讀 ({file_!r})."
 
 #: ckan/controllers/package.py:435 ckan/controllers/package.py:817
 #: ckan/controllers/package.py:918 ckan/controllers/package.py:966
@@ -1671,7 +1683,7 @@ msgstr "請輸入一個整數"
 
 #: ckan/lib/navl/validators.py:124
 msgid "Must be a Unicode string value"
-msgstr ""
+msgstr "需為Unicode編碼文字"
 
 #: ckan/logic/__init__.py:98 ckan/logic/action/__init__.py:60
 msgid "Package resource(s) invalid"
@@ -1819,7 +1831,11 @@ msgstr "使用者名稱必須是字串"
 msgid "That login name is not available."
 msgstr "此登入名稱無法使用"
 
-#: ckan/logic/validators.py:570
+#: ckan/logic/validators.py:566
+msgid "That login name can not be modified."
+msgstr "此登入名稱無法修改"
+
+#: ckan/logic/validators.py:577
 msgid "Please enter both passwords"
 msgstr "請輸入兩組密碼"
 
@@ -1827,9 +1843,9 @@ msgstr "請輸入兩組密碼"
 msgid "Passwords must be strings"
 msgstr "密碼必須是字串"
 
-#: ckan/logic/validators.py:582
-msgid "Your password must be 4 characters or longer"
-msgstr "你的密碼必須大於四個字元"
+#: ckan/logic/validators.py:589
+msgid "Your password must be 8 characters or longer"
+msgstr "密碼長度至少要8個字元"
 
 #: ckan/logic/validators.py:590
 msgid "The passwords you entered do not match"
@@ -1915,7 +1931,7 @@ msgstr "已有一個 schema 欄位具有相同名稱"
 
 #: ckan/logic/validators.py:846
 msgid "Email {email} is not a valid format"
-msgstr ""
+msgstr "Email {email} 格式錯誤"
 
 #: ckan/logic/action/create.py:183 ckan/logic/action/create.py:665
 #, python-format
@@ -2001,8 +2017,12 @@ msgstr "REST API: 刪除 %s"
 msgid "REST API: Delete Member: %s"
 msgstr "REST API: 刪除成員： %s"
 
-#: ckan/logic/action/delete.py:544 ckan/logic/action/delete.py:570
-#: ckan/logic/action/get.py:2482 ckan/logic/action/update.py:953
+#: ckan/logic/action/delete.py:358
+msgid "Organization cannot be deleted while it still has datasets"
+msgstr "不能刪除還有資料集的組織"
+
+#: ckan/logic/action/delete.py:560 ckan/logic/action/delete.py:586
+#: ckan/logic/action/get.py:2432 ckan/logic/action/update.py:906
 msgid "id not in data"
 msgstr "在資料中找不到ID"
 
@@ -2397,7 +2417,7 @@ msgstr "沒有匹配的資料"
 #, python-format
 msgid "Input is too short, must be at least one character"
 msgid_plural "Input is too short, must be at least %(num)d characters"
-msgstr[0] ""
+msgstr[0] "輸入內容必須至少要 %(num)d 字元"
 
 #: ckan/public/base/javascript/modules/basic-form.js:4
 msgid "There are unsaved modifications to this form"
@@ -2525,7 +2545,7 @@ msgstr "新增篩選條件"
 
 #: ckan/public/base/javascript/modules/resource-view-filters.js:52
 msgid "Select a field"
-msgstr ""
+msgstr "選擇1個欄位"
 
 #: ckan/public/base/javascript/modules/slug-preview.js:57
 #: ckan/templates/group/edit_base.html:22 ckan/templates/group/members.html:28
@@ -2547,6 +2567,93 @@ msgstr "顯示更多"
 #: ckan/public/base/javascript/modules/table-toggle-more.js:26
 msgid "Hide"
 msgstr "隱藏"
+
+#: ckan/public-bs2/base/test/spec/i18n.spec.js:13
+#: ckan/public-bs2/base/test/spec/module.spec.js:385
+#: ckan/public/base/test/spec/i18n.spec.js:13
+#: ckan/public/base/test/spec/module.spec.js:385
+msgid "foo"
+msgstr "foo"
+
+#: ckan/public-bs2/base/test/spec/i18n.spec.js:17
+#: ckan/public-bs2/base/test/spec/i18n.spec.js:46
+#: ckan/public-bs2/base/test/spec/i18n.spec.js:50
+#: ckan/public-bs2/base/test/spec/i18n.spec.js:54
+#: ckan/public/base/test/spec/i18n.spec.js:17
+#: ckan/public/base/test/spec/i18n.spec.js:46
+#: ckan/public/base/test/spec/i18n.spec.js:50
+#: ckan/public/base/test/spec/i18n.spec.js:54
+msgid "no translation"
+msgid_plural "no translations"
+msgstr[0] "無翻譯"
+
+#: ckan/public-bs2/base/test/spec/i18n.spec.js:22
+#: ckan/public/base/test/spec/i18n.spec.js:22
+#, python-format
+msgid "hello %(name)s!"
+msgstr "hello %(name)s!"
+
+#: ckan/public-bs2/base/test/spec/i18n.spec.js:29
+#: ckan/public-bs2/base/test/spec/i18n.spec.js:76
+#: ckan/public-bs2/base/test/spec/i18n.spec.js:81
+#: ckan/public-bs2/base/test/spec/i18n.spec.js:86
+#: ckan/public/base/test/spec/i18n.spec.js:29
+#: ckan/public/base/test/spec/i18n.spec.js:76
+#: ckan/public/base/test/spec/i18n.spec.js:81
+#: ckan/public/base/test/spec/i18n.spec.js:86
+#, python-format
+msgid "no %(attr)s translation"
+msgid_plural "no %(attr)s translations"
+msgstr[0] " %(attr)s 無翻譯"
+
+#: ckan/public-bs2/base/test/spec/i18n.spec.js:39
+#: ckan/public-bs2/base/test/spec/i18n.spec.js:40
+#: ckan/public-bs2/base/test/spec/i18n.spec.js:41
+#: ckan/public-bs2/base/test/spec/module.spec.js:395
+#: ckan/public-bs2/base/test/spec/module.spec.js:396
+#: ckan/public-bs2/base/test/spec/module.spec.js:397
+#: ckan/public/base/test/spec/i18n.spec.js:39
+#: ckan/public/base/test/spec/i18n.spec.js:40
+#: ckan/public/base/test/spec/i18n.spec.js:41
+#: ckan/public/base/test/spec/module.spec.js:395
+#: ckan/public/base/test/spec/module.spec.js:396
+#: ckan/public/base/test/spec/module.spec.js:397
+msgid "bar"
+msgid_plural "bars"
+msgstr[0] "bars"
+
+#: ckan/public-bs2/base/test/spec/i18n.spec.js:61
+#: ckan/public-bs2/base/test/spec/i18n.spec.js:65
+#: ckan/public-bs2/base/test/spec/i18n.spec.js:69
+#: ckan/public/base/test/spec/i18n.spec.js:61
+#: ckan/public/base/test/spec/i18n.spec.js:65
+#: ckan/public/base/test/spec/i18n.spec.js:69
+#, python-format
+msgid "%(color)s shirt"
+msgid_plural "%(color)s shirts"
+msgstr[0] "%(color)s 襯衫"
+
+#: ckan/public-bs2/base/test/spec/i18n.spec.js:93
+#: ckan/public-bs2/base/test/spec/i18n.spec.js:94
+#: ckan/public-bs2/base/test/spec/i18n.spec.js:95
+#: ckan/public/base/test/spec/i18n.spec.js:93
+#: ckan/public/base/test/spec/i18n.spec.js:94
+#: ckan/public/base/test/spec/i18n.spec.js:95
+#, python-format
+msgid "%(num)d item"
+msgid_plural "%(num)d items"
+msgstr[0] "%(num)d 個數"
+
+#: ckan/public-bs2/base/test/spec/i18n.spec.js:100
+#: ckan/public-bs2/base/test/spec/i18n.spec.js:105
+#: ckan/public-bs2/base/test/spec/i18n.spec.js:110
+#: ckan/public/base/test/spec/i18n.spec.js:100
+#: ckan/public/base/test/spec/i18n.spec.js:105
+#: ckan/public/base/test/spec/i18n.spec.js:110
+#, python-format
+msgid "%(num)d missing translation"
+msgid_plural "%(num)d missing translations"
+msgstr[0] "%(num)d 沒有被翻譯"
 
 #: ckan/templates/error_document_template.html:3
 #, python-format
@@ -2671,7 +2778,11 @@ msgstr "設置"
 msgid "Trash"
 msgstr "垃圾桶"
 
-#: ckan/templates/admin/config.html:16
+#: ckan/templates/admin/config.html:23 ckan/templates/macros/autoform.html:62
+msgid "Site logo"
+msgstr "網站 LOGO"
+
+#: ckan/templates/admin/config.html:35
 #: ckan/templates/admin/confirm_reset.html:7
 msgid "Are you sure you want to reset the config?"
 msgstr "確定要重設設置嗎？"
@@ -3207,6 +3318,10 @@ msgstr "例如：環境"
 msgid "Search data"
 msgstr "搜尋資料"
 
+#: ckan/templates/home/snippets/search.html:8
+msgid "Search datasets"
+msgstr "搜尋資料集"
+
 #: ckan/templates/home/snippets/search.html:16
 msgid "Popular tags"
 msgstr "熱門標籤"
@@ -3378,7 +3493,7 @@ msgstr ""
 #: ckan/templates/organization/members.html:14
 msgid "{count} member"
 msgid_plural "{count} members"
-msgstr[0] ""
+msgstr[0] "{count} 位成員"
 
 #: ckan/templates/organization/new.html:3
 #: ckan/templates/organization/new.html:5
@@ -3445,7 +3560,7 @@ msgstr "一些關於我的組織的資訊..."
 msgid ""
 "Are you sure you want to delete this Organization? Note*: Deleting cannot be"
 " performed while public or private datasets belong to this organization."
-msgstr ""
+msgstr "你確定要刪除這個組織嗎？這樣會刪除屬於這個組織的所有公開和非公開之資料集。"
 
 #: ckan/templates/organization/snippets/organization_form.html:63
 msgid "Save Organization"
@@ -3665,7 +3780,7 @@ msgstr "值"
 
 #: ckan/templates/package/resource_read.html:154
 msgid "Data last updated"
-msgstr ""
+msgstr "最後更新資料"
 
 #: ckan/templates/package/resource_read.html:155
 #: ckan/templates/package/resource_read.html:159
@@ -3676,7 +3791,7 @@ msgstr "未知的"
 
 #: ckan/templates/package/resource_read.html:158
 msgid "Metadata last updated"
-msgstr ""
+msgstr "最後更新的詮釋資料"
 
 #: ckan/templates/package/resource_read.html:162
 #: ckan/templates/package/snippets/additional_info.html:70
@@ -3982,7 +4097,11 @@ msgstr "探索"
 msgid "More information"
 msgstr "更多資訊"
 
-#: ckan/templates/package/snippets/resource_view.html:11
+#: ckan/templates/package/snippets/resource_view.html:10
+msgid "Fullscreen"
+msgstr "全螢幕"
+
+#: ckan/templates/package/snippets/resource_view.html:18
 msgid "Embed"
 msgstr "嵌入"
 
@@ -4507,7 +4626,11 @@ msgstr "重置密碼"
 msgid "Password Reset"
 msgstr "密碼重置"
 
-#: ckan/templates/user/perform_reset.html:24
+#: ckan/templates/user/perform_reset.html:21
+msgid "You can also change username. It can not be modified later."
+msgstr "現在可以更改用戶名，但以後不能修改"
+
+#: ckan/templates/user/perform_reset.html:29
 msgid "Update Password"
 msgstr "更新密碼"
 
@@ -4590,4 +4713,4 @@ msgstr "搜尋使用者"
 
 #: ckan/views/user.py:588
 msgid "Your password must be 8 characters or longer."
-msgstr ""
+msgstr "密碼長度至少要8個字元"

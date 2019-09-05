@@ -2,18 +2,22 @@
 # Copyright (C) 2018 ORGANIZATION
 # This file is distributed under the same license as the ckan project.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2018.
-#
+# 
+# Translators:
+# Adrià Mercader <adria.mercader@okfn.org>, 2018
+# Zharktas <jari-pekka.voutilainen@gofore.com>, 2019
+# 
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: ckan 2.8.0b0\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2017-06-21 15:47+0100\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: Adrià Mercader <adria.mercader@okfn.org>, 2018\n"
+"POT-Creation-Date: 2018-03-27 16:10+0200\n"
+"PO-Revision-Date: 2018-03-27 14:15+0000\n"
+"Last-Translator: Zharktas <jari-pekka.voutilainen@gofore.com>, 2019\n"
 "Language-Team: Finnish (https://www.transifex.com/okfn/teams/11162/fi/)\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=utf-8\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.5.3\n"
 "Language: fi\n"
@@ -3094,7 +3098,7 @@ msgstr "Luo uusi ryhmä"
 #: ckan/templates/group/read.html:21 ckan/templates/organization/read.html:25
 #: ckan/templates/snippets/search_form.html:3
 msgid "Search datasets..."
-msgstr "Etsi tietoaineistoista..."
+msgstr "Etsi tietoaineistoja..."
 
 #: ckan/templates/group/snippets/feeds.html:3
 msgid "Datasets in group: {group}"
@@ -3274,6 +3278,10 @@ msgstr "Esim. ympäristö"
 #: ckan/templates/home/snippets/search.html:6
 msgid "Search data"
 msgstr "Etsi tietoja"
+
+#: ckan/templates/home/snippets/search.html:8
+msgid "Search datasets"
+msgstr "Etsi tietoaineistoja"
 
 #: ckan/templates/home/snippets/search.html:16
 msgid "Popular tags"
@@ -3891,7 +3899,9 @@ msgstr "Luo uusi organisaatio"
 
 #: ckan/templates/package/snippets/cannot_create_package.html:18
 msgid "There are no organizations to which you can assign this dataset."
-msgstr "Organisaatioita ei ole, mihin voit sijoittaa tämän tietiaineston."
+msgstr ""
+"Järjestelmässä ei ole organisaatioita, mihin voit sijoittaa tämän "
+"tietoaineston."
 
 #: ckan/templates/package/snippets/cannot_create_package.html:19
 msgid ""

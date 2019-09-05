@@ -36,6 +36,7 @@ from flask import url_for as _flask_default_url_for
 from werkzeug.routing import BuildError as FlaskRouteBuildError
 import i18n
 from six import string_types, text_type
+import jinja2
 
 import ckan.exceptions
 import ckan.model as model
@@ -48,7 +49,8 @@ import ckan.authz as authz
 import ckan.plugins as p
 import ckan
 
-from ckan.common import _, ungettext, c, request, session, json
+from ckan.common import _, ungettext, c, g, request, session, json
+from ckan.lib.webassets_tools import include_asset, render_assets
 from markupsafe import Markup, escape
 
 
@@ -189,7 +191,7 @@ def redirect_to(*args, **kw):
     _url = ''
     skip_url_parsing = False
     parse_url = kw.pop('parse_url', False)
-    if uargs and len(uargs) is 1 and isinstance(uargs[0], string_types) \
+    if uargs and len(uargs) == 1 and isinstance(uargs[0], string_types) \
             and (uargs[0].startswith('/') or is_url(uargs[0])) \
             and parse_url is False:
         skip_url_parsing = True
@@ -408,7 +410,9 @@ def _url_for_pylons(*args, **kw):
 
     # We need to provide protocol and host to get full URLs, get them from
     # ckan.site_url
-    if kw.get('qualified', False) or kw.get('_external', False):
+    if kw.pop('_external', None):
+        kw['qualified'] = True
+    if kw.get('qualified'):
         kw['protocol'], kw['host'] = get_site_protocol_and_host()
 
     # The Pylons API routes require a slask on the version number for some
@@ -504,7 +508,7 @@ def _local_url(url_to_amend, **kw):
             default_locale = True
 
     root = ''
-    if kw.get('qualified', False):
+    if kw.get('qualified', False) or kw.get('_external', False):
         # if qualified is given we want the full url ie http://...
         protocol, host = get_site_protocol_and_host()
         root = _routes_default_url_for('/',
@@ -731,7 +735,7 @@ def _link_active_pylons(kwargs):
 
 
 def _link_active_flask(kwargs):
-    blueprint, endpoint = request.url_rule.endpoint.split('.')
+    blueprint, endpoint = p.toolkit.get_endpoint()
     return(kwargs.get('controller') == blueprint and
            kwargs.get('action') == endpoint)
 
@@ -785,7 +789,7 @@ def nav_link(text, *args, **kwargs):
 def nav_link_flask(text, *args, **kwargs):
     if len(args) > 1:
         raise Exception('Too many unnamed parameters supplied')
-    blueprint, endpoint = request.url_rule.endpoint.split('.')
+    blueprint, endpoint = p.toolkit.get_endpoint()
     if args:
         kwargs['controller'] = blueprint or None
         kwargs['action'] = endpoint or None
@@ -907,15 +911,17 @@ def build_nav(menu_item, title, **kw):
 def map_pylons_to_flask_route_name(menu_item):
     '''returns flask routes for old fashioned route names'''
     # Pylons to Flask legacy route names mappings
-    if config.get('ckan.legacy_route_mappings'):
-        if isinstance(config.get('ckan.legacy_route_mappings'), string_types):
-            LEGACY_ROUTE_NAMES.update(json.loads(config.get(
-                'ckan.legacy_route_mappings')))
+    mappings = config.get('ckan.legacy_route_mappings')
+    if mappings:
+        if isinstance(mappings, string_types):
+            LEGACY_ROUTE_NAMES.update(json.loads(mappings))
+        elif isinstance(mappings, dict):
+            LEGACY_ROUTE_NAMES.update(mappings)
 
     if menu_item in LEGACY_ROUTE_NAMES:
-        log.info('Route name "{}" is deprecated and will be removed.\
-                Please update calls to use "{}" instead'.format(
-                menu_item, LEGACY_ROUTE_NAMES[menu_item]))
+        log.info('Route name "{}" is deprecated and will be removed. '
+                 'Please update calls to use "{}" instead'
+                 .format(menu_item, LEGACY_ROUTE_NAMES[menu_item]))
     return LEGACY_ROUTE_NAMES.get(menu_item, menu_item)
 
 
@@ -931,8 +937,11 @@ def build_extra_admin_nav():
     admin_tabs_dict = config.get('ckan.admin_tabs')
     output = ''
     if admin_tabs_dict:
-        for key in admin_tabs_dict:
-            output += build_nav_icon(key, admin_tabs_dict[key])
+        for k, v in admin_tabs_dict.iteritems():
+            if v['icon']:
+                output += build_nav_icon(k, v['label'], icon=v['icon'])
+            else:
+                output += build_nav(k, v['label'])
     return output
 
 
@@ -1007,7 +1016,9 @@ def get_facet_items_dict(
     for facet_item in search_facets.get(facet)['items']:
         if not len(facet_item['name'].strip()):
             continue
-        if not (facet, facet_item['name']) in request.params.items():
+        params_items = request.params.items(multi=True) \
+            if is_flask_request() else request.params.items()
+        if not (facet, facet_item['name']) in params_items:
             facets.append(dict(active=False, **facet_item))
         elif not exclude_active:
             facets.append(dict(active=True, **facet_item))
@@ -1043,7 +1054,9 @@ def has_more_facets(facet, search_facets, limit=None, exclude_active=False):
     for facet_item in search_facets.get(facet)['items']:
         if not len(facet_item['name'].strip()):
             continue
-        if not (facet, facet_item['name']) in request.params.items():
+        params_items = request.params.items(multi=True) \
+            if is_flask_request() else request.params.items()
+        if not (facet, facet_item['name']) in params_items:
             facets.append(dict(active=False, **facet_item))
         elif not exclude_active:
             facets.append(dict(active=True, **facet_item))
@@ -1152,8 +1165,10 @@ def sorted_extras(package_extras, auto_clean=False, subs=None, exclude=None):
 
 @core_helper
 def check_access(action, data_dict=None):
+    if not getattr(g, u'user', None):
+        g.user = ''
     context = {'model': model,
-               'user': c.user}
+               'user': g.user}
     if not data_dict:
         data_dict = {}
     try:
@@ -1418,7 +1433,8 @@ def get_display_timezone():
 
 
 @core_helper
-def render_datetime(datetime_, date_format=None, with_hours=False):
+def render_datetime(datetime_, date_format=None, with_hours=False,
+                    with_seconds=False):
     '''Render a datetime object or timestamp string as a localised date or
     in the requested format.
     If timestamp is badly formatted, then a blank string is returned.
@@ -1429,6 +1445,8 @@ def render_datetime(datetime_, date_format=None, with_hours=False):
     :type date_format: string
     :param with_hours: should the `hours:mins` be shown
     :type with_hours: bool
+    :param with_seconds: should the `hours:mins:seconds` be shown
+    :type with_seconds: bool
 
     :rtype: string
     '''
@@ -1459,7 +1477,8 @@ def render_datetime(datetime_, date_format=None, with_hours=False):
         return datetime_.strftime(date_format)
     # the localised date
     return formatters.localised_nice_date(datetime_, show_date=True,
-                                          with_hours=with_hours)
+                                          with_hours=with_hours,
+                                          with_seconds=with_seconds)
 
 
 @core_helper
@@ -1479,11 +1498,11 @@ def date_str_to_datetime(date_str):
            despite that not being part of the ISO format.
     '''
 
-    time_tuple = re.split('[^\d]+', date_str, maxsplit=5)
+    time_tuple = re.split(r'[^\d]+', date_str, maxsplit=5)
 
     # Extract seconds and microseconds
     if len(time_tuple) >= 6:
-        m = re.match('(?P<seconds>\d{2})(\.(?P<microseconds>\d{6}))?$',
+        m = re.match(r'(?P<seconds>\d{2})(\.(?P<microseconds>\d{6}))?$',
                      time_tuple[5])
         if not m:
             raise ValueError('Unable to parse %s as seconds.microseconds' %
@@ -1803,7 +1822,7 @@ def _create_url_with_params(params=None, controller=None, action=None,
     if not controller:
         controller = getattr(c, 'controller', False) or request.blueprint
     if not action:
-        action = getattr(c, 'action', False) or request.endpoint.split('.')[1]
+        action = getattr(c, 'action', False) or p.toolkit.get_endpoint()[1]
     if not extras:
         extras = {}
 
@@ -1825,7 +1844,12 @@ def add_url_param(alternative_url=None, controller=None, action=None,
     instead.
     '''
 
-    params_nopage = [(k, v) for k, v in request.params.items() if k != 'page']
+    params_items = request.params.items(multi=True) \
+        if is_flask_request() else request.params.items()
+    params_nopage = [
+        (k, v) for k, v in params_items
+        if k != 'page'
+    ]
     params = set(params_nopage)
     if new_params:
         params |= set(new_params.items())
@@ -1860,7 +1884,12 @@ def remove_url_param(key, value=None, replace=None, controller=None,
     else:
         keys = key
 
-    params_nopage = [(k, v) for k, v in request.params.items() if k != 'page']
+    params_items = request.params.items(multi=True) \
+        if is_flask_request() else request.params.items()
+    params_nopage = [
+        (k, v) for k, v in params_items
+        if k != 'page'
+    ]
     params = list(params_nopage)
     if value:
         params.remove((keys[0], value))
@@ -2010,15 +2039,15 @@ def dashboard_activity_stream(user_id, filter_type=None, filter_id=None,
 
     if filter_type:
         action_functions = {
-            'dataset': 'package_activity_list_html',
-            'user': 'user_activity_list_html',
-            'group': 'group_activity_list_html',
-            'organization': 'organization_activity_list_html',
+            'dataset': 'package_activity_list',
+            'user': 'user_activity_list',
+            'group': 'group_activity_list',
+            'organization': 'organization_activity_list',
         }
         action_function = logic.get_action(action_functions.get(filter_type))
         return action_function(context, {'id': filter_id, 'offset': offset})
     else:
-        return logic.get_action('dashboard_activity_list_html')(
+        return logic.get_action('dashboard_activity_list')(
             context, {'offset': offset})
 
 
@@ -2029,7 +2058,7 @@ def recently_changed_packages_activity_stream(limit=None):
     else:
         data_dict = {}
     context = {'model': model, 'session': model.Session, 'user': c.user}
-    return logic.get_action('recently_changed_packages_activity_list_html')(
+    return logic.get_action('recently_changed_packages_activity_list')(
         context, data_dict)
 
 
@@ -2093,7 +2122,7 @@ RE_MD_INTERNAL_LINK = re.compile(
 # but ignore trailing punctuation since it is probably not part of the link
 RE_MD_EXTERNAL_LINK = re.compile(
     r'(\bhttps?:\/\/[\w\-\.,@?^=%&;:\/~\\+#]*'
-    '[\w\-@?^=%&:\/~\\+#]'  # but last character can't be punctuation [.,;]
+    r'[\w\-@?^=%&:\/~\\+#]'  # but last character can't be punctuation [.,;]
     ')',
     flags=re.UNICODE
 )
@@ -2176,9 +2205,9 @@ def format_resource_items(items):
     blacklist = ['name', 'description', 'url', 'tracking_summary']
     output = []
     # regular expressions for detecting types in strings
-    reg_ex_datetime = '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{6})?$'
-    reg_ex_int = '^-?\d{1,}$'
-    reg_ex_float = '^-?\d{1,}\.\d{1,}$'
+    reg_ex_datetime = r'^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{6})?$'
+    reg_ex_int = r'^-?\d{1,}$'
+    reg_ex_float = r'^-?\d{1,}\.\d{1,}$'
     for key, value in items:
         if not value or key in blacklist:
             continue
@@ -2637,6 +2666,8 @@ core_helper(whtext.truncate)
 core_helper(converters.asbool)
 # Useful additions from the stdlib.
 core_helper(urlencode)
+core_helper(include_asset)
+core_helper(render_assets)
 
 
 def load_plugin_helpers():
@@ -2658,3 +2689,60 @@ def sanitize_id(id_):
     ValueError.
     '''
     return str(uuid.UUID(id_))
+
+
+@core_helper
+def compare_pkg_dicts(old, new, old_activity_id):
+    '''
+    Takes two package dictionaries that represent consecutive versions of
+    the same dataset and returns a list of detailed & formatted summaries of
+    the changes between the two versions. old and new are the two package
+    dictionaries. The function assumes that both dictionaries will have
+    all of the default package dictionary keys, and also checks for fields
+    added by extensions and extra fields added by the user in the web
+    interface.
+
+    Returns a list of dictionaries, each of which corresponds to a change
+    to the dataset made in this revision. The dictionaries each contain a
+    string indicating the type of change made as well as other data necessary
+    to form a detailed summary of the change.
+    '''
+    from changes import check_metadata_changes, check_resource_changes
+    change_list = []
+
+    check_metadata_changes(change_list, old, new)
+
+    check_resource_changes(change_list, old, new, old_activity_id)
+
+    # if the dataset was updated but none of the fields we check were changed,
+    # display a message stating that
+    if len(change_list) == 0:
+        change_list.append({u'type': 'no_change'})
+
+    return change_list
+
+
+@core_helper
+def activity_list_select(pkg_activity_list, current_activity_id):
+    '''
+    Builds an HTML formatted list of options for the select lists
+    on the "Changes" summary page.
+    '''
+    select_list = []
+    template = jinja2.Template(
+        u'<option value="{{activity_id}}" {{selected}}>'
+        '{{timestamp}}</option>',
+        autoescape=True)
+    for activity in pkg_activity_list:
+        entry = render_datetime(activity['timestamp'],
+                                with_hours=True,
+                                with_seconds=True)
+        select_list.append(Markup(
+            template
+            .render(activity_id=activity['id'], timestamp=entry,
+                    selected='selected'
+                    if activity['id'] == current_activity_id
+                    else '')
+        ))
+
+    return select_list

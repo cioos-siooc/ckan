@@ -1,8 +1,6 @@
 # encoding: utf-8
 
 from nose.tools import assert_equal
-from pylons.test import pylonsapp
-import paste.fixture
 
 from ckan.lib.helpers import url_for as url_for
 
@@ -13,7 +11,7 @@ class TestUtil(helpers.FunctionalTestBase):
     def test_redirect_ok(self):
         app = self._get_test_app()
         response = app.get(
-            url=url_for(controller='util', action='redirect'),
+            url=url_for('util.internal_redirect'),
             params={'url': '/dataset'},
             status=302,
         )
@@ -23,7 +21,7 @@ class TestUtil(helpers.FunctionalTestBase):
     def test_redirect_external(self):
         app = self._get_test_app()
         response = app.get(
-            url=url_for(controller='util', action='redirect'),
+            url=url_for('util.internal_redirect'),
             params={'url': 'http://nastysite.com'},
             status=403,
         )
@@ -31,7 +29,7 @@ class TestUtil(helpers.FunctionalTestBase):
     def test_redirect_no_params(self):
         app = self._get_test_app()
         response = app.get(
-            url=url_for(controller='util', action='redirect'),
+            url=url_for('util.internal_redirect'),
             params={},
             status=400,
         )
@@ -39,7 +37,7 @@ class TestUtil(helpers.FunctionalTestBase):
     def test_redirect_no_params_2(self):
         app = self._get_test_app()
         response = app.get(
-            url=url_for(controller='util', action='redirect'),
+            url=url_for('util.internal_redirect'),
             params={'url': ''},
             status=400,
         )

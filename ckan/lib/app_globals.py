@@ -7,7 +7,7 @@ import time
 from threading import Lock
 import re
 
-from paste.deploy.converters import asbool
+from ckan.common import asbool
 from ckan.common import config
 
 import ckan
@@ -42,12 +42,11 @@ app_globals_from_config_details = {
         # has been setup in load_environment():
     'ckan.site_id': {},
     'ckan.recaptcha.publickey': {'name': 'recaptcha_publickey'},
-    'ckan.template_title_deliminater': {'default': '-'},
+    'ckan.template_title_delimiter': {'default': '-'},
     'ckan.template_head_end': {},
     'ckan.template_footer_end': {},
     'ckan.dumps_url': {},
     'ckan.dumps_format': {},
-    'ofs.impl': {'name': 'ofs_impl'},
     'ckan.homepage_style': {'default': '1'},
 
     # split string

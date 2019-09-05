@@ -44,7 +44,8 @@ def _finish(status_int, response_data=None,
     :param status_int: The HTTP status code to return
     :type status_int: int
     :param response_data: The body of the response
-    :type response_data: object if content_type is `text`, a string otherwise
+    :type response_data: object if content_type is `text` or `json`,
+        a string otherwise
     :param content_type: One of `text`, `html` or `json`. Defaults to `text`
     :type content_type: string
     :param headers: Extra headers to serve with the response
@@ -82,7 +83,8 @@ def _finish_ok(response_data=None,
     calling this method will prepare the response.
 
     :param response_data: The body of the response
-    :type response_data: object if content_type is `text`, a string otherwise
+    :type response_data: object if content_type is `text` or `json`,
+        a string otherwise
     :param content_type: One of `text`, `html` or `json`. Defaults to `json`
     :type content_type: string
     :param resource_location: Specify this if a new resource has just been
@@ -414,12 +416,13 @@ def format_autocomplete(ver=API_REST_DEFAULT_VERSION):
 def user_autocomplete(ver=API_REST_DEFAULT_VERSION):
     q = request.args.get(u'q', u'')
     limit = request.args.get(u'limit', 20)
+    ignore_self = request.args.get(u'ignore_self', False)
     user_list = []
     if q:
         context = {u'model': model, u'session': model.Session,
                    u'user': g.user, u'auth_user_obj': g.userobj}
 
-        data_dict = {u'q': q, u'limit': limit}
+        data_dict = {u'q': q, u'limit': limit, u'ignore_self': ignore_self}
 
         user_list = get_action(u'user_autocomplete')(context, data_dict)
     return _finish_ok(user_list)
@@ -470,7 +473,7 @@ def i18n_js_translations(lang, ver=API_REST_DEFAULT_VERSION):
                              u'base', u'i18n', u'{0}.js'.format(lang)))
     if not os.path.exists(source):
         return u'{}'
-    translations = open(source, u'r').read()
+    translations = json.load(open(source, u'r'))
     return _finish_ok(translations)
 
 

@@ -2,17 +2,26 @@
 
 import os
 
-from nose.tools import assert_equal
+from nose.tools import assert_equal, assert_in
 from ckan.common import config
 
 from ckan.model.license import LicenseRegister
-from ckan.tests import helpers
+from ckan.tests import helpers, factories
+
+this_dir = os.path.dirname(os.path.realpath(__file__))
 
 
 class TestLicenseRegister(object):
 
     def setup(self):
         helpers.reset_db()
+
+    def teardown(self):
+        # _license_register is cached, so clear it after tests that change the
+        # config['licenses_group_url']
+        from ckan import model
+        if hasattr(model.Package, '_license_register'):
+            del model.Package._license_register
 
     def test_default_register_has_basic_properties_of_a_license(self):
         config['licenses_group_url'] = None
@@ -24,11 +33,8 @@ class TestLicenseRegister(object):
         assert_equal(license.isopen(), True)
         assert_equal(license.title, 'Creative Commons Attribution')
 
+    @helpers.change_config('licenses_group_url', 'file:///%s/licenses.v1' % this_dir)
     def test_import_v1_style_register(self):
-        this_dir = os.path.dirname(os.path.realpath(__file__))
-        # v1 is used by CKAN so far
-        register_filepath = '%s/licenses.v1' % this_dir
-        config['licenses_group_url'] = 'file:///%s' % register_filepath
         reg = LicenseRegister()
 
         license = reg['cc-by']
@@ -37,11 +43,9 @@ class TestLicenseRegister(object):
         assert_equal(license.isopen(), True)
         assert_equal(license.title, 'Creative Commons Attribution')
 
+    # v2 is used by http://licenses.opendefinition.org in recent times
+    @helpers.change_config('licenses_group_url', 'file:///%s/licenses.v2' % this_dir)
     def test_import_v2_style_register(self):
-        this_dir = os.path.dirname(os.path.realpath(__file__))
-        # v2 is used by http://licenses.opendefinition.org in recent times
-        register_filepath = '%s/licenses.v2' % this_dir
-        config['licenses_group_url'] = 'file:///%s' % register_filepath
         reg = LicenseRegister()
 
         license = reg['CC-BY-4.0']
@@ -49,6 +53,26 @@ class TestLicenseRegister(object):
                      'https://creativecommons.org/licenses/by/4.0/')
         assert_equal(license.isopen(), True)
         assert_equal(license.title, 'Creative Commons Attribution 4.0')
+
+    @helpers.change_config('licenses_group_url', 'file:///%s/licenses.v1' % this_dir)
+    @helpers.change_config('ckan.locale_default', 'ca')
+    def test_import_v1_style_register_i18n(self):
+
+        sysadmin = factories.Sysadmin()
+        app = helpers._get_test_app()
+
+        resp = app.get('/dataset/new', extra_environ={'REMOTE_USER': str(sysadmin['name'])})
+        assert_in('Altres (Oberta)', resp.body)
+
+    @helpers.change_config('licenses_group_url', 'file:///%s/licenses.v2' % this_dir)
+    @helpers.change_config('ckan.locale_default', 'ca')
+    def test_import_v2_style_register_i18n(self):
+
+        sysadmin = factories.Sysadmin()
+        app = helpers._get_test_app()
+
+        resp = app.get('/dataset/new', extra_environ={'REMOTE_USER': str(sysadmin['name'])})
+        assert_in('Altres (Oberta)', resp.body)
 
 
 class TestLicense:
