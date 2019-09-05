@@ -3,17 +3,22 @@
 # This file is distributed under the same license as the ckan project.
 # FIRST AUTHOR <EMAIL@ADDRESS>, 2018.
 # 
+# Translators:
+# Adrià Mercader <adria.mercader@okfn.org>, 2018
+# Bogdan Mateescu, 2018
+# Costin Bleotu <costin.bleotu@databus.systems>, 2019
+# 
 #, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: ckan 2.8.0b0\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
 "POT-Creation-Date: 2018-03-27 16:10+0200\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: Bogdan Mateescu, 2018\n"
+"PO-Revision-Date: 2018-03-27 14:15+0000\n"
+"Last-Translator: Costin Bleotu <costin.bleotu@databus.systems>, 2019\n"
 "Language-Team: Romanian (https://www.transifex.com/okfn/teams/11162/ro/)\n"
 "MIME-Version: 1.0\n"
-"Content-Type: text/plain; charset=utf-8\n"
+"Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.5.3\n"
 "Language: ro\n"
@@ -21,7 +26,7 @@ msgstr ""
 
 #: ckanext/datapusher/helpers.py:21
 msgid "Complete"
-msgstr ""
+msgstr "Complet"
 
 #: ckanext/datapusher/helpers.py:22
 msgid "Pending"
@@ -85,7 +90,7 @@ msgstr ""
 #: ckanext/datapusher/templates-bs2/datapusher/resource_data.html:48
 #: ckanext/datapusher/templates/datapusher/resource_data.html:48
 msgid "Status"
-msgstr ""
+msgstr "Status"
 
 #: ckanext/datapusher/templates-bs2/datapusher/resource_data.html:52
 #: ckanext/datapusher/templates/datapusher/resource_data.html:52
@@ -120,7 +125,7 @@ msgstr ""
 #: ckanext/datastore/controller.py:53
 #, python-format
 msgid "format: must be one of %s"
-msgstr ""
+msgstr "format: trebuie sa fie unul de tipul %s"
 
 #: ckanext/datastore/controller.py:65
 msgid "DataStore resource not found"
@@ -141,7 +146,7 @@ msgstr ""
 #: ckanext/datastore/logic/action.py:258 ckanext/datastore/logic/action.py:286
 #: ckanext/datastore/logic/action.py:344 ckanext/datastore/logic/action.py:457
 msgid "Resource \"{0}\" was not found."
-msgstr ""
+msgstr "Resursa \"{0}\" nu a fost găsită."
 
 #: ckanext/datastore/logic/auth.py:19
 msgid "User {0} not authorized to update resource {1}"
