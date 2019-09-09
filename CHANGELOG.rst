@@ -7,26 +7,62 @@
 Changelog
 ---------
 
-v.2.9.0 TBA
+v.2.8.3 2019-07-03
 ==================
 
-Deprecations:
- * ``c.action`` and ``c.controller`` variables should be avoided.
-   ``ckan.plugins.toolkit.get_endpoint`` can be used instead. This function
-   returns tuple of two items(depending on request handler):
-   1. Flask blueprint name / Pylons controller name
-   2. Flask view name / Pylons action name
-   In some cases, Flask blueprints have names that are differs from their
-   Pylons equivalents. For example, 'package' controller is divided between
-   'dataset' and 'resource' blueprints. For such cases you may need to perform
-   additional check of returned value:
+General notes:
+ * Note: This version does not requires a requirements upgrade on source installations
+ * Note: This version does not requires a database upgrade
+ * Note: This version does not require a Solr schema upgrade
 
-   >>> if toolkit.get_endpoint()[0] in ['dataset', 'package']:
-   >>>     do_something()
+Fixes:
 
-   In this code snippet, will be called if current request is handled via Flask's
-   dataset blueprint in CKAN>=2.9, and, in the same time, it's still working for
-   Pylons package controller in CKAN<2.9
+* Fix `include_total` in `datastore_search` (`#4446 <https://github.com/ckan/ckan/issues/4446>`_)
+* Fix problem with reindex-fast (`#4352 <https://github.com/ckan/ckan/issues/4352>`_)
+* Fix `ValueError` in `url_validator` (`#4629 <https://github.com/ckan/ckan/issues/4629>`_)
+* Strip local path when uploading file in IE (`#4608 <https://github.com/ckan/ckan/issues/4608>`_)
+* Increase size of h1 headings to 1.8em (`#4665 <https://github.com/ckan/ckan/issues/4665>`_)
+* Fix broken div nesting in the `user/read_base.html` (`#4672 <https://github.com/ckan/ckan/issues/4672>`_)
+* `package_search` parameter `fl` accepts list-like values (`#4464 <https://github.com/ckan/ckan/issues/4464>`_)
+* Use `chained_auth_function` with core auth functions (`#4491 <https://github.com/ckan/ckan/issues/4491>`_)
+* Allow translation of custom licenses (`#4594 <https://github.com/ckan/ckan/issues/4594>`_)
+* Fix delete button links (`#4598 <https://github.com/ckan/ckan/issues/4598>`_)
+* Fix hardcoded root paths (`#4662 <https://github.com/ckan/ckan/issues/4662>`_)
+* Fix reCaptcha (`#4732 <https://github.com/ckan/ckan/issues/4732>`_)
+* Fix incremented follower-counter (`#4767 <https://github.com/ckan/ckan/issues/4767>`_)
+* Fix breadcrumb on /datasets (`#4405 <https://github.com/ckan/ckan/issues/4405>`_)
+* Fix `root_path` when using mod_wsgi (`#4452 <https://github.com/ckan/ckan/issues/4452>`_)
+* Correctly insert root_path for urls generated with _external flag (`#4722 <https://github.com/ckan/ckan/issues/4722>`_)
+* Make reorder resources button translatable (`#4838 <https://github.com/ckan/ckan/issues/4838>`_)
+* Fix `feeds` urls generation (`#4854 <https://github.com/ckan/ckan/pull/4854>`_)
+* More robust auth functions for `resource_view_show` (`#4827 <https://github.com/ckan/ckan/issues/4827>`_)
+* Allow to customize the DataProxy URL (`#4874 <https://github.com/ckan/ckan/issues/4874>`_)
+* Allow custom CKAN callback URL for the DataPusher (`#4878 <https://github.com/ckan/ckan/issues/4878>`_)
+* Add `psycopg>=2.8` support (`#4841 <https://github.com/ckan/ckan/pull/4841>`_)
+
+v.2.8.2 2018-12-12
+==================
+
+General notes:
+ * This version requires a requirements upgrade on source installations
+ * Note: This version does not requires a database upgrade
+ * Note: This version does not require a Solr schema upgrade
+
+Fixes:
+
+* Strip full URL on uploaded resources before saving to DB (`#4382 <https://github.com/ckan/ckan/issues/4382>`_)
+* Fix user not being defined in check_access function (`#4574 <https://github.com/ckan/ckan/issues/4574>`_)
+* Remove html5 shim from stats extension (`#4236 <https://github.com/ckan/ckan/issues/4236>`_)
+* Fix for datastore_search distinct=true option (`#4236 <https://github.com/ckan/ckan/issues/4236>`_)
+* Fix edit slug button (`#4379 <https://github.com/ckan/ckan/issues/4379>`_)
+* Don't re-register plugin helpers on flask_app (`#4414 <https://github.com/ckan/ckan/issues/4414>`_)
+* Fix for Resouce View Re-order (`#4416 <https://github.com/ckan/ckan/issues/4416>`_)
+* autocomplete.js: fix handling of comma key codes (`#4421 <https://github.com/ckan/ckan/issues/4421>`_)
+* Flask patch update (`#4426 <https://github.com/ckan/ckan/issues/4426>`_)
+* Allow plugins to define multiple blueprints (`#4495 <https://github.com/ckan/ckan/issues/4495>`_)
+* Fix i18n API encoding (`#4505 <https://github.com/ckan/ckan/issues/4505>`_)
+* Allow to defined legacy route mappings as a dict in config (`#4521 <https://github.com/ckan/ckan/issues/4521>`_)
+* group_patch does not reset packages (`#4557 <https://github.com/ckan/ckan/issues/4557>`_)
 
 v.2.8.1 2018-07-25
 ==================
@@ -38,20 +74,20 @@ General notes:
 
 Fixes:
 
- * "Add Filter" Performance Issue (`#4162 <https://github.com/ckan/ckan/issues/4162>`)
- * Error handler update (`#4257 <https://github.com/ckan/ckan/issues/4257>`)
- * "New view" button does not work (`#4260 <https://github.com/ckan/ckan/issues/4260>`)
- * Upload logo is not working (`#4262 <https://github.com/ckan/ckan/issues/4262>`)
- * Unable to pip install ckan (`#4271 <https://github.com/ckan/ckan/issues/4271>`)
- * The "License" Icon in 2.8 is wrong (`#4272 <https://github.com/ckan/ckan/issues/4272>`)
- * Search - input- border color is overly specific in CSS (`#4273 <https://github.com/ckan/ckan/issues/4273>`)
- * Site logo image does not scale down when very large (`#4283 <https://github.com/ckan/ckan/issues/4283>`)
- * Validation Error on datastore_search when sorting timestamp fields (`#4288 <https://github.com/ckan/ckan/issues/4288>`)
- * Undocumented changes breaking error_document_template (`#4303 <https://github.com/ckan/ckan/issues/4303>`)
- * Internal server error when viewing /dashboard when logged out (`#4305 <https://github.com/ckan/ckan/issues/4305>`)
- * Missing c.action attribute in 2.8.0 templates (`#4310 <https://github.com/ckan/ckan/issues/4310>`)
- * [multilingual] AttributeError: '_Globals' object has no attribute 'fields' (`#4338 <https://github.com/ckan/ckan/issues/4338>`)
- * `search` legacy route missing (`#4346 <https://github.com/ckan/ckan/issues/4346>`)
+ * "Add Filter" Performance Issue (`#4162 <https://github.com/ckan/ckan/issues/4162>`_)
+ * Error handler update (`#4257 <https://github.com/ckan/ckan/issues/4257>`_)
+ * "New view" button does not work (`#4260 <https://github.com/ckan/ckan/issues/4260>`_)
+ * Upload logo is not working (`#4262 <https://github.com/ckan/ckan/issues/4262>`_)
+ * Unable to pip install ckan (`#4271 <https://github.com/ckan/ckan/issues/4271>`_)
+ * The "License" Icon in 2.8 is wrong (`#4272 <https://github.com/ckan/ckan/issues/4272>`_)
+ * Search - input- border color is overly specific in CSS (`#4273 <https://github.com/ckan/ckan/issues/4273>`_)
+ * Site logo image does not scale down when very large (`#4283 <https://github.com/ckan/ckan/issues/4283>`_)
+ * Validation Error on datastore_search when sorting timestamp fields (`#4288 <https://github.com/ckan/ckan/issues/4288>`_)
+ * Undocumented changes breaking error_document_template (`#4303 <https://github.com/ckan/ckan/issues/4303>`_)
+ * Internal server error when viewing /dashboard when logged out (`#4305 <https://github.com/ckan/ckan/issues/4305>`_)
+ * Missing c.action attribute in 2.8.0 templates (`#4310 <https://github.com/ckan/ckan/issues/4310>`_)
+ * [multilingual] AttributeError: '_Globals' object has no attribute 'fields' (`#4338 <https://github.com/ckan/ckan/issues/4338>`_)
+ * `search` legacy route missing (`#4346 <https://github.com/ckan/ckan/issues/4346>`_)
 
 v.2.8.0 2018-05-09
 ==================
@@ -171,6 +207,27 @@ Changes and deprecations:
    jobs (http://docs.ckan.org/en/latest/maintaining/background-tasks.html). Extensions can still
    of course use Celery but they will need to handle the management themselves.
  * The ``ckan.recaptcha.version`` config option is now removed, since v2 is the only valid version now (#4061)
+
+v2.7.5 2018-12-12
+=================
+
+  * Strip full URL on uploaded resources before saving to DB (`#4382 <https://github.com/ckan/ckan/issues/4382>`_)
+  * Fix for datastore_search distinct=true option (`#4236 <https://github.com/ckan/ckan/issues/4236>`_)
+  * Fix edit slug button (`#4379 <https://github.com/ckan/ckan/issues/4379>`_)
+  * Don't re-register plugin helpers on flask_app (`#4414 <https://github.com/ckan/ckan/issues/4414>`_)
+  * Fix for Resouce View Re-order (`#4416 <https://github.com/ckan/ckan/issues/4416>`_)
+  * autocomplete.js: fix handling of comma key codes (`#4421 <https://github.com/ckan/ckan/issues/4421>`_)
+  * Flask patch update (`#4426 <https://github.com/ckan/ckan/issues/4426>`_)
+  * Allow plugins to define multiple blueprints (`#4495 <https://github.com/ckan/ckan/issues/4495>`_)
+  * Fix i18n API encoding (`#4505 <https://github.com/ckan/ckan/issues/4505>`_)
+  * Allow to defined legacy route mappings as a dict in config (`#4521 <https://github.com/ckan/ckan/issues/4521>`_)
+  * group_patch does not reset packages (`#4557 <https://github.com/ckan/ckan/issues/4557>`_)
+
+v2.7.4 2018-05-09
+=================
+
+ * Adding filter at resoruce preview doesn't work while site is setup with ckan.root_path param (#4140)
+ * Datastore dump results are not the same as data in database (#4150)
 
 v2.7.3 2018-03-15
 =================
@@ -348,6 +405,20 @@ Deprecations:
  * The old Celery based background jobs will be removed in CKAN 2.8 in favour of the new RQ based
    jobs (http://docs.ckan.org/en/latest/maintaining/background-tasks.html). Extensions can still
    of course use Celery but they will need to handle the management themselves.
+
+v2.6.7 2018-12-12
+=================
+
+  * Fix for Resouce View Re-order (`#4416 <https://github.com/ckan/ckan/issues/4416>`_)
+  * autocomplete.js: fix handling of comma key codes (`#4421 <https://github.com/ckan/ckan/issues/4421>`_)
+  * group_patch does not reset packages (`#4557 <https://github.com/ckan/ckan/issues/4557>`_)
+
+v2.6.6 2018-05-09
+=================
+
+* Adding filter at resoruce preview doesn't work while site is setup with ckan.root_path param (#4140)
+* Stable version URLs CKAN for documentation (#4209)
+* Add Warning in docs sidebar (#4209)
 
 v2.6.5 2018-03-15
 =================

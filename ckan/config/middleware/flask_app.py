@@ -178,7 +178,11 @@ def make_flask_stack(conf, **app_conf):
     # Set up each IBlueprint extension as a Flask Blueprint
     for plugin in PluginImplementations(IBlueprint):
         if hasattr(plugin, 'get_blueprint'):
-            app.register_extension_blueprint(plugin.get_blueprint())
+            plugin_blueprints = plugin.get_blueprint()
+            if not isinstance(plugin_blueprints, list):
+                plugin_blueprints = [plugin_blueprints]
+            for blueprint in plugin_blueprints:
+                app.register_extension_blueprint(blueprint)
 
     # Set flask routes in named_routes
     for rule in app.url_map.iter_rules():
@@ -298,12 +302,17 @@ def ckan_after_request(response):
     # Set CORS headers if necessary
     response = set_cors_headers_for_response(response)
 
+    # Default to cache-control private if it was not set
+    if response.cache_control.private is None:
+        response.cache_control.private = True
+
     return response
 
 
 def helper_functions():
     u'''Make helper functions (`h`) available to Flask templates'''
-    helpers.load_plugin_helpers()
+    if not helpers.helper_functions:
+        helpers.load_plugin_helpers()
     return dict(h=helpers.helper_functions)
 
 
@@ -357,8 +366,8 @@ class CKANFlask(Flask):
         `origin` can be either 'core' or 'extension' depending on where
         the route was defined.
         '''
-
         urls = self.url_map.bind_to_environ(environ)
+
         try:
             rule, args = urls.match(return_rule=True)
             origin = 'core'
@@ -366,6 +375,12 @@ class CKANFlask(Flask):
                 origin = 'extension'
             log.debug('Flask route match, endpoint: {0}, args: {1}, '
                       'origin: {2}'.format(rule.endpoint, args, origin))
+
+            # Disable built-in flask's ability to prepend site root to
+            # generated url, as we are going to use locale and existing
+            # logic is not flexible enough for this purpose
+            environ['SCRIPT_NAME'] = ''
+
             return (True, self.app_name, origin)
         except HTTPException:
             return (False, self.app_name)

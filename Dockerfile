@@ -63,6 +63,8 @@ RUN ckan-pip install -U pip && \
     chmod +x /ckan-entrypoint.sh && \
     cp -v $CKAN_VENV/src/ckan/contrib/docker/ckan-harvester-entrypoint.sh /ckan-harvester-entrypoint.sh && \
     chmod +x /ckan-harvester-entrypoint.sh && \
+    cp -v $CKAN_VENV/src/ckan/contrib/docker/ckan-run-harvester-entrypoint.sh /ckan-run-harvester-entrypoint.sh && \
+    chmod +x /ckan-run-harvester-entrypoint.sh && \
     chown -R ckan:ckan $CKAN_HOME $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH
 
 # Install needed libraries
