@@ -369,7 +369,7 @@ Restart apache
 
 # Troubleshooting
 
-Issues building/starting CKAN:
+#### Issues building/starting CKAN:
 
 Try manually pulling the images first e.g.:
 
@@ -442,7 +442,7 @@ or remove only the images you want with
 	sudo docker rmi [image name]
 ```
 
-When building ckan, in windows, you get the error `standard_init_linux.go:207: exec user process caused "no such file or directory"`
+#### When building ckan, in windows, you get the error `standard_init_linux.go:207: exec user process caused "no such file or directory"`
   delete c:/user/[your username]/lock.gitconfig
 Then change git line end characters to unix/linux style ones
   git config --global core.eol lf
