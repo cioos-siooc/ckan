@@ -33,7 +33,7 @@
 	url = https://github.com/cioos-siooc/ckanext-composite.git
 [submodule "contrib/docker/src/ckanext-fluent"]
 	path = contrib/docker/src/ckanext-fluent
-	url = https://github.com/ckan/ckanext-fluent.git
+	url = https://github.com/cioos-siooc/ckanext-fluent.git
 [submodule "contrib/docker/src/ckanext-cioos_harvest"]
 	path = contrib/docker/src/ckanext-cioos_harvest
 	url = https://github.com/cioos-siooc/ckanext-cioos_harvest.git
