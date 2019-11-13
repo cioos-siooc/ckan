@@ -81,7 +81,7 @@ COPY ./contrib/docker/src/pycsw $CKAN_VENV/src/pycsw
 COPY ./contrib/docker/pycsw/pycsw.cfg $CKAN_VENV/src/pycsw/default.cfg
 COPY ./contrib/docker/src/ckanext-harvest $CKAN_VENV/src/ckanext-harvest
 COPY ./contrib/docker/src/ckanext-spatial $CKAN_VENV/src/ckanext-spatial
-COPY ./contrib/docker/src/ckanext-cioos_theme $CKAN_VENV/src/ckanext-cioos_theme
+COPY ./contrib/docker/src/ckanext-hakai_theme $CKAN_VENV/src/ckanext-hakai_theme
 COPY ./contrib/docker/src/ckanext-cioos_harvest $CKAN_VENV/src/ckanext-cioos_harvest
 COPY ./contrib/docker/src/ckanext-scheming $CKAN_VENV/src/ckanext-scheming
 COPY ./contrib/docker/src/ckanext-composite $CKAN_VENV/src/ckanext-composite
@@ -106,7 +106,7 @@ RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-sp
 # add simlink so ckan spatial can find pycsw
 RUN ln -s $CKAN_VENV/src/pycsw/pycsw $CKAN_VENV/src/ckanext-spatial/pycsw
 
-RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-cioos_theme && python setup.py install && python setup.py develop"
+RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-hakai_theme && python setup.py install && python setup.py develop"
 RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-cioos_harvest && python setup.py install && python setup.py develop"
 #RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-doi && python setup.py install && python setup.py develop"
 

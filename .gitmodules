@@ -37,3 +37,6 @@
 [submodule "contrib/docker/src/hakai-schema"]
 	path = contrib/docker/src/hakai-schema
 	url = https://github.com/HakaiInstitute/hakai-schema.git
+[submodule "contrib/docker/src/ckanext-hakai_theme"]
+	path = contrib/docker/src/ckanext-hakai_theme
+	url = https://github.com/HakaiInstitute/ckanext-hakai_theme.git
