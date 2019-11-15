@@ -479,6 +479,26 @@ To diagnose issue turn on debuging in the production.ini file ad restart ckan. T
 - create upload folder: `sudo mkdir $VOL_CKAN_STIRAGE/storage/upload`
 - change file permissions: `sudo chown 900:900 -R $VOL_CKAN_HOME $VOL_CKAN_STORAGE`
 
+### if while starting ckan you get the error "from osgeo import ogr ImportError: No module named osgeo"
+This issue also applys to "ImportError: No module named urllib3.contrib" errors or any python module which you know is installed but is not found when starting ckan
+
+You have re-build ckan after upgrading to a version that uses glad and ogr but have not recreated the docker_ckan_home volume. Delete the volume and restart ckan.
+
+```bash
+cd ~/ckan/contrib/docker
+sudo docker-compose down
+sudo docker volume rm docker_ckan_home
+sudo docker-compose up -d
+```
+
+You may get a file permissions error after the new volume is created. reset permissions to resolve
+
+```bash
+cd ~/ckan/contrib/docker
+sudo chown 900:900 -R $VOL_CKAN_HOME/venv/src/
+sudo docker-compose up -d
+```
+
 ---
 # Update solr schema
 
