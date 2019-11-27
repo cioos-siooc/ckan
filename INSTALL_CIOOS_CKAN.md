@@ -248,7 +248,7 @@ Note that `use_default_schema` and `force_package_type` are not needed and will 
 it may become nesisary to reindex harvesters, especially if they no longer report the correct number of harveted datasets. If modifying the harvester config you will also need to reindex to make the new config take affect
 
 ```bash
-sudo docker exec -it ckan //usr/local/bin/ckan-paster --plugin=ckanext-harvest harvester reindex --config=/etc/ckan/production.ini
+sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckanext-harvest harvester reindex --config=/etc/ckan/production.ini
 ```
 ---
 
@@ -528,7 +528,7 @@ sudo docker-compose restart ckan_run_harvester ckan_fetch_harvester ckan_gather_
 ```
 or
 ```bash
-sudo docker exec -it ckan //usr/local/bin/ckan-paster --plugin=ckanext-harvest harvester reindex --config=/etc/ckan/production.ini
+sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckanext-harvest harvester reindex --config=/etc/ckan/production.ini
 ```
 
 #### When creating organizations or updating admin config settings you get a 500 Internal Server Error
@@ -598,7 +598,7 @@ sudo docker-compose restart solr
 rebuild search index
 
 ```bash
-sudo docker exec -it ckan //usr/local/bin/ckan-paster --plugin=ckan search-index rebuild --config=/etc/ckan/production.ini
+sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckan search-index rebuild --config=/etc/ckan/production.ini
 ```
 
 # Update CKAN
@@ -728,3 +728,7 @@ ls -l /etc/localtime
 timedatectl list-timezones
 sudo timedatectl set-timezone UTC
 sudo timedatectl set-timezone America/Vancouver
+
+
+
+sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckan post -c /etc/ckan/production.ini /api/action/send_email_notifications
