@@ -435,6 +435,24 @@ Now that you have ckan running you can customize the interface via the admin con
 }
 ```
 
+# Enable Google Analytics
+edit the production.ini file currently in the volume.
+```bash
+  export VOL_CKAN_CONFIG=`sudo docker volume inspect docker_ckan_config | jq -r -c '.[] | .Mountpoint'`
+  sudo nano $VOL_CKAN_CONFIG/production.ini
+```
+
+uncomment the google analytics id config and update to your id
+
+replace
+```bash
+  # googleanalytics.ids = UA-1234567890000-1
+```
+with
+```bash
+  googleanalytics.ids = [your Tracking IDs here seperated by spaces]
+```
+
 ---
 
 # Troubleshooting
