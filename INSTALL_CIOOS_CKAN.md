@@ -195,6 +195,30 @@ The settings for harvesters are fairly straightforward. The one exception is the
 }
 ```
 
+#### 19115-3 WAF (ERDDAP)
+
+```json
+{
+  "default_tags": [],
+  "default_extras": {
+    "encoding": "utf8",
+    "h_source_id": "{harvest_source_id}",
+    "h_source_url": "{harvest_source_url}",
+    "h_source_title": "{harvest_source_title}",
+    "h_job_id": "{harvest_job_id}",
+    "h_object_id": "{harvest_object_id}"
+  },
+  "override_extras": false,
+  "clean_tags": true,
+  "validator_profiles": ["iso19115"],
+  "remote_orgs": "only_local",
+  "harvest_iso_categories": false,
+  "organization_mapping": {
+    "Institute of Ocean Sciences, 9860 West Saanich Road, Sidney, B.C., Canada": "Fisheries and Oceans Canada"
+  }
+}
+```
+
 #### CKAN
 
 ```json
@@ -220,6 +244,12 @@ The settings for harvesters are fairly straightforward. The one exception is the
 ```
 Note that `use_default_schema` and `force_package_type` are not needed and will cause validation errors if harvesting between two ckans using the same custom schema (the CIOOS setup)
 
+### reindex Harvesters
+it may become nesisary to reindex harvesters, especially if they no longer report the correct number of harveted datasets. If modifying the harvester config you will also need to reindex to make the new config take affect
+
+```bash
+sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckanext-harvest harvester reindex --config=/etc/ckan/production.ini
+```
 ---
 
 #### Finish setting up pyCSW
@@ -369,6 +399,60 @@ Restart apache
   sudo apachectl restart
 ```
 
+
+# Customize interface
+Now that you have ckan running you can customize the interface via the admin config page. Go to http://localhost:5000/ckan-admin/config and configure some of the site options.
+
+- Site_logo can be used to set the CIOOS logo that appears on every page.
+- Homepage should be set to CIOOS for the CIOOS style home page layout
+- Custom CSS can be used to change the colour pallet of the site as well as any of the other css items. An example css that sets the colour pallet is:
+
+```CSS
+.box, .wrapper {
+    border: 1px solid #006e90;
+    border-width: 0 0 0 4px;
+}
+
+#topmenu {
+    background: #006e90;
+}
+
+.account-masthead{
+  background-image: none;
+  background: #006e90;
+}
+
+#footer{
+  background: #006e90;
+}
+
+
+#footer a {
+  color: rgb(255,255,255,.5);
+}
+.account-masthead .account ul li a {
+  color: rgb(255,255,255,.5);
+}
+```
+
+# Enable Google Analytics
+edit the production.ini file currently in the volume.
+```bash
+  export VOL_CKAN_CONFIG=`sudo docker volume inspect docker_ckan_config | jq -r -c '.[] | .Mountpoint'`
+  sudo nano $VOL_CKAN_CONFIG/production.ini
+```
+
+uncomment the google analytics id config and update to your id
+
+replace
+```bash
+  # googleanalytics.ids = UA-1234567890000-1
+```
+with
+```bash
+  googleanalytics.ids = [your Tracking IDs here seperated by spaces]
+```
+
 ---
 
 # Troubleshooting
@@ -453,6 +537,18 @@ Then change git line end characters to unix/linux style ones
   git config --global core.autocrlf input
 Delete and re clone the ckan repo. You may want to backup config files first.
 
+#### When changing harvester config it does not take affect
+
+If you edit a harvester config and then reharvest the existing harvester will continue to use the in memory harvester config. To solve this you can either restart the harvester docker containers or reindex the harvesters
+
+```bash
+sudo docker-compose restart ckan_run_harvester ckan_fetch_harvester ckan_gather_harvester
+```
+or
+```bash
+sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckanext-harvest harvester reindex --config=/etc/ckan/production.ini
+```
+
 #### When creating organizations or updating admin config settings you get a 500 Internal Server Error
 
 This can be caused by ckan not having permissions to write to the internal storage of the ckan container. This should be setup during the build process. You can debug this by setting debug = true in the production.ini file. No error messages will be reported in the ckan logs for this issue without turning on debug.
@@ -479,6 +575,26 @@ To diagnose issue turn on debuging in the production.ini file ad restart ckan. T
 - create upload folder: `sudo mkdir $VOL_CKAN_STIRAGE/storage/upload`
 - change file permissions: `sudo chown 900:900 -R $VOL_CKAN_HOME $VOL_CKAN_STORAGE`
 
+### if while starting ckan you get the error "from osgeo import ogr ImportError: No module named osgeo"
+This issue also applys to "ImportError: No module named urllib3.contrib" errors or any python module which you know is installed but is not found when starting ckan
+
+You have re-build ckan after upgrading to a version that uses glad and ogr but have not recreated the docker_ckan_home volume. Delete the volume and restart ckan.
+
+```bash
+cd ~/ckan/contrib/docker
+sudo docker-compose down
+sudo docker volume rm docker_ckan_home
+sudo docker-compose up -d
+```
+
+You may get a file permissions error after the new volume is created. reset permissions to resolve
+
+```bash
+cd ~/ckan/contrib/docker
+sudo chown 900:900 -R $VOL_CKAN_HOME/venv/src/
+sudo docker-compose up -d
+```
+
 ---
 # Update solr schema
 
@@ -500,7 +616,7 @@ sudo docker-compose restart solr
 rebuild search index
 
 ```bash
-sudo docker exec -it ckan //usr/local/bin/ckan-paster --plugin=ckan search-index rebuild --config=/etc/ckan/production.ini
+sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckan search-index rebuild --config=/etc/ckan/production.ini
 ```
 
 # Update CKAN
@@ -583,6 +699,7 @@ sudo cp -r src/ckanext-package_converter/ $VOL_CKAN_HOME/venv/src/
 sudo cp -r src/ckanext-fluent/ $VOL_CKAN_HOME/venv/src/
 sudo cp src/hakai-schema/hakai_schema.json $VOL_CKAN_HOME/venv/src/ckanext-scheming/ckanext/scheming/hakai_schema.json
 sudo cp src/hakai-schema/organization.json $VOL_CKAN_HOME/venv/src/ckanext-scheming/ckanext/scheming/organization.json
+sudo cp src/cioos-siooc-schema/ckan_license.json $VOL_CKAN_HOME/venv/src/ckan/contrib/docker/src/cioos-siooc-schema/ckan_license.json
 ```
 
 Exporting volumes on windows does not work so another option for copying files to the volumes is to use the `docker cp` command. You must know the path of the named volume in the container you are connecting to and the container must be running for this to work
@@ -590,7 +707,7 @@ Exporting volumes on windows does not work so another option for copying files t
 ```bash
 cd ~/ckan/contrib/docker
 docker cp -r src/ckanext-cioos_theme/ ckan:/usr/lib/ckan/venv/src/
-docker cp -r src/ckanext-cioos_harvest/ ckan:/venv/src/
+docker cp -r src/ckanext-cioos_harvest/ ckan:/usr/lib/ckan/venv/src/
 docker cp -r src/ckanext-harvest/ ckan:/usr/lib/ckan/venv/src/
 docker cp -r src/ckanext-spatial/ ckan:/usr/lib/ckan/venv/src/
 docker cp -r src/pycsw/ ckan:/usr/lib/ckan/venv/src/
@@ -621,3 +738,15 @@ cd ~/ckan/contrib/docker
 sudo docker-compose restart ckan
 sudo docker-compose restart ckan_run_harvester ckan_fetch_harvester ckan_gather_harvester
 ```
+
+### Set timezone
+
+timedatectl
+ls -l /etc/localtime
+timedatectl list-timezones
+sudo timedatectl set-timezone UTC
+sudo timedatectl set-timezone America/Vancouver
+
+
+
+sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckan post -c /etc/ckan/production.ini /api/action/send_email_notifications

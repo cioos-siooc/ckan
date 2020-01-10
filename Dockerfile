@@ -29,8 +29,15 @@ RUN apt-get -q -y update \
         supervisor \
         cron \
         libsaxonb-java \
+        gdal-bin \
+        libgdal-dev\
+        python3-gdal \
+        python-gdal \
     && apt-get -q clean \
     && rm -rf /var/lib/apt/lists/*
+
+RUN export CPLUS_INCLUDE_PATH=/usr/include/gdal
+RUN export C_INCLUDE_PATH=/usr/include/gdal
 
 # Define environment variables
 ENV CKAN_HOME /usr/lib/ckan
@@ -71,6 +78,7 @@ RUN ckan-pip install -U pip && \
 RUN ckan-pip install factory_boy
 RUN ckan-pip install mock
 RUN ckan-pip install urllib3
+RUN ckan-pip install --global-option=build_ext --global-option="-I/usr/include/gdal" GDAL==2.1.0
 
 # for debugging
 RUN ckan-pip install flask_debugtoolbar
@@ -88,6 +96,7 @@ COPY ./contrib/docker/src/ckanext-composite $CKAN_VENV/src/ckanext-composite
 COPY ./contrib/docker/src/ckanext-repeating $CKAN_VENV/src/ckanext-repeating
 COPY ./contrib/docker/src/ckanext-fluent $CKAN_VENV/src/ckanext-fluent
 COPY ./contrib/docker/src/ckanext-package_converter $CKAN_VENV/src/ckanext-package_converter
+COPY ./contrib/docker/src/ckanext-googleanalyticsbasic $CKAN_VENV/src/ckanext-googleanalyticsbasic
 COPY ./contrib/docker/src/hakai-schema/hakai_schema.json $CKAN_VENV/src/ckanext-scheming/ckanext/scheming/hakai_schema.json
 # COPY ./contrib/docker/src/hakai-schema/organization.json $CKAN_VENV/src/ckanext-scheming/ckanext/scheming/organization.json
 RUN  chown -R ckan:ckan $CKAN_HOME $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH
@@ -119,6 +128,8 @@ RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-fl
 RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src && ckan-pip install -r ckanext-package_converter/requirements.txt"
 RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src && ckan-pip install -r ckanext-package_converter/dev-requirements.txt"
 RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-package_converter && python setup.py install && python setup.py develop"
+
+RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-googleanalyticsbasic && python setup.py install && python setup.py develop"
 
 RUN  chown -R ckan:ckan $CKAN_HOME $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH
 
