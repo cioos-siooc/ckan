@@ -139,8 +139,8 @@ EXPOSE 5000
 
 RUN apt-get update && apt-get -y install apache2 libapache2-mod-wsgi libapache2-mod-rpaf
 
-COPY ./apache.conf /etc/apache2/sites-available/
-COPY ./apache.wsgi /etc/ckan/
+COPY ./contrib/docker/apache.conf /etc/apache2/sites-available/
+COPY ./contrib/docker/apache.wsgi /etc/ckan/
 
 RUN a2ensite apache && a2dissite 000-default
 
