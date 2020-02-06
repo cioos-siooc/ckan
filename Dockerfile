@@ -135,7 +135,13 @@ RUN  chown -R ckan:ckan $CKAN_HOME $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH
 
 ENTRYPOINT ["/ckan-entrypoint.sh"]
 
-USER ckan
 EXPOSE 5000
 
-CMD ["ckan-paster","serve","/etc/ckan/production.ini"]
+RUN apt-get update && apt-get -y install apache2 libapache2-mod-wsgi libapache2-mod-rpaf
+
+COPY ./apache.conf /etc/apache2/sites-available/
+COPY ./apache.wsgi /etc/ckan/
+
+RUN a2ensite apache && a2dissite 000-default
+
+CMD apachectl -D FOREGROUND
