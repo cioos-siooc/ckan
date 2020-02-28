@@ -898,8 +898,8 @@ nano .env
 
 Change folder permissions on ckan log folder so ckan can write to it.
 sudo mkdir /var/log/ckan
-sudo chmod 770  /var/log/ckan
-sudo chown root:900 /var/log/ckan
+sudo chmod -R 770  /var/log/ckan
+sudo chown -R root:900 /var/log/ckan
 
 If updating an exsiting ckan instance you will need to copy the new entrypoint file into the ckan container. We set owner and permissions using tar stream
 ```bash
@@ -917,7 +917,7 @@ sudo docker-compose up -d --force-recreate ckan
 ```
 
 ### Setup fail2ban on host
-Please contact Matt or Jacob for instructions 
+see [how to protect ssh with fail2ban on centos 7](https://www.digitalocean.com/community/tutorials/how-to-protect-ssh-with-fail2ban-on-centos-7) to get started. You will want to create custom ruls for ckan and possible wordpress depending on how your site is configured.
 
 ### add dhcp entries to docker container
 edit docker-compose.xml
