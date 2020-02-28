@@ -844,14 +844,12 @@ cd ~/ckan/contrib/docker
 nano .env
 ```
 
-Edit jail.local and update ckan log path and file name. file is stored locally and not shared in this repo
-
 Change folder permissions on ckan log folder so ckan can write to it.
 sudo mkdir /var/log/ckan
 sudo chmod 770  /var/log/ckan
 sudo chown root:900 /var/log/ckan
 
-If updating and exsiting ckan instance you will need to copy the new entrypoint file into the ckan container. We set owner and permissions using tar stream
+If updating an exsiting ckan instance you will need to copy the new entrypoint file into the ckan container. We set owner and permissions using tar stream
 ```bash
 tar -cf - ckan-entrypoint.sh --mode u=rwx,g=rx,o=rx --owner root --group root | sudo docker cp - ckan:/
 ```
@@ -865,3 +863,6 @@ If ckan does not start becouse of failed permissions you can reset the container
 ```bash
 sudo docker-compose up -d --force-recreate ckan
 ```
+
+### Setup fail2ban on host
+Please contact Matt or Jacob for instructions 
