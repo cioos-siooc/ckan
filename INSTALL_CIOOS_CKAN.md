@@ -97,6 +97,24 @@ Create ckan admin user
 sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckan sysadmin -c /etc/ckan/production.ini add admin
 ```
 
+#### Update shared secrets and app uuid
+In production.ini, update beaker.session.secret and app_instance_uuid values. These values are generate by the make-config paster command.
+
+```bash
+export VOL_CKAN_HOME=`sudo docker volume inspect docker_ckan_home | jq -r -c '.[] | .Mountpoint'`
+cd ~/ckan/contrib/docker/
+sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckan make-config ckan ./temp.ini
+
+sudo grep 'beaker.session.secret' $VOL_CKAN_HOME/venv/src/production.ini
+sudo grep 'app_instance_uuid' $VOL_CKAN_HOME/venv/src/production.ini
+```
+then update the corosponing lines in production.init
+
+```bash
+sudo nano $VOL_CKAN_HOME/venv/src/production.ini
+```
+
+
 #### Configure admin settings
 
 in the admin page of ckan set style to default and homepage to CIOOS to get the full affect of the cioos_theme extension
@@ -814,4 +832,36 @@ Copy to volume
 ```bash
 cd ~/ckan/contrib/docker
 sudo cp -r src/ckanext-cioos_theme/ $VOL_CKAN_HOME/venv/src/
+```
+
+
+### Export Logs from CKAN
+Exporting logs from CKAN allows fail2ban to monitor CKAN and prevent bruteforce attacks.
+
+Edit .env file and update CKAN_LOG_PATH. Path must not have a trailing slash. The path will point to a directory which will be mounted into the CKAN container. Here we assume the path is `/var/log/ckan`
+```bash
+cd ~/ckan/contrib/docker
+nano .env
+```
+
+Edit jail.local and update ckan log path and file name. file is stored locally and not shared in this repo
+
+Change folder permissions on ckan log folder so ckan can write to it.
+sudo mkdir /var/log/ckan
+sudo chmod 770  /var/log/ckan
+sudo chown root:900 /var/log/ckan
+
+If updating and exsiting ckan instance you will need to copy the new entrypoint file into the ckan container. We set owner and permissions using tar stream
+```bash
+tar -cf - ckan-entrypoint.sh --mode u=rwx,g=rx,o=rx --owner root --group root | sudo docker cp - ckan:/
+```
+
+Then restart CKAN
+```bash
+sudo docker-compose restart ckan
+```
+
+If ckan does not start becouse of failed permissions you can reset the container by forcing it to recreate.
+```bash
+sudo docker-compose up -d --force-recreate ckan
 ```
