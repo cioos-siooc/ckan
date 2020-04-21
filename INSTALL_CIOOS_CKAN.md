@@ -59,7 +59,7 @@ cp production_non_root_url.ini production.ini
 cp who_non_root_url.ini who.ini
 ```
 
-copy pyCSW config file and update the database password. This is the same password enetered in your .env file
+copy pyCSW config file and update the database password. This is the same password entered in your .env file
 
 ```bash
 cd ~/ckan/contrib/docker/pycsw
@@ -99,7 +99,7 @@ sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckan sysadmin -c /
 
 #### Configure admin settings
 
-in the admin page of ckan set style to default and homepage to CIOOS to get the full affect of the cioos_theme extention
+in the admin page of ckan set style to default and homepage to CIOOS to get the full affect of the cioos_theme extension
 
 ---
 
@@ -233,19 +233,18 @@ The settings for harvesters are fairly straightforward. The one exception is the
     "h_object_id": "{harvest_object_id}"
   },
   "clean_tags": true,
-  "remote_groups": "create",
-  "remote_orgs": "create",
   "use_default_schema": true,
   "force_package_type": "dataset",
   "groups_filter_include": ["cioos"],
   "spatial_crs": "4326",
+  "spatial_filter_file": "./cioos-siooc-schema/pacific_RA.wkt",
   "spatial_filter": "POLYGON((-128.17701209 51.62096599, -127.92157996 51.62096599, -127.92157996 51.73507366, -128.17701209 51.73507366, -128.17701209 51.62096599))"
 }
 ```
-Note that `use_default_schema` and `force_package_type` are not needed and will cause validation errors if harvesting between two ckans using the same custom schema (the CIOOS setup)
+Note that `use_default_schema` and `force_package_type` are not needed and will cause validation errors if harvesting between two ckans using the same custom schema (the CIOOS setup). `spatial_filter_file`, if set, will take presidents over `spatial_filter`. Thus in the above example the `spatial_filter` paramiter will be ignored in favour of loading the spatial filter from an external file
 
 ### reindex Harvesters
-it may become nesisary to reindex harvesters, especially if they no longer report the correct number of harveted datasets. If modifying the harvester config you will also need to reindex to make the new config take affect
+it may become necessary to reindex harvesters, especially if they no longer report the correct number of harvested datasets. If modifying the harvester config you will also need to reindex to make the new config take affect
 
 ```bash
 sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckanext-harvest harvester reindex --config=/etc/ckan/production.ini
@@ -257,7 +256,7 @@ sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckanext-harvest ha
 create pycsw database in existing pg container and install postgis
 
 ```bash
-sudo docker exec -i db psql -U ckan
+sudo docker exec -it db psql -U ckan
 CREATE DATABASE pycsw OWNER ckan ENCODING 'utf-8';
 \c pycsw
 CREATE EXTENSION postgis;
@@ -353,6 +352,9 @@ add the following to your sites configs
 		<location /ckan>
   	    ProxyPass http://localhost:5000/
   	    ProxyPassReverse http://localhost:5000/
+        # enable deflate
+        SetOutputFilter DEFLATE
+        SetEnvIfNoCase Request_URI "\.(?:gif|jpe?g|png)$" no-gzip
    	</location>
 
     # pycsw
@@ -399,6 +401,19 @@ Restart apache
   sudo apachectl restart
 ```
 
+# Enable Compression in Apache
+ubuntu https://rietta.com/blog/moddeflate-dramatic-website-speed/
+centos7 https://www.digitalocean.com/community/tutorials/how-to-install-and-configure-mod_deflate-on-centos-7
+Enable mod_deflate in your Apache2 installation
+
+```bash
+sudo a2enmod deflate
+```
+
+Restart apache
+```bash
+  sudo apachectl restart
+```
 
 # Customize interface
 Now that you have ckan running you can customize the interface via the admin config page. Go to http://localhost:5000/ckan-admin/config and configure some of the site options.
@@ -408,30 +423,81 @@ Now that you have ckan running you can customize the interface via the admin con
 - Custom CSS can be used to change the colour pallet of the site as well as any of the other css items. An example css that sets the colour pallet is:
 
 ```CSS
-.box, .wrapper {
-    border: 1px solid #006e90;
-    border-width: 0 0 0 4px;
+#header-container #header .header-links>ul>li a:hover {
+  color: #ffc857;
+  background: #FFF
+}
+#header-container #header .header-links>ul>li.current-menu-item>a span {
+  color: #ffc857;
+}
+
+#header-container #header .menu>li>a::after {
+  background: #006e90;
+}
+
+#header-container #header #header-links .sub-menu {
+  box-shadow: #115172 0 -4px 0 0px, rgba(0, 0, 0, 0.15) 1px 1px 2px 0;
+}
+
+#main-nav-check:checked~.mobile-nav ul.menu ul.subshow li a {
+    line-height: 2.5em;
+    border-width: 1px 0 0 0;
+    transition: all .2s ease;
+    height: auto;
+    width: 100%
+  }
+
+#header-container #header .header-links>ul>li a {
+    color: #58595b;
+}
+
+.homepage .box,
+.homepage .wrapper {
+  border: 1px solid #006e90;
+  border-width: 0 0 0 4px;
 }
 
 #topmenu {
-    background: #006e90;
+  background: #006e90;
 }
 
-.account-masthead{
+.account-masthead {
   background-image: none;
   background: #006e90;
 }
 
-#footer{
+#footer {
   background: #006e90;
 }
 
-
-#footer a {
-  color: rgb(255,255,255,.5);
-}
 .account-masthead .account ul li a {
-  color: rgb(255,255,255,.5);
+  color: rgb(255, 255, 255, .5);
+}
+
+.search-form .search-input-group button:hover i {
+  color: #000000;
+}
+
+.toggle-menu label,
+.mobile-nav {
+  background: #006e90;
+}
+
+.mobile-nav ul.menu ul.sub-menu li {
+  background: #00648c;
+}
+
+.mobile-nav ul.menu ul.shareicons {
+  background: #006e90;
+}
+
+.mobile-nav ul.menu li a,
+#main-nav-check:checked~.mobile-nav ul.menu li a {
+  border-color: #187794;
+}
+
+#header-container #header .menu>li>a::after {
+background:rgb(185, 214, 242);
 }
 ```
 
@@ -489,6 +555,11 @@ update ckan/contrib/docker/production.ini
 ```bash
   export VOL_CKAN_CONFIG=`sudo docker volume inspect docker_ckan_config | jq -r -c '.[] | .Mountpoint'`
   sudo nano $VOL_CKAN_CONFIG/production.ini
+```
+
+on windows edit the production.ini file and copy it to the volume
+```bash
+  docker cp production.ini ckan:/etc/ckan/
 ```
 
 Is ckan running? Check container is running and view logs
@@ -553,7 +624,7 @@ sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckanext-harvest ha
 
 This can be caused by ckan not having permissions to write to the internal storage of the ckan container. This should be setup during the build process. You can debug this by setting debug = true in the production.ini file. No error messages will be reported in the ckan logs for this issue without turning on debug.
 
-To fix chage the owner of the ckan storage folder and its children
+To fix change the owner of the ckan storage folder and its children
 
 ```bash
   sudo docker exec -u root -it ckan /bin/bash -c "export TERM=xterm; exec bash"
@@ -569,14 +640,14 @@ for a solution.
 
 #### Saving the admin config via the gui causes an internal server errors
 
-To diagnose issue turn on debuging in the production.ini file ad restart ckan. The problem is likely caused by file permissions or a missing upload directory. Change file permissions using chown or create folderas as needed. Exact paths will be reported in ckan error log.
+To diagnose issue turn on debugging in the production.ini file ad restart ckan. The problem is likely caused by file permissions or a missing upload directory. Change file permissions using chown or create folder as as needed. Exact paths will be reported in ckan error log.
 
 - view ckan error log: `docker-compose logs -f --tail 100 ckan`
 - create upload folder: `sudo mkdir $VOL_CKAN_STIRAGE/storage/upload`
 - change file permissions: `sudo chown 900:900 -R $VOL_CKAN_HOME $VOL_CKAN_STORAGE`
 
 ### if while starting ckan you get the error "from osgeo import ogr ImportError: No module named osgeo"
-This issue also applys to "ImportError: No module named urllib3.contrib" errors or any python module which you know is installed but is not found when starting ckan
+This issue also applies to "ImportError: No module named urllib3.contrib" errors or any python module which you know is installed but is not found when starting ckan
 
 You have re-build ckan after upgrading to a version that uses glad and ogr but have not recreated the docker_ckan_home volume. Delete the volume and restart ckan.
 
@@ -620,7 +691,7 @@ sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckan search-index 
 ```
 
 # Update CKAN
-If you need to update CKAN to a new version you can either remove the docker_ckan_home volume or update the volume with the new ckan core files. After which you need to rebuild the CKAN image and any docker containers based on that image. If you are working with a live / production system the prefered method is to update the volume and rebuild which will result in the least amount of down time.
+If you need to update CKAN to a new version you can either remove the docker_ckan_home volume or update the volume with the new ckan core files. After which you need to rebuild the CKAN image and any docker containers based on that image. If you are working with a live / production system the preferred method is to update the volume and rebuild which will result in the least amount of down time.
 
 update local repo
 ```bash
@@ -688,6 +759,7 @@ copy updated extension code to the volumes
 ```bash
 cd ~/ckan/contrib/docker
 sudo cp -r src/ckanext-cioos_theme/ $VOL_CKAN_HOME/venv/src/
+sudo cp -R src/ckanext-googleanalyticsbasic $VOL_CKAN_HOME/venv/src/
 sudo cp -r src/ckanext-cioos_harvest/ $VOL_CKAN_HOME/venv/src/
 sudo cp -r src/ckanext-harvest/ $VOL_CKAN_HOME/venv/src/
 sudo cp -r src/ckanext-spatial/ $VOL_CKAN_HOME/venv/src/
@@ -728,7 +800,7 @@ sudo chown 900:900 -R $VOL_CKAN_HOME/venv/src/
 or on windows run the command directly in the ckan container
 
 ```bash
-docker exec -it ckan chown 900:900 -R $CKAN_HOME
+docker exec -u root -it ckan chown 900:900 -R /usr/lib/ckan
 ```
 
 restart the container affected by the change. If changing html files you may not need to restart anything
@@ -737,6 +809,32 @@ restart the container affected by the change. If changing html files you may not
 cd ~/ckan/contrib/docker
 sudo docker-compose restart ckan
 sudo docker-compose restart ckan_run_harvester ckan_fetch_harvester ckan_gather_harvester
+```
+
+# Other helpfull commands
+
+### update a system file in a running container
+The easiest way is with the docker copy command. For example to update the crontab of the ckan_run_harvester containers you first copy the file to the container:
+
+```base
+cd ~/ckan/contrib/docker
+sudo docker cp ./crontab ckan_run_harvester:/etc/cron.d/crontab
+```
+
+Then update the crontab in the container by connecting to it's bash shell and running the crontab commands
+
+```base
+sudo docker exec -u root -it ckan_run_harvester /bin/bash -c "export TERM=xterm; exec bash"
+chown root:root /etc/cron.d/crontab
+chmod 0644 /etc/cron.d/crontab
+/usr/bin/crontab /etc/cron.d/crontab
+exit
+```
+
+In this example the entrypoint file for this container also copies the file over from the volume so you should update the file in the volume as well so that when the container is restarted the correct file contents is used.
+```base
+cd ~/ckan/contrib/docker
+sudo cp -r ./crontab $VOL_CKAN_HOME/venv/src/ckan/contrib/docker/crontab
 ```
 
 ### Set timezone
@@ -748,5 +846,24 @@ sudo timedatectl set-timezone UTC
 sudo timedatectl set-timezone America/Vancouver
 
 
-
+### flush email notifications
 sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckan post -c /etc/ckan/production.ini /api/action/send_email_notifications
+
+### get public ip of server
+```bash
+curl ifconfig.me
+```
+
+### update language translation files
+
+Build translation file
+```bash
+cd ~/ckan/contrib/docker/src/ckanext-cioos_theme
+python setup.py compile_catalog --locale fr
+```
+
+Copy to volume
+```bash
+cd ~/ckan/contrib/docker
+sudo cp -r src/ckanext-cioos_theme/ $VOL_CKAN_HOME/venv/src/
+```
