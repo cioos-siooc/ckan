@@ -24,7 +24,7 @@ sudo docker-compose --version
 #### Download CKAN git repo and submodules
 
 ```bash
-git clone -b cioos https://github.com/cioos-siooc/ckan.git
+git clone -b hakai_master https://github.com/HakaiInstitute/ckan.git
 cd ckan
 git checkout cioos
 git submodule init
