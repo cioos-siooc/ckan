@@ -98,6 +98,7 @@ COPY ./contrib/docker/src/ckanext-fluent $CKAN_VENV/src/ckanext-fluent
 COPY ./contrib/docker/src/ckanext-package_converter $CKAN_VENV/src/ckanext-package_converter
 COPY ./contrib/docker/src/ckanext-googleanalyticsbasic $CKAN_VENV/src/ckanext-googleanalyticsbasic
 COPY ./contrib/docker/src/ckanext-dcat $CKAN_VENV/src/ckanext-dcat
+COPY ./contrib/docker/src/ckanext-geoview $CKAN_VENV/src/ckanext-geoview
 COPY ./contrib/docker/src/cioos-siooc-schema/cioos-siooc_schema.json $CKAN_VENV/src/ckanext-scheming/ckanext/scheming/cioos_siooc_schema.json
 COPY ./contrib/docker/src/cioos-siooc-schema/organization.json $CKAN_VENV/src/ckanext-scheming/ckanext/scheming/organization.json
 RUN  chown -R ckan:ckan $CKAN_HOME $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH
@@ -133,7 +134,10 @@ RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-pa
 RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-googleanalyticsbasic && python setup.py install && python setup.py develop"
 
 RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src && ckan-pip install -r ckanext-dcat/requirements.txt"
-RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-dcat && python setup.py install&& python setup.py develop"
+RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-dcat && python setup.py install && python setup.py develop"
+
+RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src && ckan-pip install -r ckanext-geoview/pip-requirements.txt"
+RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-geoview && python setup.py install && python setup.py develop"
 
 RUN  chown -R ckan:ckan $CKAN_HOME $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH
 
