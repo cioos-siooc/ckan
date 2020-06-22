@@ -43,3 +43,6 @@
 [submodule "contrib/docker/src/ckanext-dcat"]
 	path = contrib/docker/src/ckanext-dcat
 	url = https://github.com/ckan/ckanext-dcat.git
+[submodule "contrib/docker/src/ckanext-hierarchy"]
+	path = contrib/docker/src/ckanext-hierarchy
+	url = https://github.com/ckan/ckanext-hierarchy.git
