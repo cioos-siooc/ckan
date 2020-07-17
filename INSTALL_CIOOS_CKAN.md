@@ -767,9 +767,10 @@ sudo cp -r src/pycsw/ $VOL_CKAN_HOME/venv/src/
 sudo cp -r src/ckanext-scheming/ $VOL_CKAN_HOME/venv/src/
 sudo cp -r src/ckanext-repeating/ $VOL_CKAN_HOME/venv/src/
 sudo cp -r src/ckanext-composite/ $VOL_CKAN_HOME/venv/src/
-sudo cp -r src/ckanext-package_converter/ $VOL_CKAN_HOME/venv/src/
+# sudo cp -r src/ckanext-package_converter/ $VOL_CKAN_HOME/venv/src/
 sudo cp -r src/ckanext-fluent/ $VOL_CKAN_HOME/venv/src/
 sudo cp -r src/ckanext-dcat/ $VOL_CKAN_HOME/venv/src/
+sudo cp -r src/pygeometa/ $VOL_CKAN_HOME/venv/src/
 sudo cp src/cioos-siooc-schema/cioos-siooc_schema.json $VOL_CKAN_HOME/venv/src/ckanext-scheming/ckanext/scheming/cioos_siooc_schema.json
 sudo cp src/cioos-siooc-schema/organization.json $VOL_CKAN_HOME/venv/src/ckanext-scheming/ckanext/scheming/organization.json
 sudo cp src/cioos-siooc-schema/ckan_license.json $VOL_CKAN_HOME/venv/src/ckan/contrib/docker/src/cioos-siooc-schema/ckan_license.json
@@ -780,6 +781,7 @@ Exporting volumes on windows does not work so another option for copying files t
 ```bash
 cd ~/ckan/contrib/docker
 docker cp -r src/ckanext-cioos_theme/ ckan:/usr/lib/ckan/venv/src/
+docker cp -R src/ckanext-googleanalyticsbasic ckan:/usr/lib/ckan/venv/src/
 docker cp -r src/ckanext-cioos_harvest/ ckan:/usr/lib/ckan/venv/src/
 docker cp -r src/ckanext-harvest/ ckan:/usr/lib/ckan/venv/src/
 docker cp -r src/ckanext-spatial/ ckan:/usr/lib/ckan/venv/src/
@@ -787,10 +789,13 @@ docker cp -r src/pycsw/ ckan:/usr/lib/ckan/venv/src/
 docker cp -r src/ckanext-scheming/ ckan:/usr/lib/ckan/venv/src/
 docker cp -r src/ckanext-repeating/ ckan:/usr/lib/ckan/venv/src/
 docker cp -r src/ckanext-composite/ ckan:/usr/lib/ckan/venv/src/
-docker cp -r src/ckanext-package_converter/ ckan:/usr/lib/ckan/venv/src/
+# docker cp -r src/ckanext-package_converter/ ckan:/usr/lib/ckan/venv/src/
 docker cp -r src/ckanext-fluent/ ckan:/usr/lib/ckan/venv/src/
+docker cp -r src/ckanext-dcat/ ckan:/usr/lib/ckan/venv/src/
+docker cp -r src/pygeometa/ ckan:/usr/lib/ckan/venv/src/
 docker cp src/cioos-siooc-schema/cioos-siooc_schema.json ckan:/usr/lib/ckan/venv/src/ckanext-scheming/ckanext/scheming/cioos_siooc_schema.json
 docker cp src/cioos-siooc-schema/organization.json ckan:/usr/lib/ckan/venv/src/ckanext-scheming/ckanext/scheming/organization.json
+docker cp src/cioos-siooc-schema/ckan_license.json ckan:/usr/lib/ckan/venv/src/ckan/contrib/docker/src/cioos-siooc-schema/ckan_license.json
 ```
 
 update permissions (optional)

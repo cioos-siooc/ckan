@@ -43,3 +43,9 @@
 [submodule "contrib/docker/src/ckanext-dcat"]
 	path = contrib/docker/src/ckanext-dcat
 	url = https://github.com/ckan/ckanext-dcat.git
+[submodule "contrib/docker/src/pygeometa"]
+	path = contrib/docker/src/pygeometa
+	url = https://github.com/geopython/pygeometa.git
+[submodule "contrib/docker/src/metadata-xml"]
+	path = contrib/docker/src/metadata-xml
+	url = https://github.com/cioos-siooc/metadata-xml.git
