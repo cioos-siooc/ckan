@@ -767,7 +767,6 @@ sudo cp -r src/pycsw/ $VOL_CKAN_HOME/venv/src/
 sudo cp -r src/ckanext-scheming/ $VOL_CKAN_HOME/venv/src/
 sudo cp -r src/ckanext-repeating/ $VOL_CKAN_HOME/venv/src/
 sudo cp -r src/ckanext-composite/ $VOL_CKAN_HOME/venv/src/
-sudo cp -r src/ckanext-package_converter/ $VOL_CKAN_HOME/venv/src/
 sudo cp -r src/ckanext-fluent/ $VOL_CKAN_HOME/venv/src/
 sudo cp -r src/ckanext-dcat/ $VOL_CKAN_HOME/venv/src/
 sudo cp src/cioos-siooc-schema/cioos-siooc_schema.json $VOL_CKAN_HOME/venv/src/ckanext-scheming/ckanext/scheming/cioos_siooc_schema.json
@@ -787,7 +786,6 @@ docker cp -r src/pycsw/ ckan:/usr/lib/ckan/venv/src/
 docker cp -r src/ckanext-scheming/ ckan:/usr/lib/ckan/venv/src/
 docker cp -r src/ckanext-repeating/ ckan:/usr/lib/ckan/venv/src/
 docker cp -r src/ckanext-composite/ ckan:/usr/lib/ckan/venv/src/
-docker cp -r src/ckanext-package_converter/ ckan:/usr/lib/ckan/venv/src/
 docker cp -r src/ckanext-fluent/ ckan:/usr/lib/ckan/venv/src/
 docker cp src/cioos-siooc-schema/cioos-siooc_schema.json ckan:/usr/lib/ckan/venv/src/ckanext-scheming/ckanext/scheming/cioos_siooc_schema.json
 docker cp src/cioos-siooc-schema/organization.json ckan:/usr/lib/ckan/venv/src/ckanext-scheming/ckanext/scheming/organization.json
