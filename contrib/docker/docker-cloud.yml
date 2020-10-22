@@ -26,7 +26,7 @@ x-ckan: &ckan_app
     #- TZ=Canada/Vancouver
   #restart: always
   volumes:
-    - "/etc/localtime:/etc/localtime:ro"
+    - "/etc/localtime:/etc/localtime:ro" # remove and use TZ setting if running on windows
     - ckan_config:/etc/ckan
     - ckan_home:/usr/lib/ckan
     - ckan_storage:/var/lib/ckan
@@ -84,12 +84,12 @@ services:
        - ckan_gather_harvester
        - ckan_fetch_harvester
 
-  # datapusher:
-  #   container_name: datapusher
-  #   image: clementmouchet/datapusher
-  #   #restart: always
-  #   ports:
-  #     - "8800:8800"
+  datapusher:
+    container_name: datapusher
+    image: clementmouchet/datapusher
+    #restart: always
+    ports:
+      - "8800:8800"
 
   db:
     container_name: db
@@ -99,9 +99,10 @@ services:
     environment:
       - DS_RO_PASS=${DATASTORE_READONLY_PASSWORD}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      #- TZ=Canada/Vancouver
     #restart: always
     volumes:
-      - "/etc/localtime:/etc/localtime:ro"
+      - "/etc/localtime:/etc/localtime:ro" # remove and use TZ setting if running on windows
       - pg_data:/var/lib/postgresql/data
 
   solr:
