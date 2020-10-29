@@ -917,7 +917,9 @@ sudo docker-compose up -d --force-recreate ckan
 ```
 
 ### Setup fail2ban on host
-see [how to protect ssh with fail2ban on centos 7](https://www.digitalocean.com/community/tutorials/how-to-protect-ssh-with-fail2ban-on-centos-7) to get started. You will want to create custom ruls for ckan and possible wordpress depending on how your site is configured.
+see [how to protect ssh with fail2ban on centos 7](https://www.digitalocean.com/community/tutorials/how-to-protect-ssh-with-fail2ban-on-centos-7) 
+to get started. You will want to create custom ruls for ckan and 
+possible wordpress depending on how your site is configured.
 
 ### add dhcp entries to docker container
 edit docker-compose.xml
