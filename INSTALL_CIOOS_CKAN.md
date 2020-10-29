@@ -767,8 +767,8 @@ sudo cp -r src/pycsw/ $VOL_CKAN_HOME/venv/src/
 sudo cp -r src/ckanext-scheming/ $VOL_CKAN_HOME/venv/src/
 sudo cp -r src/ckanext-repeating/ $VOL_CKAN_HOME/venv/src/
 sudo cp -r src/ckanext-composite/ $VOL_CKAN_HOME/venv/src/
-sudo cp -r src/ckanext-package_converter/ $VOL_CKAN_HOME/venv/src/
 sudo cp -r src/ckanext-fluent/ $VOL_CKAN_HOME/venv/src/
+sudo cp -r src/ckanext-dcat/ $VOL_CKAN_HOME/venv/src/
 sudo cp src/cioos-siooc-schema/cioos-siooc_schema.json $VOL_CKAN_HOME/venv/src/ckanext-scheming/ckanext/scheming/cioos_siooc_schema.json
 sudo cp src/cioos-siooc-schema/organization.json $VOL_CKAN_HOME/venv/src/ckanext-scheming/ckanext/scheming/organization.json
 sudo cp src/cioos-siooc-schema/ckan_license.json $VOL_CKAN_HOME/venv/src/ckan/contrib/docker/src/cioos-siooc-schema/ckan_license.json
@@ -786,7 +786,6 @@ docker cp -r src/pycsw/ ckan:/usr/lib/ckan/venv/src/
 docker cp -r src/ckanext-scheming/ ckan:/usr/lib/ckan/venv/src/
 docker cp -r src/ckanext-repeating/ ckan:/usr/lib/ckan/venv/src/
 docker cp -r src/ckanext-composite/ ckan:/usr/lib/ckan/venv/src/
-docker cp -r src/ckanext-package_converter/ ckan:/usr/lib/ckan/venv/src/
 docker cp -r src/ckanext-fluent/ ckan:/usr/lib/ckan/venv/src/
 docker cp src/cioos-siooc-schema/cioos-siooc_schema.json ckan:/usr/lib/ckan/venv/src/ckanext-scheming/ckanext/scheming/cioos_siooc_schema.json
 docker cp src/cioos-siooc-schema/organization.json ckan:/usr/lib/ckan/venv/src/ckanext-scheming/ckanext/scheming/organization.json
@@ -858,6 +857,7 @@ curl ifconfig.me
 
 Build translation file
 ```bash
+pip install babel
 cd ~/ckan/contrib/docker/src/ckanext-cioos_theme
 python setup.py compile_catalog --locale fr
 ```
@@ -867,3 +867,25 @@ Copy to volume
 cd ~/ckan/contrib/docker
 sudo cp -r src/ckanext-cioos_theme/ $VOL_CKAN_HOME/venv/src/
 ```
+
+### add dhcp entries to docker container
+edit docker-compose.xml
+```bash
+cd ~/ckan/contrib/docker
+nano docker-compose.yml
+```
+
+add extra hosts entrie to any services. In this example we add a hosts entrie
+for test.ckan.org to the ckan_gather_harvester container. this will map the
+domain name to the local docker network.
+```yml
+services:
+  ckan_gather_harvester:
+    extra_hosts:
+      - "test.ckan.org:172.17.0.1"
+```
+
+you can examine the hosts file in the container using
+```bash
+sudo docker exec -u root -it ckan_gather_harvester cat /etc/hosts
+``
