@@ -1,0 +1,11 @@
+#/contrib/docker/
+!/contrib/docker/ckan_*
+!/contrib/docker/ckan-*
+!/contrib/docker/production.ini
+!/contrib/docker/who.ini
+/.git
+/.github
+/.circleci
+/**/public/grunt
+/doc
+/INSTALL_CIOOS_CKAN.md
