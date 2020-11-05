@@ -1,5 +1,5 @@
 # See CKAN docs on installation from Docker Compose on usage
-FROM debian:stretch
+FROM debian:stretch as base
 MAINTAINER Open Knowledge
 
 # Install required system packages
@@ -62,7 +62,7 @@ ADD ./bin/ $CKAN_VENV/src/ckan/bin/
 ADD ./ckan/ $CKAN_VENV/src/ckan/ckan/
 ADD ./ckanext/ $CKAN_VENV/src/ckan/ckanext/
 ADD ./scripts/ $CKAN_VENV/src/ckan/scripts/
-ADD ./* $CKAN_VENV/src/ckan/
+COPY ./*.py ./*.txt ./*.ini ./*.rst $CKAN_VENV/src/ckan/
 ADD ./contrib/docker/production.ini $CKAN_CONFIG/production.ini
 ADD ./contrib/docker/who.ini $CKAN_VENV/src/ckan/ckan/config/who.ini
 ADD ./contrib/docker/ckan-entrypoint.sh /ckan-entrypoint.sh
@@ -104,6 +104,13 @@ RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src && ckan-pi
 COPY ./contrib/docker/src/ckanext-scheming/requirements.txt $CKAN_VENV/src/ckanext-scheming/requirements.txt
 RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src && ckan-pip install -r ckanext-scheming/requirements.txt"
 
+COPY ./contrib/docker/src/ckanext-cioos_theme/dev-requirements.txt $CKAN_VENV/src/ckanext-cioos_theme/dev-requirements.txt
+RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src && ckan-pip install -r ckanext-cioos_theme/dev-requirements.txt"
+
+from base as extensions1
+
+WORKDIR $CKAN_VENV/src
+
 # COPY ./contrib/docker/src/pycsw $CKAN_VENV/src/pycsw
 # COPY ./contrib/docker/pycsw/pycsw.cfg $CKAN_VENV/src/pycsw/default.cfg
 
@@ -113,11 +120,9 @@ RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-go
 COPY ./contrib/docker/src/ckanext-dcat $CKAN_VENV/src/ckanext-dcat
 RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-dcat && python setup.py install && python setup.py develop"
 
-COPY ./contrib/docker/src/ckanext-harvest $CKAN_VENV/src/ckanext-harvest
-RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-harvest && python setup.py install && python setup.py develop"
+from base as extensions2
 
-COPY ./contrib/docker/src/ckanext-spatial $CKAN_VENV/src/ckanext-spatial
-RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-spatial && python setup.py install && python setup.py develop"
+WORKDIR $CKAN_VENV/src
 
 COPY ./contrib/docker/src/ckanext-scheming $CKAN_VENV/src/ckanext-scheming
 RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-scheming && python setup.py install && python setup.py develop"
@@ -125,21 +130,52 @@ RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-sc
 COPY ./contrib/docker/src/ckanext-fluent $CKAN_VENV/src/ckanext-fluent
 RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-fluent && python setup.py install && python setup.py develop"
 
-COPY ./contrib/docker/src/ckanext-composite $CKAN_VENV/src/ckanext-composite
-RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-composite && python setup.py install && python setup.py develop"
-
 COPY ./contrib/docker/src/ckanext-repeating $CKAN_VENV/src/ckanext-repeating
 RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-repeating && python setup.py install && python setup.py develop"
 
+COPY ./contrib/docker/src/ckanext-composite $CKAN_VENV/src/ckanext-composite
+RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-composite && python setup.py install && python setup.py develop"
+
+COPY ./contrib/docker/src/cioos-siooc-schema/cioos-siooc_schema.json ./contrib/docker/src/cioos-siooc-schema/organization.json ./contrib/docker/src/cioos-siooc-schema/ckan_license.json $CKAN_VENV/src/ckanext-scheming/ckanext/scheming/
+
+from base as harvest_extensions
+
+WORKDIR $CKAN_VENV/src
+
+COPY ./contrib/docker/src/ckanext-harvest $CKAN_VENV/src/ckanext-harvest
+RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-harvest && python setup.py install && python setup.py develop"
+
+COPY ./contrib/docker/src/ckanext-spatial $CKAN_VENV/src/ckanext-spatial
+RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-spatial && python setup.py install && python setup.py develop"
+
+
+from base as cioos_extensions
+
+WORKDIR $CKAN_VENV/src
 COPY ./contrib/docker/src/ckanext-cioos_harvest $CKAN_VENV/src/ckanext-cioos_harvest
 RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-cioos_harvest && python setup.py install && python setup.py develop"
 
 COPY ./contrib/docker/src/ckanext-cioos_theme $CKAN_VENV/src/ckanext-cioos_theme
 RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-cioos_theme && python setup.py compile_catalog -f && python setup.py install && python setup.py develop"
 
-COPY ./contrib/docker/src/cioos-siooc-schema/cioos-siooc_schema.json $CKAN_VENV/src/ckanext-scheming/ckanext/scheming/cioos_siooc_schema.json
-COPY ./contrib/docker/src/cioos-siooc-schema/organization.json $CKAN_VENV/src/ckanext-scheming/ckanext/scheming/organization.json
-COPY ./contrib/docker/src/cioos-siooc-schema/ckan_license.json $CKAN_VENV/src/ckanext-scheming/ckanext/scheming/ckan_license.json
+from base
+COPY --from=extensions1 $CKAN_VENV/src/ckanext* $CKAN_VENV/src/
+COPY --from=extensions1 $CKAN_VENV/lib/python2.7/site-packages/ckanext* $CKAN_VENV/lib/python2.7/site-packages/
+COPY --from=extensions1 $CKAN_VENV/lib/python2.7/site-packages/easy-install.pth $CKAN_VENV/lib/python2.7/site-packages/easy-install-A.pth
+
+COPY --from=extensions2 $CKAN_VENV/src/ckanext* $CKAN_VENV/src/
+COPY --from=extensions2 $CKAN_VENV/lib/python2.7/site-packages/ckanext* $CKAN_VENV/lib/python2.7/site-packages/
+COPY --from=extensions2 $CKAN_VENV/lib/python2.7/site-packages/easy-install.pth $CKAN_VENV/lib/python2.7/site-packages/easy-install-B.pth
+
+COPY --from=harvest_extensions $CKAN_VENV/src/ckanext* $CKAN_VENV/src/
+COPY --from=harvest_extensions $CKAN_VENV/lib/python2.7/site-packages/ckanext* $CKAN_VENV/lib/python2.7/site-packages/
+COPY --from=harvest_extensions $CKAN_VENV/lib/python2.7/site-packages/easy-install.pth $CKAN_VENV/lib/python2.7/site-packages/easy-install-C.pth
+
+COPY --from=cioos_extensions $CKAN_VENV/src/ckanext* $CKAN_VENV/src/
+COPY --from=cioos_extensions $CKAN_VENV/lib/python2.7/site-packages/ckanext* $CKAN_VENV/lib/python2.7/site-packages/
+COPY --from=cioos_extensions $CKAN_VENV/lib/python2.7/site-packages/easy-install.pth $CKAN_VENV/lib/python2.7/site-packages/easy-install-D.pth
+
+RUN /bin/bash -c "sort -u $CKAN_VENV/lib/python2.7/site-packages/easy-install-[ABCD].pth > $CKAN_VENV/lib/python2.7/site-packages/easy-install.pth"
 
 RUN  chown -R ckan:ckan $CKAN_HOME $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH
 
