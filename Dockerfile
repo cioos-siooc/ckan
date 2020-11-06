@@ -1,5 +1,7 @@
 # See CKAN docs on installation from Docker Compose on usage
+#------------------------------------------------------------------------------#
 FROM debian:stretch as base
+#------------------------------------------------------------------------------#
 MAINTAINER Open Knowledge
 
 # Install required system packages
@@ -107,8 +109,9 @@ RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src && ckan-pi
 COPY ./contrib/docker/src/ckanext-cioos_theme/dev-requirements.txt $CKAN_VENV/src/ckanext-cioos_theme/dev-requirements.txt
 RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src && ckan-pip install -r ckanext-cioos_theme/dev-requirements.txt"
 
-from base as extensions1
-
+#------------------------------------------------------------------------------#
+FROM base as extensions1
+#------------------------------------------------------------------------------#
 WORKDIR $CKAN_VENV/src
 
 # COPY ./contrib/docker/src/pycsw $CKAN_VENV/src/pycsw
@@ -120,8 +123,15 @@ RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-go
 COPY ./contrib/docker/src/ckanext-dcat $CKAN_VENV/src/ckanext-dcat
 RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-dcat && python setup.py install && python setup.py develop"
 
-from base as extensions2
+WORKDIR $CKAN_VENV/src
+RUN /bin/bash -c "rm -R ./ckan"
 
+WORKDIR $CKAN_VENV/lib/python2.7/site-packages/
+RUN /bin/bash -c "find . -maxdepth 1 ! -name 'ckanext*' ! -name '..' ! -name '.' ! -name 'easy-install.pth' | xargs rm -R; mv easy-install.pth easy-install-A.pth"
+
+#------------------------------------------------------------------------------#
+FROM base as extensions2
+#------------------------------------------------------------------------------#
 WORKDIR $CKAN_VENV/src
 
 COPY ./contrib/docker/src/ckanext-scheming $CKAN_VENV/src/ckanext-scheming
@@ -136,10 +146,18 @@ RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-re
 COPY ./contrib/docker/src/ckanext-composite $CKAN_VENV/src/ckanext-composite
 RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-composite && python setup.py install && python setup.py develop"
 
-COPY ./contrib/docker/src/cioos-siooc-schema/cioos-siooc_schema.json ./contrib/docker/src/cioos-siooc-schema/organization.json ./contrib/docker/src/cioos-siooc-schema/ckan_license.json $CKAN_VENV/src/ckanext-scheming/ckanext/scheming/
+COPY ./contrib/docker/src/cioos-siooc-schema/cioos-siooc_schema.json  $CKAN_VENV/src/ckanext-scheming/ckanext/scheming/cioos_siooc_schema.json
+COPY ./contrib/docker/src/cioos-siooc-schema/organization.json ./contrib/docker/src/cioos-siooc-schema/ckan_license.json $CKAN_VENV/src/ckanext-scheming/ckanext/scheming/
 
-from base as harvest_extensions
+WORKDIR $CKAN_VENV/src
+RUN /bin/bash -c "rm -R ./ckan"
 
+WORKDIR $CKAN_VENV/lib/python2.7/site-packages/
+RUN /bin/bash -c "find . -maxdepth 1 ! -name 'ckanext*' ! -name '..' ! -name '.' ! -name 'easy-install.pth' | xargs rm -R; mv easy-install.pth easy-install-B.pth"
+
+#------------------------------------------------------------------------------#
+FROM base as harvest_extensions
+#------------------------------------------------------------------------------#
 WORKDIR $CKAN_VENV/src
 
 COPY ./contrib/docker/src/ckanext-harvest $CKAN_VENV/src/ckanext-harvest
@@ -148,9 +166,15 @@ RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-ha
 COPY ./contrib/docker/src/ckanext-spatial $CKAN_VENV/src/ckanext-spatial
 RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-spatial && python setup.py install && python setup.py develop"
 
+WORKDIR $CKAN_VENV/src
+RUN /bin/bash -c "rm -R ./ckan"
 
-from base as cioos_extensions
+WORKDIR $CKAN_VENV/lib/python2.7/site-packages/
+RUN /bin/bash -c "find . -maxdepth 1 ! -name 'ckanext*' ! -name '..' ! -name '.' ! -name 'easy-install.pth' | xargs rm -R; mv easy-install.pth easy-install-C.pth"
 
+#------------------------------------------------------------------------------#
+FROM base as cioos_extensions
+#------------------------------------------------------------------------------#
 WORKDIR $CKAN_VENV/src
 COPY ./contrib/docker/src/ckanext-cioos_harvest $CKAN_VENV/src/ckanext-cioos_harvest
 RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-cioos_harvest && python setup.py install && python setup.py develop"
@@ -158,22 +182,26 @@ RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-ci
 COPY ./contrib/docker/src/ckanext-cioos_theme $CKAN_VENV/src/ckanext-cioos_theme
 RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-cioos_theme && python setup.py compile_catalog -f && python setup.py install && python setup.py develop"
 
-from base
-COPY --from=extensions1 $CKAN_VENV/src/ckanext* $CKAN_VENV/src/
-COPY --from=extensions1 $CKAN_VENV/lib/python2.7/site-packages/ckanext* $CKAN_VENV/lib/python2.7/site-packages/
-COPY --from=extensions1 $CKAN_VENV/lib/python2.7/site-packages/easy-install.pth $CKAN_VENV/lib/python2.7/site-packages/easy-install-A.pth
+WORKDIR $CKAN_VENV/src
+RUN /bin/bash -c "rm -R ./ckan"
 
-COPY --from=extensions2 $CKAN_VENV/src/ckanext* $CKAN_VENV/src/
-COPY --from=extensions2 $CKAN_VENV/lib/python2.7/site-packages/ckanext* $CKAN_VENV/lib/python2.7/site-packages/
-COPY --from=extensions2 $CKAN_VENV/lib/python2.7/site-packages/easy-install.pth $CKAN_VENV/lib/python2.7/site-packages/easy-install-B.pth
+WORKDIR $CKAN_VENV/lib/python2.7/site-packages/
+RUN /bin/bash -c "find . -maxdepth 1 ! -name 'ckanext*' ! -name '..' ! -name '.' ! -name 'easy-install.pth' | xargs rm -R; mv easy-install.pth easy-install-D.pth"
 
-COPY --from=harvest_extensions $CKAN_VENV/src/ckanext* $CKAN_VENV/src/
-COPY --from=harvest_extensions $CKAN_VENV/lib/python2.7/site-packages/ckanext* $CKAN_VENV/lib/python2.7/site-packages/
-COPY --from=harvest_extensions $CKAN_VENV/lib/python2.7/site-packages/easy-install.pth $CKAN_VENV/lib/python2.7/site-packages/easy-install-C.pth
+#------------------------------------------------------------------------------#
+FROM base
+#------------------------------------------------------------------------------#
+COPY --from=extensions1 $CKAN_VENV/src/ $CKAN_VENV/src/
+COPY --from=extensions1 $CKAN_VENV/lib/python2.7/site-packages/ $CKAN_VENV/lib/python2.7/site-packages/
 
-COPY --from=cioos_extensions $CKAN_VENV/src/ckanext* $CKAN_VENV/src/
-COPY --from=cioos_extensions $CKAN_VENV/lib/python2.7/site-packages/ckanext* $CKAN_VENV/lib/python2.7/site-packages/
-COPY --from=cioos_extensions $CKAN_VENV/lib/python2.7/site-packages/easy-install.pth $CKAN_VENV/lib/python2.7/site-packages/easy-install-D.pth
+COPY --from=extensions2 $CKAN_VENV/src/ $CKAN_VENV/src/
+COPY --from=extensions2 $CKAN_VENV/lib/python2.7/site-packages/ $CKAN_VENV/lib/python2.7/site-packages/
+
+COPY --from=harvest_extensions $CKAN_VENV/src/ $CKAN_VENV/src/
+COPY --from=harvest_extensions $CKAN_VENV/lib/python2.7/site-packages/ $CKAN_VENV/lib/python2.7/site-packages/
+
+COPY --from=cioos_extensions $CKAN_VENV/src/ $CKAN_VENV/src/
+COPY --from=cioos_extensions $CKAN_VENV/lib/python2.7/site-packages/ $CKAN_VENV/lib/python2.7/site-packages/
 
 RUN /bin/bash -c "sort -u $CKAN_VENV/lib/python2.7/site-packages/easy-install-[ABCD].pth > $CKAN_VENV/lib/python2.7/site-packages/easy-install.pth"
 
