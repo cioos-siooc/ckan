@@ -33,8 +33,8 @@ jobs:
 
   build:
     if: |
-      "!(github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true)" &&
-      "!(github.event_name == 'repository_dispatch' && github.event.client_payload.action == 'closed' && github.event.client_payload.merged == true)"
+      !(github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true) &&
+      !(github.event_name == 'repository_dispatch' && github.event.client_payload.action == 'closed' && github.event.client_payload.merged == true)
     name: build ckan docker image
     runs-on: ubuntu-latest
     steps:
