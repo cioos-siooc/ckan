@@ -20,6 +20,7 @@ jobs:
       (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true) ||
       (github.event_name == 'repository_dispatch' && github.event.client_payload.action == 'closed' && github.event.client_payload.merged == true)
     name: Delete docker tag on pull request merge
+    runs-on: ubuntu-latest
     steps:
       - name: Set PR number as TAG env variable for pull requests
         if: github.event_name == 'pull_request'
