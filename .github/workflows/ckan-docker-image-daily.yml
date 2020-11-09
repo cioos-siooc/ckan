@@ -28,8 +28,7 @@ jobs:
         if: github.event_name == 'repository_dispatch'
         run: echo "TAG=$SM_NAME-PR${{ github.event.client_payload.prn }}" >> $GITHUB_ENV
 
-      - run: docker run --rm -it lumir/remove-dockerhub-tag --user ${{ secrets.DOCKER_USERNAME }} /
-      --password ${{ secrets.DOCKER_PASSWORD }} cioos/ckan:$TAG
+      - run: docker run --rm -it lumir/remove-dockerhub-tag --user ${{ secrets.DOCKER_USERNAME }} --password ${{ secrets.DOCKER_PASSWORD }} cioos/ckan:$TAG
 
   build:
     if: |
