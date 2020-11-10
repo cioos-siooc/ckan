@@ -16,6 +16,8 @@ env:
 
 jobs:
   delete_pr:
+    - name: Debug Action
+      uses: hmarr/debug-action@v1.0.0
     if: |
       (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true) ||
       (github.event_name == 'repository_dispatch' && github.event.client_payload.action == 'closed' && github.event.client_payload.merged == true)
