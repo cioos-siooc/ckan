@@ -13,11 +13,11 @@ on:
 
 env:
   submod_path: "contrib/docker/src"
-  debug_on: 1
+  debug_on: '1'
 
 jobs:
   debug:
-    if: env.debug_on == '1'
+    if: debug_on == '1'
     name: Print action debug info
     runs-on: ubuntu-latest
     steps:
