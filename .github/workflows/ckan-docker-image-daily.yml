@@ -6,6 +6,7 @@ on:
    branches: [ cioos ]
   pull_request:
     branches: [ cioos ]
+    types: [opened, synchronize, reopened, closed]
   release:
     types: [published]
   repository_dispatch:
@@ -15,12 +16,21 @@ env:
   submod_path: "contrib/docker/src"
 
 jobs:
+  debug:
+    name: Print action debug info
+    runs-on: ubuntu-latest
+    steps:
+      - name: Debug Action
+        uses: hmarr/debug-action@v1.0.0
+      - run: echo ${{github.event_name}}:${{github.event_name == 'pull_request'}}
+      - run: echo ${{github.event.action}}:${{github.event.action == 'closed'}}
+
   delete_pr:
-    if: |
-      (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true) ||
-      (github.event_name == 'repository_dispatch' && github.event.client_payload.action == 'closed' && github.event.client_payload.merged == true)
     name: Delete docker tag on pull request merge
     runs-on: ubuntu-latest
+    if: |
+      (github.event_name == 'pull_request' && github.event.action == 'closed') ||
+      (github.event_name == 'repository_dispatch' && github.event.client_payload.action == 'closed')
     steps:
       - name: Set PR number as TAG env variable for pull requests
         if: github.event_name == 'pull_request'
@@ -29,11 +39,14 @@ jobs:
         if: github.event_name == 'repository_dispatch'
         run: echo "TAG=$SM_NAME-PR${{ github.event.client_payload.prn }}" >> $GITHUB_ENV
 
-      - run: docker run --rm -it lumir/remove-dockerhub-tag --user ${{ secrets.DOCKER_USERNAME }} --password ${{ secrets.DOCKER_PASSWORD }} cioos/ckan:$TAG
+      - run: docker run --rm lumir/remove-dockerhub-tag --user ${{ secrets.DOCKER_USERNAME }} --password ${{ secrets.DOCKER_PASSWORD }} cioos/ckan:$TAG
 
   build:
     name: build ckan docker image
     runs-on: ubuntu-latest
+    if: |
+      !(github.event_name == 'pull_request' && github.event.action == 'closed') &&
+      !(github.event_name == 'repository_dispatch' && github.event.client_payload.action == 'closed')
     steps:
     - uses: actions/checkout@v2
     - if: github.event_name == 'repository_dispatch'
