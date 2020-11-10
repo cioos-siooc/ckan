@@ -32,7 +32,7 @@ jobs:
           image: cioos/ckan:latest
 
       - name: Modify TD add redis container
-        id: render-ckan-container
+        id: render-redis-container
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
           task-definition: ${{ steps.render-ckan-container.outputs.task-definition }}
