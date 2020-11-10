@@ -22,73 +22,54 @@
 # 4. Store an IAM user access key in GitHub Actions secrets named `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY`.
 #    See the documentation for each action used below for the recommended IAM policies for this IAM user,
 #    and best practices on handling the access key credentials.
+name: Deploy to Amazon ECS
 
 on:
   workflow_dispatch:
-#   release:
-#     types: [created]
-
-name: Deploy to Amazon ECS
 
 jobs:
   deploy:
     name: Deploy
     runs-on: ubuntu-latest
-
     steps:
+      - name: Render TD add db container
+        id: render-db-container
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: db
+          image: cioos/postgresql:latest
+      - name: Modify TD add solr container
+        id: render-solr-container
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: ${{ steps.render-db-container.outputs.task-definition }}
+          container-name: solr
+          image: cioos/solr:latest
 
-#     - name: Configure AWS credentials
-#       uses: aws-actions/configure-aws-credentials@v1
-#       with:
-#         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-#         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-#         aws-region: us-east-2
+      - name: Modify TD add ckan container
+        id: render-ckan-container
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: ${{ steps.render-solr-container.outputs.task-definition }}
+          container-name: ckan
+          image: cioos/ckan:latest
 
-    - name: Render TD add db container
-      id: render-db-container
-      uses: aws-actions/amazon-ecs-render-task-definition@v1
-      with:
-        task-definition: task-definition.json
-        container-name: db
-        image: cioos/postgresql:latest
-    - name: Modify TD add solr container
-      id: render-solr-container
-      uses: aws-actions/amazon-ecs-render-task-definition@v1
-      with:
-        task-definition: ${{ steps.render-db-container.outputs.task-definition }}
-        container-name: solr
-        image: cioos/solr:latest
-    
-    - name: Modify TD add ckan container
-      id: render-ckan-container
-      uses: aws-actions/amazon-ecs-render-task-definition@v1
-      with:
-        task-definition: ${{ steps.render-solr-container.outputs.task-definition }}
-        container-name: ckan
-        image: cioos/ckan:latest
-        
-    - name: Modify TD add redis container
-      id: render-ckan-container
-      uses: aws-actions/amazon-ecs-render-task-definition@v1
-      with:
-        task-definition: ${{ steps.render-ckan-container.outputs.task-definition }}
-        container-name: redis
-        image: redis:latest    
-        
-    - name: Modify TD add datapusher container
-      id: render-datapusher-container
-      uses: aws-actions/amazon-ecs-render-task-definition@v1
-      with:
-        task-definition: ${{ steps.render-redis-container.outputs.task-definition }}
-        container-name: datapusher
-        image: clementmouchet/datapusher
+      - name: Modify TD add redis container
+        id: render-ckan-container
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: ${{ steps.render-ckan-container.outputs.task-definition }}
+          container-name: redis
+          image: redis:latest
 
-    - name: print task defiition
-    - run: echo ${{ steps.task-def.outputs.task-definition }}
-#     - name: Deploy Amazon ECS task definition
-#       uses: aws-actions/amazon-ecs-deploy-task-definition@v1
-#       with:
-#         task-definition: ${{ steps.task-def.outputs.task-definition }}
-#         service: sample-app-service
-#         cluster: default
-#         wait-for-service-stability: true
+      - name: Modify TD add datapusher container
+        id: render-datapusher-container
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: ${{ steps.render-redis-container.outputs.task-definition }}
+          container-name: datapusher
+          image: clementmouchet/datapusher
+
+      - name: print task defiition
+        run: echo ${{ steps.task-def.outputs.task-definition }}
