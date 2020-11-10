@@ -13,11 +13,11 @@ on:
 
 env:
   submod_path: "contrib/docker/src"
-  DEBUG: ${{ true }}
+  debug_on: 1
 
 jobs:
   debug:
-    if: DEBUG
+    if: env.debug_on == '1'
     name: Print action debug info
     runs-on: ubuntu-latest
     steps:
@@ -42,7 +42,7 @@ jobs:
 
   build:
     if: |
-      !(DEBUG) &&
+      debug_on == '0' &&
       !(github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true) &&
       !(github.event_name == 'repository_dispatch' && github.event.client_payload.action == 'closed' && github.event.client_payload.merged == true)
     name: build ckan docker image
