@@ -10,14 +10,14 @@ on:
     types: [published]
   repository_dispatch:
     types: [submodule-pull-request]
-
+    
 env:
   submod_path: "contrib/docker/src"
-  debug_on: '1'
+  debug_on: "true"
 
 jobs:
   debug:
-    if: debug_on == '1'
+    if: env.debug_on == 'true'
     name: Print action debug info
     runs-on: ubuntu-latest
     steps:
@@ -42,7 +42,7 @@ jobs:
 
   build:
     if: |
-      debug_on == '0' &&
+      env.debug_on != 'true' &&
       !(github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true) &&
       !(github.event_name == 'repository_dispatch' && github.event.client_payload.action == 'closed' && github.event.client_payload.merged == true)
     name: build ckan docker image
