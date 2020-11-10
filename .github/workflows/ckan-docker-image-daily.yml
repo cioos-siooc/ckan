@@ -41,7 +41,7 @@ jobs:
       - run: docker run --rm -it lumir/remove-dockerhub-tag --user ${{ secrets.DOCKER_USERNAME }} --password ${{ secrets.DOCKER_PASSWORD }} cioos/ckan:$TAG
 
   build:
-    if: ${{ !env.DEBUG }}
+    if: !env.DEBUG
     if: |
       !(github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true) &&
       !(github.event_name == 'repository_dispatch' && github.event.client_payload.action == 'closed' && github.event.client_payload.merged == true)
