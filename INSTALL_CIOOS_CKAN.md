@@ -1,8 +1,10 @@
 # Setup
 
-These instructions are for CentOS 7. They have been modified from the original ['Installing CKAN with Docker Compose'](https://docs.ckan.org/en/2.8/maintaining/installing/install-from-docker-compose.html) instructions.
+## Linux
 
-#### Install Docker
+These instructions are for CentOS 7.  They have been modified from the original ['Installing CKAN with Docker Compose'](https://docs.ckan.org/en/2.8/maintaining/installing/install-from-docker-compose.html) instructions.
+
+### Install Docker
 
 ```bash
 sudo yum install -y yum-utils device-mapper-persistent-data   lvm2
@@ -11,7 +13,7 @@ sudo yum install docker-ce docker-ce-cli containerd.io
 sudo systemctl start docker
 ```
 
-#### Install docker-compose
+### Install docker-compose
 
 ```bash
 sudo curl -L "https://github.com/docker/compose/releases/download/1.22.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
@@ -19,9 +21,42 @@ sudo chmod +x /usr/local/bin/docker-compose
 sudo docker-compose --version
 ```
 
----
 
-#### Download CKAN git repo and submodules
+
+## Windows
+
+It is possible to setup CKAN under Windows 10 using:
+
+- [Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/install-win10), Version 2 (WSL2) and 
+- [Docker Desktop](https://www.docker.com/products/docker-desktop)
+
+This is useful for development purposes but has not been tested for production environments.
+
+> **NOTE:** It is technically possible to get CKAN to run using WSL Version 1, however, it is much harder to get running and more prone to instability and other problems.  If your system can run WSL 2 you should shoot for that or, alternatively, use a proper Linux environment.
+
+Once WSL 2 has been installed you'll need to select a Linux distro to use, Ubuntu has been tested under this configuration and performs well.  It tends to have Docker and Docker Compose already installed.
+
+After WSL 2 and your distro of choice have been installed, install Docker Desktop.
+
+### Docker Desktop + WSL Integration
+
+**Optional, but recommend:**
+
+When Docker Desktop is installed you can make your life easier by enabling WSL Integration.  
+
+> This will allow you to view many aspects of the containers & applications running in docker as well start/stop/restart/delete them, and enter a CLI environment inside a running container from the dashboard.
+
+Open Docker Desktop, Open Settings and enable WSL Integration under the Resources section as illustrated below: 
+
+<img src="./install-docker-desktop-wsl-integration.png" alt="Docker Desktop + WSL Integration" style="zoom: 80%;" />
+
+### Windows Terminal
+
+The rest of the instructions assume you are using a terminal in a Linux environment.  WSL will already provide you with one by opening one of your installed Linux distros, [Windows Terminal](https://aka.ms/terminal) is also excellent for this purpose.
+
+## Download CKAN git repo and submodules
+
+> **NOTE:** The following instructions assume you are installing CKAN in your home directory (~)
 
 ```bash
 git clone -b cioos https://github.com/cioos-siooc/ckan.git
@@ -33,7 +68,7 @@ git submodule update
 
 ---
 
-#### Create config files
+## Create config files
 
 Create environment file and populate with appropriate values
 
@@ -43,6 +78,8 @@ cp .env.template .env
 nano .env
 ```
 
+### Installing CKAN as the root website
+
 If your CKAN installation will run at the root of your domain, use:
 
 ```
@@ -51,7 +88,9 @@ cp production_root_url.ini production.ini
 cp who_root_url.ini who.ini
 ```
 
-**Or** Use this setup if your site will run at yourdomain.com **/ckan**
+### Installing CKAN off the root of a website
+
+Use this setup if your site will run at yourdomain.com **/ckan**
 
 ```bash
 cd ~/ckan/contrib/docker/
@@ -69,7 +108,7 @@ nano pycsw.cfg
 
 ---
 
-#### Build CKAN
+## Build CKAN
 
 Change to ckan docker config folder
 
@@ -97,7 +136,7 @@ Create ckan admin user
 sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckan sysadmin -c /etc/ckan/production.ini add admin
 ```
 
-#### Configure admin settings
+## Configure admin settings
 
 in the admin page of ckan set style to default and homepage to CIOOS to get the full affect of the cioos_theme extension
 
@@ -113,7 +152,7 @@ URL: `https://localhost/ckan/harvest`
 
 The settings for harvesters are fairly straightforward. The one exception is the configuration section. Some example configs are listed below.
 
-#### CSW (geonetwork)
+## CSW (geonetwork)
 
 ```json
 {
@@ -153,7 +192,7 @@ The settings for harvesters are fairly straightforward. The one exception is the
 }
 ```
 
-#### WAF (ERDDAP)
+## WAF (ERDDAP)
 
 ```json
 {
@@ -195,7 +234,7 @@ The settings for harvesters are fairly straightforward. The one exception is the
 }
 ```
 
-#### 19115-3 WAF (ERDDAP)
+## 19115-3 WAF (ERDDAP)
 
 ```json
 {
@@ -219,7 +258,7 @@ The settings for harvesters are fairly straightforward. The one exception is the
 }
 ```
 
-#### CKAN
+## CKAN
 
 ```json
 {
@@ -251,7 +290,7 @@ sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckanext-harvest ha
 ```
 ---
 
-#### Finish setting up pyCSW
+## Finish setting up pyCSW
 
 create pycsw database in existing pg container and install postgis
 
@@ -275,7 +314,7 @@ start pycsw container
 sudo docker-compose up -d pycsw
 ```
 
-#### test GetCapabilities
+## test GetCapabilities
 
 <https://localhost/ckan/csw/?service=CSW&version=2.0.2&request=GetCapabilities>
 
@@ -283,7 +322,7 @@ or
 
 <https://localhost/csw/?service=CSW&version=2.0.2&request=GetCapabilities>
 
-#### Useful pycsw commands
+## Useful pycsw commands
 
 access pycsw-admin
 
@@ -331,11 +370,11 @@ CREATE INDEX ix_records_abstract ON records((md5(abstract)));
 
 ---
 
-#### Setup Apache proxy
+## Setup Apache proxy
 
 CKAN by default will install to localhost:5000. You can use Apache to forward requests from yourdomain.com or yourdomain.com/ckan to localhost:5000.
 
-#### Install Apache
+## Install Apache
 
 If proxying docker behind Apache (recommended) you will need to have that installed as well. nginx will also work but is not covered in this guide.
 
@@ -608,7 +647,7 @@ Then change git line end characters to unix/linux style ones
   git config --global core.autocrlf input
 Delete and re clone the ckan repo. You may want to backup config files first.
 
-#### When changing harvester config it does not take affect
+## When changing harvester config it does not take affect
 
 If you edit a harvester config and then reharvest the existing harvester will continue to use the in memory harvester config. To solve this you can either restart the harvester docker containers or reindex the harvesters
 
@@ -620,7 +659,7 @@ or
 sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckanext-harvest harvester reindex --config=/etc/ckan/production.ini
 ```
 
-#### When creating organizations or updating admin config settings you get a 500 Internal Server Error
+## When creating organizations or updating admin config settings you get a 500 Internal Server Error
 
 This can be caused by ckan not having permissions to write to the internal storage of the ckan container. This should be setup during the build process. You can debug this by setting debug = true in the production.ini file. No error messages will be reported in the ckan logs for this issue without turning on debug.
 
@@ -632,13 +671,13 @@ To fix change the owner of the ckan storage folder and its children
   exit
 ```
 
-#### Build fails with 'Temporary failure resolving...' errors
+## Build fails with 'Temporary failure resolving...' errors
 
 Likely the issue is that docker is passing the wrong DNS lookup addresses to the
 containers on build. See issue this issue on stack overflow https://stackoverflow.com/a/45644890
 for a solution.
 
-#### Saving the admin config via the gui causes an internal server errors
+## Saving the admin config via the gui causes an internal server errors
 
 To diagnose issue turn on debugging in the production.ini file ad restart ckan. The problem is likely caused by file permissions or a missing upload directory. Change file permissions using chown or create folder as as needed. Exact paths will be reported in ckan error log.
 
@@ -895,7 +934,7 @@ sudo docker exec -u root -it ckan_gather_harvester cat /etc/hosts
 ## build project using docker hub images
 
 edit .env file and change compose file setting
-```bash
+​```bash
 COMPOSE_FILE=docker-cloud.yml
 ```
 
@@ -921,5 +960,7 @@ sudo docker-compose up -d
 sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckan search-index rebuild --config=/etc/ckan/production.ini
 sudo docker exec -it ckan /usr/local/bin/ckaext-harvest harvester reindex --config=/etc/ckan/production.ini
 
+
+```
 
 ```
