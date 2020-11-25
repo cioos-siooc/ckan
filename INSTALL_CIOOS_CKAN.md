@@ -769,6 +769,7 @@ sudo cp -r src/ckanext-repeating/ $VOL_CKAN_HOME/venv/src/
 sudo cp -r src/ckanext-composite/ $VOL_CKAN_HOME/venv/src/
 sudo cp -r src/ckanext-fluent/ $VOL_CKAN_HOME/venv/src/
 sudo cp -r src/ckanext-dcat/ $VOL_CKAN_HOME/venv/src/
+sudo cp -r src/ckanext-geoview/ $VOL_CKAN_HOME/venv/src/
 sudo cp src/cioos-siooc-schema/cioos-siooc_schema.json $VOL_CKAN_HOME/venv/src/ckanext-scheming/ckanext/scheming/cioos_siooc_schema.json
 sudo cp src/cioos-siooc-schema/organization.json $VOL_CKAN_HOME/venv/src/ckanext-scheming/ckanext/scheming/organization.json
 sudo cp src/cioos-siooc-schema/ckan_license.json $VOL_CKAN_HOME/venv/src/ckan/contrib/docker/src/cioos-siooc-schema/ckan_license.json
@@ -787,6 +788,8 @@ docker cp -r src/ckanext-scheming/ ckan:/usr/lib/ckan/venv/src/
 docker cp -r src/ckanext-repeating/ ckan:/usr/lib/ckan/venv/src/
 docker cp -r src/ckanext-composite/ ckan:/usr/lib/ckan/venv/src/
 docker cp -r src/ckanext-fluent/ ckan:/usr/lib/ckan/venv/src/
+docker cp -r src/ckanext-dcat/ ckan:/usr/lib/ckan/venv/src/
+docker cp -r src/ckanext-geoview/ ckan:/usr/lib/ckan/venv/src/
 docker cp src/cioos-siooc-schema/cioos-siooc_schema.json ckan:/usr/lib/ckan/venv/src/ckanext-scheming/ckanext/scheming/cioos_siooc_schema.json
 docker cp src/cioos-siooc-schema/organization.json ckan:/usr/lib/ckan/venv/src/ckanext-scheming/ckanext/scheming/organization.json
 ```
@@ -889,3 +892,37 @@ you can examine the hosts file in the container using
 ```bash
 sudo docker exec -u root -it ckan_gather_harvester cat /etc/hosts
 ``
+
+
+
+## build project using docker hub images
+
+edit .env file and change compose file setting
+```bash
+COMPOSE_FILE=docker-cloud.yml
+```
+
+edit docker-cloud.yml to use correct image. If the CKAN_TAG variable is set in
+the .env file then docker compose will use that setting by default. The default
+setting for this variable is 'latest'. To change to a differente image tag you
+can change the setting in your .env file or overwrite at continer launch using
+a shell environment variable. For eample to use the PR37 tag of the cioos ckan
+image you would use the following command
+```bash
+export CKAN_TAG=PR37; docker-compose up -d
+or
+sudo CKAN_TAG=PR37 docker-compose up -d
+```
+
+If changing in .env file then you can start the containers normally
+```bash
+sudo docker-compose up -d
+```
+
+### reindex if project was already installed / running
+
+sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckan search-index rebuild --config=/etc/ckan/production.ini
+sudo docker exec -it ckan /usr/local/bin/ckaext-harvest harvester reindex --config=/etc/ckan/production.ini
+
+
+```

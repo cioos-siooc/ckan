@@ -4,11 +4,12 @@ version: "3.4"
 
 x-ckan: &ckan_app
   container_name: ckan
-  image: cioos/ckan:${CKAN_TAG}
+  image: docker_ckan
   links:
     - db
     - solr
-    # - redis
+    - redis
+    # - pycsw
   ports:
     - "0.0.0.0:${CKAN_PORT}:5000"
   environment:
@@ -26,12 +27,17 @@ x-ckan: &ckan_app
     #- TZ=Canada/Vancouver
   #restart: always
   volumes:
-    - "/etc/localtime:/etc/localtime:ro" # remove and use TZ setting if running on windows
+    - "/etc/localtime:/etc/localtime:ro"
     - ckan_config:/etc/ckan
     - ckan_home:/usr/lib/ckan
     - ckan_storage:/var/lib/ckan
     - ${CKAN_LOG_PATH}:/usr/lib/ckan/venv/src/ckanlog.log
 
+x-ckan_build: &ckan_build
+    build:
+      context: ../../
+      args:
+          - CKAN_SITE_URL=${CKAN_SITE_URL}
 volumes:
   ckan_config:
   ckan_home:
@@ -39,19 +45,17 @@ volumes:
   pg_data:
 
 
-
 services:
   ckan:
     depends_on:
       - db
-      - solr
-      # - redis
     <<: *ckan_app
+    <<: *ckan_build
 
   ckan_gather_harvester:
      <<: *ckan_app
      container_name: ckan_gather_harvester
-     image: cioos/ckan:${CKAN_TAG}
+     image: docker_ckan
      entrypoint: /ckan-harvester-entrypoint.sh
      user: root
      command: ckan-paster --plugin=ckanext-harvest harvester gather_consumer -c /etc/ckan/production.ini
@@ -62,7 +66,7 @@ services:
   ckan_fetch_harvester:
      <<: *ckan_app
      container_name: ckan_fetch_harvester
-     image: cioos/ckan:${CKAN_TAG}
+     image: docker_ckan
      entrypoint: /ckan-harvester-entrypoint.sh
      user: root
      command: ckan-paster --plugin=ckanext-harvest harvester fetch_consumer -c /etc/ckan/production.ini
@@ -74,7 +78,7 @@ services:
   ckan_run_harvester:
      <<: *ckan_app
      container_name: ckan_run_harvester
-     image: cioos/ckan:${CKAN_TAG}
+     image: docker_ckan
      entrypoint: /ckan-run-harvester-entrypoint.sh
      user: root
      command: /bin/bash -c "echo 'ckan_run_harvester started' && cron -f 2>&1 "
@@ -93,25 +97,40 @@ services:
 
   db:
     container_name: db
-    image: cioos/postgresql:latest
+    image: docker_db
     ports:
        - "5432:5432"
+    build:
+      context: ../../
+      dockerfile: contrib/docker/postgresql/Dockerfile
+      args:
+        - DS_RO_PASS=${DATASTORE_READONLY_PASSWORD}
+        - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     environment:
       - DS_RO_PASS=${DATASTORE_READONLY_PASSWORD}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      #- TZ=Canada/Vancouver
     #restart: always
     volumes:
-      - "/etc/localtime:/etc/localtime:ro" # remove and use TZ setting if running on windows
+      - "/etc/localtime:/etc/localtime:ro"
       - pg_data:/var/lib/postgresql/data
 
   solr:
     container_name: solr
-    image: cioos/solr:latest
+    build:
+      context: ../../
+      dockerfile: contrib/docker/solr/Dockerfile
     #restart: always
 
-  # redis is used by the datapusher and the spatial fetch and gather harvesters
   redis:
     container_name: redis
     image: redis:latest
     #restart: always
+
+  # pycsw:
+  #   container_name: pycsw
+  #   image: geopython/pycsw
+  #   ports:
+  #     - "8000:8000"
+  #   restart: always
+  #   volumes:
+  #     - ./pycsw/pycsw.cfg:/etc/pycsw/pycsw.cfg
