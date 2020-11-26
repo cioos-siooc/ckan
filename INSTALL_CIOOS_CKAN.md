@@ -66,7 +66,7 @@ git submodule init
 git submodule update
 ```
 
----
+
 
 ## Create config files
 
@@ -80,7 +80,7 @@ nano .env
 
 ### Installing CKAN as the root website
 
-If your CKAN installation will run at the root of your domain, use:
+If your CKAN installation will run at the root of your domain, for example http://yourdomain.com/
 
 ```
 cd ~/ckan/contrib/docker/
@@ -90,7 +90,7 @@ cp who_root_url.ini who.ini
 
 ### Installing CKAN off the root of a website
 
-Use this setup if your site will run at yourdomain.com **/ckan**
+Use this setup if your site will run at http://yourdomain.com**/ckan**
 
 ```bash
 cd ~/ckan/contrib/docker/
@@ -98,7 +98,11 @@ cp production_non_root_url.ini production.ini
 cp who_non_root_url.ini who.ini
 ```
 
-copy pyCSW config file and update the database password. This is the same password entered in your .env file
+### Configuring pyCSW
+
+Copy [pyCSW](https://pycsw.org/) config template file and update the database password. 
+
+The database password is the same password entered in your **.env** file
 
 ```bash
 cd ~/ckan/contrib/docker/pycsw
@@ -106,7 +110,7 @@ cp pycsw.cfg.template pycsw.cfg
 nano pycsw.cfg
 ```
 
----
+
 
 ## Build CKAN
 
@@ -128,171 +132,120 @@ If you don't see any error messages, check http://localhost:5000 to see if the i
 curl localhost:5000
 ```
 
-If there was an error message, see Troubleshooting below.
+**NOTE:** If there was an error message, see [Troubleshooting](#Troubleshooting) below.
 
-Create ckan admin user
+### Create CKAN admin user
+
+CKAN doesn't start with an admin user so it must be created via command line.  The last argument in the command below is where the username has been specified.  If you'd prefer another username swap out "admin" at the end of the command for your desired username.
+
+You'll be asked to supply an email address and a password (8 characters in length minimum) and then to confirm the password.
 
 ```bash
 sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckan sysadmin -c /etc/ckan/production.ini add admin
 ```
 
+**NOTE:** You'll receive warnings about Python 2 no longer being supported, you can safely ignore these for now - they will go away when the base version of CKAN is migrated to one that supports Python 3.
+
 ## Configure admin settings
 
 in the admin page of ckan set style to default and homepage to CIOOS to get the full affect of the cioos_theme extension
 
----
+To access the admin section you can click on the hammer icon in the footer of the page or go to one of the following URLs:
 
-## Setup Harvesters
+- ROOT Install: http://localhost:5000/ckan-admin/config
 
-Add Organization
-URL: `https://localhost/ckan/organization`
+- Non-Root Install: http://localhost:5000**/ckan/**ckan-admin/config
 
-Add Harvester
-URL: `https://localhost/ckan/harvest`
+## Setup Apache proxy
 
-The settings for harvesters are fairly straightforward. The one exception is the configuration section. Some example configs are listed below.
+CKAN by default will install to http://localhost:5000/
 
-## CSW (geonetwork)
+This is fine for testing and development purposes but should not be used in a production environment.
 
-```json
-{
-  "default_tags": ["geonetwork"],
-  "default_extras": {
-    "encoding": "utf8",
-    "h_source_id": "{harvest_source_id}",
-    "h_source_url": "https://hecate.hakai.org/geonetwork/srv/eng/catalog.search#/metadata/",
-    "h_source_title": "{harvest_source_title}",
-    "h_job_id": "{harvest_job_id}",
-    "h_object_id": "{harvest_object_id}"
-  },
-  "override_extras": true,
-  "clean_tags": true,
-  "harvest_iso_categories": true,
-  "group_mapping": {
-    "farming": "farming",
-    "utilitiesCommunication": "boundaries",
-    "transportation": "boundaries",
-    "inlandWaters": "inlandwaters",
-    "geoscientificInformation": "geoscientificinformation",
-    "environment": "environment",
-    "climatologyMeteorologyAtmosphere": "climatologymeteorologyatmosphere",
-    "planningCadastre": "boundaries",
-    "imageryBaseMapsEarthCover": "imagerybasemapsearthcover",
-    "elevation": "elevation",
-    "boundaries": "boundaries",
-    "structure": "boundaries",
-    "location": "boundaries",
-    "economy": "economy",
-    "society": "economy",
-    "biota": "biota",
-    "intelligenceMilitary": "boundaries",
-    "oceans": "oceans",
-    "health": "health"
-  }
-}
-```
+You can use Apache to forward requests from http://yourdomain.com or http://yourdomain.com/ckan to http://localhost:5000
 
-## WAF (ERDDAP)
+## Install Apache
 
-```json
-{
-  "default_tags": ["erddap"],
-  "default_extras": {
-    "encoding": "utf8",
-    "guid_suffix": "_iso19115.xml",
-    "h_source_id": "{harvest_source_id}",
-    "h_source_url": "{harvest_source_url}",
-    "h_source_title": "{harvest_source_title}",
-    "h_job_id": "{harvest_job_id}",
-    "h_object_id": "{harvest_object_id}"
-  },
-  "override_extras": false,
-  "clean_tags": true,
-  "validator_profiles": ["iso19139ngdc"],
-  "harvest_iso_categories": true,
-  "group_mapping": {
-    "farming": "farming",
-    "utilitiesCommunication": "boundaries",
-    "transportation": "boundaries",
-    "inlandWaters": "inlandwaters",
-    "geoscientificInformation": "geoscientificinformation",
-    "environment": "environment",
-    "climatologyMeteorologyAtmosphere": "climatologymeteorologyatmosphere",
-    "planningCadastre": "boundaries",
-    "imageryBaseMapsEarthCover": "imagerybasemapsearthcover",
-    "elevation": "elevation",
-    "boundaries": "boundaries",
-    "structure": "boundaries",
-    "location": "boundaries",
-    "economy": "economy",
-    "society": "economy",
-    "biota": "biota",
-    "intelligenceMilitary": "boundaries",
-    "oceans": "oceans",
-    "health": "health"
-  }
-}
-```
+If proxying docker behind [Apache](https://httpd.apache.org/) (recommended) you will need to have that installed as well. 
 
-## 19115-3 WAF (ERDDAP)
-
-```json
-{
-  "default_tags": [],
-  "default_extras": {
-    "encoding": "utf8",
-    "h_source_id": "{harvest_source_id}",
-    "h_source_url": "{harvest_source_url}",
-    "h_source_title": "{harvest_source_title}",
-    "h_job_id": "{harvest_job_id}",
-    "h_object_id": "{harvest_object_id}"
-  },
-  "override_extras": false,
-  "clean_tags": true,
-  "validator_profiles": ["iso19115"],
-  "remote_orgs": "only_local",
-  "harvest_iso_categories": false,
-  "organization_mapping": {
-    "Institute of Ocean Sciences, 9860 West Saanich Road, Sidney, B.C., Canada": "Fisheries and Oceans Canada"
-  }
-}
-```
-
-## CKAN
-
-```json
-{
-  "default_tags": [{ "name": "ckan" }, { "name": "production" }],
-  "default_extras": {
-    "encoding": "utf8",
-    "h_source_id": "{harvest_source_id}",
-    "h_source_url": "{harvest_source_url}",
-    "h_source_title": "{harvest_source_title}",
-    "h_job_id": "{harvest_job_id}",
-    "h_object_id": "{harvest_object_id}"
-  },
-  "clean_tags": true,
-  "use_default_schema": true,
-  "force_package_type": "dataset",
-  "groups_filter_include": ["cioos"],
-  "spatial_crs": "4326",
-  "spatial_filter_file": "./cioos-siooc-schema/pacific_RA.wkt",
-  "spatial_filter": "POLYGON((-128.17701209 51.62096599, -127.92157996 51.62096599, -127.92157996 51.73507366, -128.17701209 51.73507366, -128.17701209 51.62096599))"
-}
-```
-Note that `use_default_schema` and `force_package_type` are not needed and will cause validation errors if harvesting between two ckans using the same custom schema (the CIOOS setup). `spatial_filter_file`, if set, will take presidents over `spatial_filter`. Thus in the above example the `spatial_filter` paramiter will be ignored in favour of loading the spatial filter from an external file
-
-### reindex Harvesters
-it may become necessary to reindex harvesters, especially if they no longer report the correct number of harvested datasets. If modifying the harvester config you will also need to reindex to make the new config take affect
+**NOTE:** [nginx](https://www.nginx.com/) will also work but is not covered in this guide.
 
 ```bash
-sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckanext-harvest harvester reindex --config=/etc/ckan/production.ini
+sudo yum install httpd mod_ssl
+sudo systemctl enable httpd
+sudo systemctl start httpd
 ```
----
+
+### Configure Proxy Settings
+
+Add the following to your sites configs to enable proxy
+
+```apache
+	# Non-Root Install
+	# CKAN
+	<location /ckan>
+  	    ProxyPass http://localhost:5000/
+  	    ProxyPassReverse http://localhost:5000/
+        # enable deflate
+        SetOutputFilter DEFLATE
+        SetEnvIfNoCase Request_URI "\.(?:gif|jpe?g|png)$" no-gzip
+   	</location>
+
+    # pycsw
+     <location /ckan/csw>
+         ProxyPass http://localhost:8000/pycsw/csw.js
+         ProxyPassReverse http://localhost:8000/pycsw/csw.js
+    </location>
+```
+
+or
+
+```apache
+	# Root Install
+    # CKAN
+    <location />
+        ProxyPass http://localhost:5000/
+        ProxyPassReverse http://localhost:5000/
+    </location>
+
+    # pycsw
+    <location /csw>
+        ProxyPass http://localhost:8000/pycsw/csw.js
+        ProxyPassReverse http://localhost:8000/pycsw/csw.js
+    </location>
+```
+
+### Redirect HTTP to HTTPS
+
+```apache
+<VirtualHost *:80>
+   Redirect / https://yourdomain.org
+</VirtualHost>
+```
+
+### Mitigate SELinux Problems
+
+SELinux, by default, will often prevent Apache from making network connections without being specifically allowed.
+
+The following command will enable the desired behaviour.
+
+```bash
+sudo /usr/sbin/setsebool -P httpd_can_network_connect 1
+```
+
+### Restart Apache
+
+Once all these changes have been made you'll need to restart Apache to see the results
+
+```bash
+  sudo apachectl restart
+```
+
+
 
 ## Finish setting up pyCSW
 
-create pycsw database in existing pg container and install postgis
+Create the pyCSW database in existing [PostgreSQL](https://www.postgresql.org/) container (db) and install [PostGIS](https://postgis.net/)
 
 ```bash
 sudo docker exec -it db psql -U ckan
@@ -370,77 +323,436 @@ CREATE INDEX ix_records_abstract ON records((md5(abstract)));
 
 ---
 
-## Setup Apache proxy
 
-CKAN by default will install to localhost:5000. You can use Apache to forward requests from yourdomain.com or yourdomain.com/ckan to localhost:5000.
 
-## Install Apache
+## Setup Harvesters
 
-If proxying docker behind Apache (recommended) you will need to have that installed as well. nginx will also work but is not covered in this guide.
+Add Organization
+URL: `https://localhost/ckan/organization`
+
+Add Harvester
+URL: `https://localhost/ckan/harvest`
+
+The settings for harvesters are fairly straightforward. The one exception is the configuration section. Some example configs are listed below.
+
+### CSW (geonetwork)
+
+```json
+{
+  "default_tags": ["geonetwork"],
+  "default_extras": {
+    "encoding": "utf8",
+    "h_source_id": "{harvest_source_id}",
+    "h_source_url": "https://hecate.hakai.org/geonetwork/srv/eng/catalog.search#/metadata/",
+    "h_source_title": "{harvest_source_title}",
+    "h_job_id": "{harvest_job_id}",
+    "h_object_id": "{harvest_object_id}"
+  },
+  "override_extras": true,
+  "clean_tags": true,
+  "harvest_iso_categories": true,
+  "group_mapping": {
+    "farming": "farming",
+    "utilitiesCommunication": "boundaries",
+    "transportation": "boundaries",
+    "inlandWaters": "inlandwaters",
+    "geoscientificInformation": "geoscientificinformation",
+    "environment": "environment",
+    "climatologyMeteorologyAtmosphere": "climatologymeteorologyatmosphere",
+    "planningCadastre": "boundaries",
+    "imageryBaseMapsEarthCover": "imagerybasemapsearthcover",
+    "elevation": "elevation",
+    "boundaries": "boundaries",
+    "structure": "boundaries",
+    "location": "boundaries",
+    "economy": "economy",
+    "society": "economy",
+    "biota": "biota",
+    "intelligenceMilitary": "boundaries",
+    "oceans": "oceans",
+    "health": "health"
+  }
+}
+```
+
+### WAF (ERDDAP)
+
+```json
+{
+  "default_tags": ["erddap"],
+  "default_extras": {
+    "encoding": "utf8",
+    "guid_suffix": "_iso19115.xml",
+    "h_source_id": "{harvest_source_id}",
+    "h_source_url": "{harvest_source_url}",
+    "h_source_title": "{harvest_source_title}",
+    "h_job_id": "{harvest_job_id}",
+    "h_object_id": "{harvest_object_id}"
+  },
+  "override_extras": false,
+  "clean_tags": true,
+  "validator_profiles": ["iso19139ngdc"],
+  "harvest_iso_categories": true,
+  "group_mapping": {
+    "farming": "farming",
+    "utilitiesCommunication": "boundaries",
+    "transportation": "boundaries",
+    "inlandWaters": "inlandwaters",
+    "geoscientificInformation": "geoscientificinformation",
+    "environment": "environment",
+    "climatologyMeteorologyAtmosphere": "climatologymeteorologyatmosphere",
+    "planningCadastre": "boundaries",
+    "imageryBaseMapsEarthCover": "imagerybasemapsearthcover",
+    "elevation": "elevation",
+    "boundaries": "boundaries",
+    "structure": "boundaries",
+    "location": "boundaries",
+    "economy": "economy",
+    "society": "economy",
+    "biota": "biota",
+    "intelligenceMilitary": "boundaries",
+    "oceans": "oceans",
+    "health": "health"
+  }
+}
+```
+
+### 19115-3 WAF (ERDDAP)
+
+```json
+{
+  "default_tags": [],
+  "default_extras": {
+    "encoding": "utf8",
+    "h_source_id": "{harvest_source_id}",
+    "h_source_url": "{harvest_source_url}",
+    "h_source_title": "{harvest_source_title}",
+    "h_job_id": "{harvest_job_id}",
+    "h_object_id": "{harvest_object_id}"
+  },
+  "override_extras": false,
+  "clean_tags": true,
+  "validator_profiles": ["iso19115"],
+  "remote_orgs": "only_local",
+  "harvest_iso_categories": false,
+  "organization_mapping": {
+    "Institute of Ocean Sciences, 9860 West Saanich Road, Sidney, B.C., Canada": "Fisheries and Oceans Canada"
+  }
+}
+```
+
+### CKAN
+
+```json
+{
+  "default_tags": [{ "name": "ckan" }, { "name": "production" }],
+  "default_extras": {
+    "encoding": "utf8",
+    "h_source_id": "{harvest_source_id}",
+    "h_source_url": "{harvest_source_url}",
+    "h_source_title": "{harvest_source_title}",
+    "h_job_id": "{harvest_job_id}",
+    "h_object_id": "{harvest_object_id}"
+  },
+  "clean_tags": true,
+  "use_default_schema": true,
+  "force_package_type": "dataset",
+  "groups_filter_include": ["cioos"],
+  "spatial_crs": "4326",
+  "spatial_filter_file": "./cioos-siooc-schema/pacific_RA.wkt",
+  "spatial_filter": "POLYGON((-128.17701209 51.62096599, -127.92157996 51.62096599, -127.92157996 51.73507366, -128.17701209 51.73507366, -128.17701209 51.62096599))"
+}
+```
+
+Note that `use_default_schema` and `force_package_type` are not needed and will cause validation errors if harvesting between two CKANs using the same custom schema (the CIOOS setup). `spatial_filter_file`, if set, will take presidents over `spatial_filter`.
+
+Thus, in the above example the `spatial_filter` parameter will be ignored in favour of loading the spatial filter from an external file.
+
+### Reindex Harvesters
+
+It may become necessary to reindex harvesters, especially if they no longer report the correct number of harvested datasets. 
+
+**NOTE:** If modifying the harvester config you will also need to reindex to make the new config take affect.
 
 ```bash
-sudo yum install httpd mod_ssl
-sudo systemctl enable httpd
-sudo systemctl start httpd
+sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckanext-harvest harvester reindex --config=/etc/ckan/production.ini
 ```
 
-add the following to your sites configs
+---
 
-```apache
-    # CKAN
-		<location /ckan>
-  	    ProxyPass http://localhost:5000/
-  	    ProxyPassReverse http://localhost:5000/
-        # enable deflate
-        SetOutputFilter DEFLATE
-        SetEnvIfNoCase Request_URI "\.(?:gif|jpe?g|png)$" no-gzip
-   	</location>
+## 
 
-    # pycsw
-     <location /ckan/csw>
-         ProxyPass http://localhost:8000/pycsw/csw.js
-         ProxyPassReverse http://localhost:8000/pycsw/csw.js
-    </location>
+# Update solr schema
+
+This method uses dockers copy command to copy the new schema file into a running
+solr container
+
+```bash
+cd ~/ckan
+sudo docker cp ~/ckan/ckan/config/solr/schema.xml solr:/opt/solr/server/solr/ckan/conf
 ```
 
+restart solr container
+
+```bash
+cd ~/ckan/contrib/docker
+sudo docker-compose restart solr
+```
+
+rebuild search index
+
+```bash
+sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckan search-index rebuild --config=/etc/ckan/production.ini
+```
+
+# Update CKAN
+
+If you need to update CKAN to a new version you can either remove the docker_ckan_home volume or update the volume with the new ckan core files. After which you need to rebuild the CKAN image and any docker containers based on that image. If you are working with a live / production system the preferred method is to update the volume and rebuild which will result in the least amount of down time.
+
+update local repo
+
+```bash
+cd ~/ckan
+git pull
+```
+
+Then copy updated ckan core files into the volume
+
+```bash
+cd ~/ckan
+sudo cp -r . $VOL_CKAN_HOME/venv/src/ckan
+```
+
+update permissions (optional but recommended)
+
+```bash
+sudo chown 900:900 -R $VOL_CKAN_HOME/venv/src/
+```
+
+or on windows run the command directly in the ckan container
+
+```bash
+sudo docker exec -it ckan chown 900:900 -R $CKAN_HOME
+```
+
+Now rebuild the CKAN docker image
+
+```bash
+cd ~/ckan/contrib/docker
+sudo docker-compose build ckan
+```
+
+update affected containers.
+
+```bash
+cd ~/ckan/contrib/docker
+sudo docker-compose up -d
+```
+
+# Update CKAN extensions
+
+enable volume environment variables to make accessing the volumes easier
+
+```bash
+export VOL_CKAN_HOME=`sudo docker volume inspect docker_ckan_home | jq -r -c '.[] | .Mountpoint'`
+export VOL_CKAN_CONFIG=`sudo docker volume inspect docker_ckan_config | jq -r -c '.[] | .Mountpoint'`
+export VOL_CKAN_STORAGE=`sudo docker volume inspect docker_ckan_storage | jq -r -c '.[] | .Mountpoint'`
+echo $VOL_CKAN_HOME
+echo $VOL_CKAN_CONFIG
+echo $VOL_CKAN_STORAGE
+```
+
+update submodules
+
+```bash
+cd ~/ckan
+git pull
+git submodule init
+git submodule sync
+git submodule update
+```
+
+copy updated extension code to the volumes
+
+```bash
+cd ~/ckan/contrib/docker
+sudo cp -r src/ckanext-cioos_theme/ $VOL_CKAN_HOME/venv/src/
+sudo cp -R src/ckanext-googleanalyticsbasic $VOL_CKAN_HOME/venv/src/
+sudo cp -r src/ckanext-cioos_harvest/ $VOL_CKAN_HOME/venv/src/
+sudo cp -r src/ckanext-harvest/ $VOL_CKAN_HOME/venv/src/
+sudo cp -r src/ckanext-spatial/ $VOL_CKAN_HOME/venv/src/
+sudo cp -r src/pycsw/ $VOL_CKAN_HOME/venv/src/
+sudo cp -r src/ckanext-scheming/ $VOL_CKAN_HOME/venv/src/
+sudo cp -r src/ckanext-repeating/ $VOL_CKAN_HOME/venv/src/
+sudo cp -r src/ckanext-composite/ $VOL_CKAN_HOME/venv/src/
+sudo cp -r src/ckanext-fluent/ $VOL_CKAN_HOME/venv/src/
+sudo cp -r src/ckanext-dcat/ $VOL_CKAN_HOME/venv/src/
+sudo cp src/cioos-siooc-schema/cioos-siooc_schema.json $VOL_CKAN_HOME/venv/src/ckanext-scheming/ckanext/scheming/cioos_siooc_schema.json
+sudo cp src/cioos-siooc-schema/organization.json $VOL_CKAN_HOME/venv/src/ckanext-scheming/ckanext/scheming/organization.json
+sudo cp src/cioos-siooc-schema/ckan_license.json $VOL_CKAN_HOME/venv/src/ckan/contrib/docker/src/cioos-siooc-schema/ckan_license.json
+```
+
+Exporting volumes on windows does not work so another option for copying files to the volumes is to use the `docker cp` command. You must know the path of the named volume in the container you are connecting to and the container must be running for this to work
+
+```bash
+cd ~/ckan/contrib/docker
+docker cp -r src/ckanext-cioos_theme/ ckan:/usr/lib/ckan/venv/src/
+docker cp -r src/ckanext-cioos_harvest/ ckan:/usr/lib/ckan/venv/src/
+docker cp -r src/ckanext-harvest/ ckan:/usr/lib/ckan/venv/src/
+docker cp -r src/ckanext-spatial/ ckan:/usr/lib/ckan/venv/src/
+docker cp -r src/pycsw/ ckan:/usr/lib/ckan/venv/src/
+docker cp -r src/ckanext-scheming/ ckan:/usr/lib/ckan/venv/src/
+docker cp -r src/ckanext-repeating/ ckan:/usr/lib/ckan/venv/src/
+docker cp -r src/ckanext-composite/ ckan:/usr/lib/ckan/venv/src/
+docker cp -r src/ckanext-fluent/ ckan:/usr/lib/ckan/venv/src/
+docker cp src/cioos-siooc-schema/cioos-siooc_schema.json ckan:/usr/lib/ckan/venv/src/ckanext-scheming/ckanext/scheming/cioos_siooc_schema.json
+docker cp src/cioos-siooc-schema/organization.json ckan:/usr/lib/ckan/venv/src/ckanext-scheming/ckanext/scheming/organization.json
+```
+
+update permissions (optional)
+
+```bash
+sudo chown 900:900 -R $VOL_CKAN_HOME/venv/src/
+```
+
+or on windows run the command directly in the ckan container
+
+```bash
+docker exec -u root -it ckan chown 900:900 -R /usr/lib/ckan
+```
+
+restart the container affected by the change. If changing html files you may not need to restart anything
+
+```bash
+cd ~/ckan/contrib/docker
+sudo docker-compose restart ckan
+sudo docker-compose restart ckan_run_harvester ckan_fetch_harvester ckan_gather_harvester
+```
+
+# Other helpfull commands
+
+### update a system file in a running container
+
+The easiest way is with the docker copy command. For example to update the crontab of the ckan_run_harvester containers you first copy the file to the container:
+
+```base
+cd ~/ckan/contrib/docker
+sudo docker cp ./crontab ckan_run_harvester:/etc/cron.d/crontab
+```
+
+Then update the crontab in the container by connecting to it's bash shell and running the crontab commands
+
+```base
+sudo docker exec -u root -it ckan_run_harvester /bin/bash -c "export TERM=xterm; exec bash"
+chown root:root /etc/cron.d/crontab
+chmod 0644 /etc/cron.d/crontab
+/usr/bin/crontab /etc/cron.d/crontab
+exit
+```
+
+In this example the entrypoint file for this container also copies the file over from the volume so you should update the file in the volume as well so that when the container is restarted the correct file contents is used.
+
+```base
+cd ~/ckan/contrib/docker
+sudo cp -r ./crontab $VOL_CKAN_HOME/venv/src/ckan/contrib/docker/crontab
+```
+
+### Set timezone
+
+timedatectl
+ls -l /etc/localtime
+timedatectl list-timezones
+sudo timedatectl set-timezone UTC
+sudo timedatectl set-timezone America/Vancouver
+
+
+### flush email notifications
+
+sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckan post -c /etc/ckan/production.ini /api/action/send_email_notifications
+
+### get public ip of server
+
+```bash
+curl ifconfig.me
+```
+
+### update language translation files
+
+Build translation file
+
+```bash
+pip install babel
+cd ~/ckan/contrib/docker/src/ckanext-cioos_theme
+python setup.py compile_catalog --locale fr
+```
+
+Copy to volume
+
+```bash
+cd ~/ckan/contrib/docker
+sudo cp -r src/ckanext-cioos_theme/ $VOL_CKAN_HOME/venv/src/
+```
+
+### add dhcp entries to docker container
+
+edit docker-compose.xml
+
+```bash
+cd ~/ckan/contrib/docker
+nano docker-compose.yml
+```
+
+add extra hosts entrie to any services. In this example we add a hosts entrie
+for test.ckan.org to the ckan_gather_harvester container. this will map the
+domain name to the local docker network.
+
+```yml
+services:
+  ckan_gather_harvester:
+    extra_hosts:
+      - "test.ckan.org:172.17.0.1"
+```
+
+you can examine the hosts file in the container using
+
+```bash
+sudo docker exec -u root -it ckan_gather_harvester cat /etc/hosts
+``
+
+
+## build project using docker hub images
+
+edit .env file and change compose file setting
+​```bash
+COMPOSE_FILE=docker-cloud.yml
+```
+
+edit docker-cloud.yml to use correct image. If the CKAN_TAG variable is set in
+the .env file then docker compose will use that setting by default. The default
+setting for this variable is 'latest'. To change to a differente image tag you
+can change the setting in your .env file or overwrite at continer launch using
+a shell environment variable. For eample to use the PR37 tag of the cioos ckan
+image you would use the following command
+
+```bash
+export CKAN_TAG=PR37; docker-compose up -d
 or
-
-```apache
-    # CKAN
-    <location />
-        ProxyPass http://localhost:5000/
-        ProxyPassReverse http://localhost:5000/
-    </location>
-
-    # pycsw
-    <location /csw>
-        ProxyPass http://localhost:8000/pycsw/csw.js
-        ProxyPassReverse http://localhost:8000/pycsw/csw.js
-    </location>
-
+sudo CKAN_TAG=PR37 docker-compose up -d
 ```
 
-Redirect HTTP to HTTPS
-
-```apache
-<VirtualHost *:80>
-   Redirect / https://yourdomain.org
-</VirtualHost>
-```
-
-Allow Apache to make network connections:
+If changing in .env file then you can start the containers normally
 
 ```bash
-sudo /usr/sbin/setsebool -P httpd_can_network_connect 1
+sudo docker-compose up -d
 ```
 
-Restart apache
+### reindex if project was already installed / running
 
-```bash
-  sudo apachectl restart
-```
+sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckan search-index rebuild --config=/etc/ckan/production.ini
+sudo docker exec -it ckan /usr/local/bin/ckaext-harvest harvester reindex --config=/etc/ckan/production.ini
 
 # Enable Compression in Apache
+
 ubuntu https://rietta.com/blog/moddeflate-dramatic-website-speed/
 centos7 https://www.digitalocean.com/community/tutorials/how-to-install-and-configure-mod_deflate-on-centos-7
 Enable mod_deflate in your Apache2 installation
@@ -706,259 +1018,7 @@ sudo docker-compose up -d
 ```
 
 ---
-# Update solr schema
 
-This method uses dockers copy command to copy the new schema file into a running
-solr container
-
-```bash
-cd ~/ckan
-sudo docker cp ~/ckan/ckan/config/solr/schema.xml solr:/opt/solr/server/solr/ckan/conf
-```
-
-restart solr container
-
-```bash
-cd ~/ckan/contrib/docker
-sudo docker-compose restart solr
-```
-
-rebuild search index
-
-```bash
-sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckan search-index rebuild --config=/etc/ckan/production.ini
-```
-
-# Update CKAN
-If you need to update CKAN to a new version you can either remove the docker_ckan_home volume or update the volume with the new ckan core files. After which you need to rebuild the CKAN image and any docker containers based on that image. If you are working with a live / production system the preferred method is to update the volume and rebuild which will result in the least amount of down time.
-
-update local repo
-```bash
-cd ~/ckan
-git pull
-```
-
-Then copy updated ckan core files into the volume
-
-```bash
-cd ~/ckan
-sudo cp -r . $VOL_CKAN_HOME/venv/src/ckan
-```
-
-update permissions (optional but recommended)
-
-```bash
-sudo chown 900:900 -R $VOL_CKAN_HOME/venv/src/
-```
-or on windows run the command directly in the ckan container
-
-```bash
-sudo docker exec -it ckan chown 900:900 -R $CKAN_HOME
-```
-
-Now rebuild the CKAN docker image
-
-```bash
-cd ~/ckan/contrib/docker
-sudo docker-compose build ckan
-```
-
-update affected containers.
-
-```bash
-cd ~/ckan/contrib/docker
-sudo docker-compose up -d
-```
-
-# Update CKAN extensions
-
-enable volume environment variables to make accessing the volumes easier
-
-```bash
-export VOL_CKAN_HOME=`sudo docker volume inspect docker_ckan_home | jq -r -c '.[] | .Mountpoint'`
-export VOL_CKAN_CONFIG=`sudo docker volume inspect docker_ckan_config | jq -r -c '.[] | .Mountpoint'`
-export VOL_CKAN_STORAGE=`sudo docker volume inspect docker_ckan_storage | jq -r -c '.[] | .Mountpoint'`
-echo $VOL_CKAN_HOME
-echo $VOL_CKAN_CONFIG
-echo $VOL_CKAN_STORAGE
-```
-
-update submodules
-
-```bash
-cd ~/ckan
-git pull
-git submodule init
-git submodule sync
-git submodule update
-```
-
-copy updated extension code to the volumes
-
-```bash
-cd ~/ckan/contrib/docker
-sudo cp -r src/ckanext-cioos_theme/ $VOL_CKAN_HOME/venv/src/
-sudo cp -R src/ckanext-googleanalyticsbasic $VOL_CKAN_HOME/venv/src/
-sudo cp -r src/ckanext-cioos_harvest/ $VOL_CKAN_HOME/venv/src/
-sudo cp -r src/ckanext-harvest/ $VOL_CKAN_HOME/venv/src/
-sudo cp -r src/ckanext-spatial/ $VOL_CKAN_HOME/venv/src/
-sudo cp -r src/pycsw/ $VOL_CKAN_HOME/venv/src/
-sudo cp -r src/ckanext-scheming/ $VOL_CKAN_HOME/venv/src/
-sudo cp -r src/ckanext-repeating/ $VOL_CKAN_HOME/venv/src/
-sudo cp -r src/ckanext-composite/ $VOL_CKAN_HOME/venv/src/
-sudo cp -r src/ckanext-fluent/ $VOL_CKAN_HOME/venv/src/
-sudo cp -r src/ckanext-dcat/ $VOL_CKAN_HOME/venv/src/
-sudo cp src/cioos-siooc-schema/cioos-siooc_schema.json $VOL_CKAN_HOME/venv/src/ckanext-scheming/ckanext/scheming/cioos_siooc_schema.json
-sudo cp src/cioos-siooc-schema/organization.json $VOL_CKAN_HOME/venv/src/ckanext-scheming/ckanext/scheming/organization.json
-sudo cp src/cioos-siooc-schema/ckan_license.json $VOL_CKAN_HOME/venv/src/ckan/contrib/docker/src/cioos-siooc-schema/ckan_license.json
-```
-
-Exporting volumes on windows does not work so another option for copying files to the volumes is to use the `docker cp` command. You must know the path of the named volume in the container you are connecting to and the container must be running for this to work
-
-```bash
-cd ~/ckan/contrib/docker
-docker cp -r src/ckanext-cioos_theme/ ckan:/usr/lib/ckan/venv/src/
-docker cp -r src/ckanext-cioos_harvest/ ckan:/usr/lib/ckan/venv/src/
-docker cp -r src/ckanext-harvest/ ckan:/usr/lib/ckan/venv/src/
-docker cp -r src/ckanext-spatial/ ckan:/usr/lib/ckan/venv/src/
-docker cp -r src/pycsw/ ckan:/usr/lib/ckan/venv/src/
-docker cp -r src/ckanext-scheming/ ckan:/usr/lib/ckan/venv/src/
-docker cp -r src/ckanext-repeating/ ckan:/usr/lib/ckan/venv/src/
-docker cp -r src/ckanext-composite/ ckan:/usr/lib/ckan/venv/src/
-docker cp -r src/ckanext-fluent/ ckan:/usr/lib/ckan/venv/src/
-docker cp src/cioos-siooc-schema/cioos-siooc_schema.json ckan:/usr/lib/ckan/venv/src/ckanext-scheming/ckanext/scheming/cioos_siooc_schema.json
-docker cp src/cioos-siooc-schema/organization.json ckan:/usr/lib/ckan/venv/src/ckanext-scheming/ckanext/scheming/organization.json
-```
-
-update permissions (optional)
-
-```bash
-sudo chown 900:900 -R $VOL_CKAN_HOME/venv/src/
-```
-or on windows run the command directly in the ckan container
-
-```bash
-docker exec -u root -it ckan chown 900:900 -R /usr/lib/ckan
-```
-
-restart the container affected by the change. If changing html files you may not need to restart anything
-
-```bash
-cd ~/ckan/contrib/docker
-sudo docker-compose restart ckan
-sudo docker-compose restart ckan_run_harvester ckan_fetch_harvester ckan_gather_harvester
-```
-
-# Other helpfull commands
-
-### update a system file in a running container
-The easiest way is with the docker copy command. For example to update the crontab of the ckan_run_harvester containers you first copy the file to the container:
-
-```base
-cd ~/ckan/contrib/docker
-sudo docker cp ./crontab ckan_run_harvester:/etc/cron.d/crontab
-```
-
-Then update the crontab in the container by connecting to it's bash shell and running the crontab commands
-
-```base
-sudo docker exec -u root -it ckan_run_harvester /bin/bash -c "export TERM=xterm; exec bash"
-chown root:root /etc/cron.d/crontab
-chmod 0644 /etc/cron.d/crontab
-/usr/bin/crontab /etc/cron.d/crontab
-exit
-```
-
-In this example the entrypoint file for this container also copies the file over from the volume so you should update the file in the volume as well so that when the container is restarted the correct file contents is used.
-```base
-cd ~/ckan/contrib/docker
-sudo cp -r ./crontab $VOL_CKAN_HOME/venv/src/ckan/contrib/docker/crontab
-```
-
-### Set timezone
-
-timedatectl
-ls -l /etc/localtime
-timedatectl list-timezones
-sudo timedatectl set-timezone UTC
-sudo timedatectl set-timezone America/Vancouver
-
-
-### flush email notifications
-sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckan post -c /etc/ckan/production.ini /api/action/send_email_notifications
-
-### get public ip of server
-```bash
-curl ifconfig.me
-```
-
-### update language translation files
-
-Build translation file
-```bash
-pip install babel
-cd ~/ckan/contrib/docker/src/ckanext-cioos_theme
-python setup.py compile_catalog --locale fr
-```
-
-Copy to volume
-```bash
-cd ~/ckan/contrib/docker
-sudo cp -r src/ckanext-cioos_theme/ $VOL_CKAN_HOME/venv/src/
-```
-
-### add dhcp entries to docker container
-edit docker-compose.xml
-```bash
-cd ~/ckan/contrib/docker
-nano docker-compose.yml
-```
-
-add extra hosts entrie to any services. In this example we add a hosts entrie
-for test.ckan.org to the ckan_gather_harvester container. this will map the
-domain name to the local docker network.
-```yml
-services:
-  ckan_gather_harvester:
-    extra_hosts:
-      - "test.ckan.org:172.17.0.1"
-```
-
-you can examine the hosts file in the container using
-```bash
-sudo docker exec -u root -it ckan_gather_harvester cat /etc/hosts
-``
-
-
-
-## build project using docker hub images
-
-edit .env file and change compose file setting
-​```bash
-COMPOSE_FILE=docker-cloud.yml
-```
-
-edit docker-cloud.yml to use correct image. If the CKAN_TAG variable is set in
-the .env file then docker compose will use that setting by default. The default
-setting for this variable is 'latest'. To change to a differente image tag you
-can change the setting in your .env file or overwrite at continer launch using
-a shell environment variable. For eample to use the PR37 tag of the cioos ckan
-image you would use the following command
-```bash
-export CKAN_TAG=PR37; docker-compose up -d
-or
-sudo CKAN_TAG=PR37 docker-compose up -d
-```
-
-If changing in .env file then you can start the containers normally
-```bash
-sudo docker-compose up -d
-```
-
-### reindex if project was already installed / running
-
-sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckan search-index rebuild --config=/etc/ckan/production.ini
-sudo docker exec -it ckan /usr/local/bin/ckaext-harvest harvester reindex --config=/etc/ckan/production.ini
 
 
 ```
