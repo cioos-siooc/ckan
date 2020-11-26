@@ -176,9 +176,26 @@ sudo systemctl enable httpd
 sudo systemctl start httpd
 ```
 
+### Enable Compression in Apache
+
+*Optional, but recommended.*
+
+Enable **mod_deflate** in your Apache2 installation
+
+```bash
+sudo a2enmod deflate
+```
+
+**Sources:**
+
+- Ubuntu https://rietta.com/blog/moddeflate-dramatic-website-speed/
+- CentOS 7 https://www.digitalocean.com/community/tutorials/how-to-install-and-configure-mod_deflate-on-centos-7
+
 ### Configure Proxy Settings
 
-Add the following to your sites configs to enable proxy
+Add the following to your sites configs to enable proxy:
+
+**NOTE:** The following settings assume you've enabled compression from the previous step, if you have not remove the lines under **# enable deflate**
 
 ```apache
 	# Non-Root Install
@@ -206,6 +223,9 @@ or
     <location />
         ProxyPass http://localhost:5000/
         ProxyPassReverse http://localhost:5000/
+        # enable deflate
+        SetOutputFilter DEFLATE
+        SetEnvIfNoCase Request_URI "\.(?:gif|jpe?g|png)$" no-gzip
     </location>
 
     # pycsw
@@ -240,88 +260,6 @@ Once all these changes have been made you'll need to restart Apache to see the r
 ```bash
   sudo apachectl restart
 ```
-
-
-
-## Finish setting up pyCSW
-
-Create the pyCSW database in existing [PostgreSQL](https://www.postgresql.org/) container (db) and install [PostGIS](https://postgis.net/)
-
-```bash
-sudo docker exec -it db psql -U ckan
-CREATE DATABASE pycsw OWNER ckan ENCODING 'utf-8';
-\c pycsw
-CREATE EXTENSION postgis;
-\q
-```
-
-setup pycsw database tables.
-
-```bash
-sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckanext-spatial ckan-pycsw setup -p /usr/lib/ckan/venv/src/pycsw/default.cfg
-```
-
-start pycsw container
-
-```bash
-sudo docker-compose up -d pycsw
-```
-
-## test GetCapabilities
-
-<https://localhost/ckan/csw/?service=CSW&version=2.0.2&request=GetCapabilities>
-
-or
-
-<https://localhost/csw/?service=CSW&version=2.0.2&request=GetCapabilities>
-
-## Useful pycsw commands
-
-access pycsw-admin
-
-```bash
-sudo docker exec -ti pycsw pycsw-admin.py -h
-```
-
-Load the CKAN datasets into pycsw
-
-```bash
-sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckanext-spatial ckan-pycsw load -p /usr/lib/ckan/venv/src/pycsw/default.cfg -u http://localhost:5000
-```
-
-ckan-pycsw commands
-
-```bash
-sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckanext-spatial ckan-pycsw --help
-sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckanext-spatial ckan-pycsw setup -p /usr/lib/ckan/venv/src/pycsw/default.cfg
-sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckanext-spatial ckan-pycsw set_keywords -p /usr/lib/ckan/venv/src/pycsw/default.cfg -u http://localhost:5000
-sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckanext-spatial ckan-pycsw load -p /usr/lib/ckan/venv/src/pycsw/default.cfg -u http://localhost:5000
-sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckanext-spatial ckan-pycsw clear -p /usr/lib/ckan/venv/src/pycsw/default.cfg
-```
-
-errors while pycsw loading
-if you get "Error:Cannot commit to repository" and "HINT: Values larger than 1/3 of a buffer page cannot be indexed." you are likely loading abstracts or other fields that are to big to be indexed in the database. You can either remove the index or switch to an index using the md5 encoded version of the value.
-
-connect to db
-
-```bash
-sudo docker exec -i db psql -U ckan
-\c pycsw
-```
-
-remove index
-
-```sql
-DROP INDEX ix_records_abstract;
-```
-
-add md5 index
-
-```sql
-CREATE INDEX ix_records_abstract ON records((md5(abstract)));
-```
-
----
 
 
 
@@ -478,32 +416,114 @@ It may become necessary to reindex harvesters, especially if they no longer repo
 sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckanext-harvest harvester reindex --config=/etc/ckan/production.ini
 ```
 
----
 
-## 
 
-# Update solr schema
+## Finish setting up pyCSW
 
-This method uses dockers copy command to copy the new schema file into a running
-solr container
+Create the pyCSW database in existing [PostgreSQL](https://www.postgresql.org/) container (db) and install [PostGIS](https://postgis.net/)
+
+```bash
+sudo docker exec -it db psql -U ckan
+CREATE DATABASE pycsw OWNER ckan ENCODING 'utf-8';
+\c pycsw
+CREATE EXTENSION postgis;
+\q
+```
+
+setup pycsw database tables.
+
+```bash
+sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckanext-spatial ckan-pycsw setup -p /usr/lib/ckan/venv/src/pycsw/default.cfg
+```
+
+start pycsw container
+
+```bash
+sudo docker-compose up -d pycsw
+```
+
+### Test GetCapabilities
+
+<https://localhost/ckan/csw/?service=CSW&version=2.0.2&request=GetCapabilities>
+
+or
+
+<https://localhost/csw/?service=CSW&version=2.0.2&request=GetCapabilities>
+
+### Useful pyCSW commands
+
+access pycsw-admin
+
+```bash
+sudo docker exec -ti pycsw pycsw-admin.py -h
+```
+
+Load the CKAN datasets into pycsw
+
+```bash
+sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckanext-spatial ckan-pycsw load -p /usr/lib/ckan/venv/src/pycsw/default.cfg -u http://localhost:5000
+```
+
+ckan-pycsw commands
+
+```bash
+sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckanext-spatial ckan-pycsw --help
+sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckanext-spatial ckan-pycsw setup -p /usr/lib/ckan/venv/src/pycsw/default.cfg
+sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckanext-spatial ckan-pycsw set_keywords -p /usr/lib/ckan/venv/src/pycsw/default.cfg -u http://localhost:5000
+sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckanext-spatial ckan-pycsw load -p /usr/lib/ckan/venv/src/pycsw/default.cfg -u http://localhost:5000
+sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckanext-spatial ckan-pycsw clear -p /usr/lib/ckan/venv/src/pycsw/default.cfg
+```
+
+### Errors while pyCSW loading
+
+if you get "**Error:Cannot commit to repository**" and "**HINT: Values larger than 1/3 of a buffer page cannot be indexed.**" you are likely loading abstracts or other fields that are to big to be indexed in the database.
+
+You can either remove the index or switch to an index using the md5 encoded version of the value.
+
+Connect to database
+
+```bash
+sudo docker exec -i db psql -U ckan
+\c pycsw
+```
+
+Remove index
+
+```sql
+DROP INDEX ix_records_abstract;
+```
+
+Add md5 index
+
+```sql
+CREATE INDEX ix_records_abstract ON records((md5(abstract)));
+```
+
+
+
+# Update SOLR schema
+
+This method uses dockers copy command to copy the new schema file into a running solr container
 
 ```bash
 cd ~/ckan
 sudo docker cp ~/ckan/ckan/config/solr/schema.xml solr:/opt/solr/server/solr/ckan/conf
 ```
 
-restart solr container
+Restart solr container
 
 ```bash
 cd ~/ckan/contrib/docker
 sudo docker-compose restart solr
 ```
 
-rebuild search index
+Rebuild search index
 
 ```bash
 sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckan search-index rebuild --config=/etc/ckan/production.ini
 ```
+
+
 
 # Update CKAN
 
@@ -548,6 +568,8 @@ update affected containers.
 cd ~/ckan/contrib/docker
 sudo docker-compose up -d
 ```
+
+
 
 # Update CKAN extensions
 
@@ -629,11 +651,15 @@ sudo docker-compose restart ckan
 sudo docker-compose restart ckan_run_harvester ckan_fetch_harvester ckan_gather_harvester
 ```
 
-# Other helpfull commands
 
-### update a system file in a running container
 
-The easiest way is with the docker copy command. For example to update the crontab of the ckan_run_harvester containers you first copy the file to the container:
+# Other helpful commands
+
+### Update a system file in a running container
+
+The easiest way is with the docker copy command. 
+
+For example to update the crontab of the ckan_run_harvester containers you first copy the file to the container:
 
 ```base
 cd ~/ckan/contrib/docker
@@ -659,24 +685,28 @@ sudo cp -r ./crontab $VOL_CKAN_HOME/venv/src/ckan/contrib/docker/crontab
 
 ### Set timezone
 
+```
 timedatectl
 ls -l /etc/localtime
 timedatectl list-timezones
 sudo timedatectl set-timezone UTC
 sudo timedatectl set-timezone America/Vancouver
+```
 
 
-### flush email notifications
+### Flush email notifications
 
+```
 sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckan post -c /etc/ckan/production.ini /api/action/send_email_notifications
+```
 
-### get public ip of server
+### Get public IP of server
 
 ```bash
 curl ifconfig.me
 ```
 
-### update language translation files
+### Update language translation files
 
 Build translation file
 
@@ -693,18 +723,20 @@ cd ~/ckan/contrib/docker
 sudo cp -r src/ckanext-cioos_theme/ $VOL_CKAN_HOME/venv/src/
 ```
 
-### add dhcp entries to docker container
+### Add DHCP entries to docker container
 
-edit docker-compose.xml
+Edit **docker-compose.xml**
 
 ```bash
 cd ~/ckan/contrib/docker
 nano docker-compose.yml
 ```
 
-add extra hosts entrie to any services. In this example we add a hosts entrie
-for test.ckan.org to the ckan_gather_harvester container. this will map the
-domain name to the local docker network.
+Add extra hosts entrie to any services.
+
+In this example we add a hosts entry for **test.ckan.org** to the **ckan_gather_harvester** container. 
+
+This will map the domain name to the local docker network.
 
 ```yml
 services:
@@ -713,13 +745,11 @@ services:
       - "test.ckan.org:172.17.0.1"
 ```
 
-you can examine the hosts file in the container using
+You can examine the **hosts** file in the container using:
 
 ```bash
 sudo docker exec -u root -it ckan_gather_harvester cat /etc/hosts
 ``
-
-
 ## build project using docker hub images
 
 edit .env file and change compose file setting
@@ -727,12 +757,13 @@ edit .env file and change compose file setting
 COMPOSE_FILE=docker-cloud.yml
 ```
 
-edit docker-cloud.yml to use correct image. If the CKAN_TAG variable is set in
-the .env file then docker compose will use that setting by default. The default
-setting for this variable is 'latest'. To change to a differente image tag you
-can change the setting in your .env file or overwrite at continer launch using
-a shell environment variable. For eample to use the PR37 tag of the cioos ckan
-image you would use the following command
+Edit **docker-cloud.yml** to use correct image. 
+
+If the **CKAN_TAG** variable is set in the **.env** file then docker compose will use that setting by default. 
+
+The default setting for this variable is '**latest**'. To change to a different image tag you can change the setting in your **.env** file or overwrite at container launch using a shell environment variable. 
+
+For example: to use the **PR37** tag of the cioos ckan image you would use the following command
 
 ```bash
 export CKAN_TAG=PR37; docker-compose up -d
@@ -740,33 +771,23 @@ or
 sudo CKAN_TAG=PR37 docker-compose up -d
 ```
 
-If changing in .env file then you can start the containers normally
+If changing in **.env** file then you can start the containers normally
 
 ```bash
 sudo docker-compose up -d
 ```
 
-### reindex if project was already installed / running
+### Reindex if project was already installed / running
 
+```
 sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckan search-index rebuild --config=/etc/ckan/production.ini
 sudo docker exec -it ckan /usr/local/bin/ckaext-harvest harvester reindex --config=/etc/ckan/production.ini
-
-# Enable Compression in Apache
-
-ubuntu https://rietta.com/blog/moddeflate-dramatic-website-speed/
-centos7 https://www.digitalocean.com/community/tutorials/how-to-install-and-configure-mod_deflate-on-centos-7
-Enable mod_deflate in your Apache2 installation
-
-```bash
-sudo a2enmod deflate
 ```
 
-Restart apache
-```bash
-  sudo apachectl restart
-```
+
 
 # Customize interface
+
 Now that you have ckan running you can customize the interface via the admin config page. Go to http://localhost:5000/ckan-admin/config and configure some of the site options.
 
 - Site_logo can be used to set the CIOOS logo that appears on every page.
@@ -853,15 +874,14 @@ background:rgb(185, 214, 242);
 ```
 
 # Enable Google Analytics
-edit the production.ini file currently in the volume.
+edit the **production.ini** file currently in the volume.
 ```bash
   export VOL_CKAN_CONFIG=`sudo docker volume inspect docker_ckan_config | jq -r -c '.[] | .Mountpoint'`
   sudo nano $VOL_CKAN_CONFIG/production.ini
 ```
 
-uncomment the google analytics id config and update to your id
+uncomment the google analytics id config and update to your id and replace
 
-replace
 ```bash
   # googleanalytics.ids = UA-1234567890000-1
 ```
@@ -874,7 +894,7 @@ with
 
 # Troubleshooting
 
-Issues building/starting CKAN:
+## Issues building/starting CKAN:
 
 Try manually pulling the images first e.g.:
 
@@ -883,7 +903,9 @@ Try manually pulling the images first e.g.:
   sudo docker pull --disable-content-trust redis:latest
 ```
 
-Sometimes the containers start in the wrong order. This often results in strange sql errors in the db logs. If this happens you can manually start the containers by first building then using docker-compose up
+Sometimes the containers start in the wrong order. 
+
+This often results in strange sql errors in the db logs.  If this happens you can manually start the containers by first building then using **docker-compose up**
 
 ```bash
   sudo docker-compose build
@@ -894,12 +916,18 @@ Sometimes the containers start in the wrong order. This often results in strange
   sudo docker-compose up -d ckan_gather_harvester ckan_fetch_harvester ckan_run_harvester
 ```
 
-if you need to change the production.ini in the repo and rebuild then you may need to delete the volume first. volume does not update during dockerfile run if it already exists.
+## Changes to production.ini 
+
+If you need to change the **production.ini** in the repo and rebuild then you may need to delete the volume first.
+
+**IMPORTANT:** Volume does not update during dockerfile run if it already exists.
 
 ```bash
   sudo docker-compose down
   sudo docker volume rm docker_ckan_config
 ```
+
+### Linux:
 
 update ckan/contrib/docker/production.ini
 
@@ -908,29 +936,38 @@ update ckan/contrib/docker/production.ini
   sudo nano $VOL_CKAN_CONFIG/production.ini
 ```
 
-on windows edit the production.ini file and copy it to the volume
+### Windows: 
+
+edit the production.ini file and copy it to the volume
+
 ```bash
   docker cp production.ini ckan:/etc/ckan/
 ```
 
-Is ckan running? Check container is running and view logs
+## Is CKAN running? 
+
+Check container is running and view logs
 
 ```bash
   sudo docker ps | grep ckan
   sudo docker-compose logs -f ckan
 ```
 
-if container isn’t running its probably because the db didn’t build in time. restart…
+if container isn’t running its probably because the db didn’t build in time. 
+
+Restart the CKAN container
 
 ```bash
   sudo docker-compose restart ckan
 ```
 
-Connect to container as root to debug
+## Connect to container as root to debug
 
 ```bash
   sudo docker exec -u root -it ckan /bin/bash -c "export TERM=xterm; exec bash"
 ```
+
+## No records are showing up
 
 If you rebuilt the ckan container and no records are showing up, you need to reindex the records.
 
@@ -938,7 +975,11 @@ If you rebuilt the ckan container and no records are showing up, you need to rei
 sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckan search-index rebuild --config=/etc/ckan/production.ini
 ```
 
-you have done several builds of ckan and now you are running out of hard drive space? With ckan running you can clean up docker images, containers, volumes, cache etc.
+## Running out of hard drive space? 
+
+You have done several builds of ckan and now you are running out of hard drive space? 
+
+With ckan running you can clean up docker images, containers, volumes, cache etc.
 
 ```bash
   sudo docker system prune -a
@@ -952,8 +993,10 @@ or remove only the images you want with
 	sudo docker rmi [image name]
 ```
 
+## Errors when building CKAN
+
 When building ckan, in windows, you get the error `standard_init_linux.go:207: exec user process caused "no such file or directory"`
-  delete c:/user/[your username]/lock.gitconfig
+delete c:/user/[your username]/lock.gitconfig
 Then change git line end characters to unix/linux style ones
   git config --global core.eol lf
   git config --global core.autocrlf input
@@ -971,7 +1014,7 @@ or
 sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckanext-harvest harvester reindex --config=/etc/ckan/production.ini
 ```
 
-## When creating organizations or updating admin config settings you get a 500 Internal Server Error
+## 500 Internal Server Error - when creating organizations or updating admin config settings
 
 This can be caused by ckan not having permissions to write to the internal storage of the ckan container. This should be setup during the build process. You can debug this by setting debug = true in the production.ini file. No error messages will be reported in the ckan logs for this issue without turning on debug.
 
@@ -1017,10 +1060,3 @@ sudo chown 900:900 -R $VOL_CKAN_HOME/venv/src/
 sudo docker-compose up -d
 ```
 
----
-
-
-
-```
-
-```
