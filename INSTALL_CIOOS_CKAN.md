@@ -16,7 +16,7 @@
     - [Create CKAN admin user](#create-ckan-admin-user)
   - [Configure admin settings](#configure-admin-settings)
   - [Setup Apache proxy](#setup-apache-proxy)
-  - [Install Apache](#install-apache)
+    - [Install Apache](#install-apache)
     - [Enable Compression in Apache](#enable-compression-in-apache)
     - [Configure Proxy Settings](#configure-proxy-settings)
     - [Redirect HTTP to HTTPS](#redirect-http-to-https)
@@ -101,7 +101,7 @@ After WSL 2 and your distro of choice have been installed, install Docker Deskto
 
 **Optional, but recommend:**
 
-When Docker Desktop is installed you can make your life easier by enabling WSL Integration.  
+When Docker Desktop is installed you can make your life easier by enabling WSL Integration.
 
 > This will allow you to view many aspects of the containers & applications running in docker as well start/stop/restart/delete them, and enter a CLI environment inside a running container from the dashboard.
 
@@ -187,7 +187,7 @@ If you don't see any error messages, check <http://localhost:5000> to see if the
 curl localhost:5000
 ```
 
-**NOTE:** If there was an error message, see [Troubleshooting](#Troubleshooting) below.
+> **NOTE:** If there was an error message, see [Troubleshooting](#Troubleshooting) below.
 
 ### Create CKAN admin user
 
@@ -199,7 +199,7 @@ You'll be asked to supply an email address and a password (8 characters in lengt
 sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckan sysadmin -c /etc/ckan/production.ini add admin
 ```
 
-**NOTE:** You'll receive warnings about Python 2 no longer being supported, you can safely ignore these for now - they will go away when the base version of CKAN is migrated to one that supports Python 3.
+> **NOTE:** You'll receive warnings about Python 2 no longer being supported, you can safely ignore these for now - they will go away when the base version of CKAN is migrated to one that supports Python 3.
 
 ## Configure admin settings
 
@@ -219,11 +219,11 @@ This is fine for testing and development purposes but should not be used in a pr
 
 You can use Apache to forward requests from <http://yourdomain.com> or <http://yourdomain.com/ckan> to <http://localhost:5000>
 
-## Install Apache
+### Install Apache
 
 If proxying docker behind [Apache](https://httpd.apache.org/) (recommended) you will need to have that installed as well.
 
-**NOTE:** [nginx](https://www.nginx.com/) will also work but is not covered in this guide.
+> **NOTE:** [nginx](https://www.nginx.com/) will also work but is not covered in this guide.
 
 ```bash
 sudo yum install httpd mod_ssl
@@ -250,7 +250,7 @@ sudo a2enmod deflate
 
 Add the following to your sites configs to enable proxy:
 
-**NOTE:** The following settings assume you've enabled compression from the previous step, if you have not remove the lines under **# enable deflate**
+> **NOTE:** The following settings assume you've enabled compression from the previous step, if you have not remove the lines under **# enable deflate**
 
 ```apache
   # Non-Root Install
@@ -457,7 +457,7 @@ The settings for harvesters are fairly straightforward. The one exception is the
 }
 ```
 
-Note that `use_default_schema` and `force_package_type` are not needed and will cause validation errors if harvesting between two CKANs using the same custom schema (the CIOOS setup). `spatial_filter_file`, if set, will take presidents over `spatial_filter`.
+> **NOTE:** that `use_default_schema` and `force_package_type` are not needed and will cause validation errors if harvesting between two CKANs using the same custom schema (the CIOOS setup). `spatial_filter_file`, if set, will take presidents over `spatial_filter`.
 
 Thus, in the above example the `spatial_filter` parameter will be ignored in favour of loading the spatial filter from an external file.
 
@@ -465,10 +465,12 @@ Thus, in the above example the `spatial_filter` parameter will be ignored in fav
 
 It may become necessary to reindex harvesters, especially if they no longer report the correct number of harvested datasets.
 
-**NOTE:** If modifying the harvester config you will also need to reindex to make the new config take affect.
+> **NOTE:** If modifying the harvester config you will also need to reindex to make the new config take affect and restart the ckan_fetch_harvester container
 
 ```bash
 sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckanext-harvest harvester reindex --config=/etc/ckan/production.ini
+cd ~/ckan/contrib/docker
+sudo docker-compose restart ckan_fetch_harvester
 ```
 
 ## Finish setting up pyCSW
@@ -589,7 +591,17 @@ Then copy updated ckan core files into the volume
 
 ```bash
 cd ~/ckan
-sudo cp -r . $VOL_CKAN_HOME/venv/src/ckan
+sudo cp -r ./bin/ $VOL_CKAN_HOME/venv/src/ckan/bin/
+sudo cp -r ./ckan/ $VOL_CKAN_HOME/venv/src/ckan/ckan/
+sudo cp -r ./ckanext/ $VOL_CKAN_HOME/venv/src/ckan/ckanext/
+sudo cp -r ./scripts/ $VOL_CKAN_HOME/venv/src/ckan/scripts/
+sudo cp -r ./*.py ./*.txt ./*.ini ./*.rst $VOL_CKAN_HOME/venv/src/ckan/
+sudo cp -r ./contrib/docker/production.ini $VOL_CKAN_CONFIG/production.ini
+sudo cp -r ./contrib/docker/who.ini $VOL_CKAN_HOME/venv/src/ckan/ckan/config/who.ini
+sudo docker cp ./contrib/docker/ckan-entrypoint.sh ckan:/ckan-entrypoint.sh
+sudo docker cp ./contrib/docker/ckan-harvester-entrypoint.sh ckan_gather_harvester:/ckan-harvester-entrypoint.sh
+sudo docker cp ./contrib/docker/ckan-harvester-entrypoint.sh ckan_fetch_harvester:/ckan-harvester-entrypoint.sh
+sudo docker cp ./contrib/docker/ckan-run-harvester-entrypoint.sh ckan_run_harvester:/ckan-run-harvester-entrypoint.sh
 ```
 
 update permissions (optional but recommended)
@@ -646,7 +658,7 @@ copy updated extension code to the volumes
 ```bash
 cd ~/ckan/contrib/docker
 sudo cp -r src/ckanext-cioos_theme/ $VOL_CKAN_HOME/venv/src/
-sudo cp -R src/ckanext-googleanalyticsbasic $VOL_CKAN_HOME/venv/src/
+sudo cp -r src/ckanext-googleanalyticsbasic $VOL_CKAN_HOME/venv/src/
 sudo cp -r src/ckanext-cioos_harvest/ $VOL_CKAN_HOME/venv/src/
 sudo cp -r src/ckanext-harvest/ $VOL_CKAN_HOME/venv/src/
 sudo cp -r src/ckanext-spatial/ $VOL_CKAN_HOME/venv/src/
@@ -658,7 +670,7 @@ sudo cp -r src/ckanext-fluent/ $VOL_CKAN_HOME/venv/src/
 sudo cp -r src/ckanext-dcat/ $VOL_CKAN_HOME/venv/src/
 sudo cp src/cioos-siooc-schema/cioos-siooc_schema.json $VOL_CKAN_HOME/venv/src/ckanext-scheming/ckanext/scheming/cioos_siooc_schema.json
 sudo cp src/cioos-siooc-schema/organization.json $VOL_CKAN_HOME/venv/src/ckanext-scheming/ckanext/scheming/organization.json
-sudo cp src/cioos-siooc-schema/ckan_license.json $VOL_CKAN_HOME/venv/src/ckan/contrib/docker/src/cioos-siooc-schema/ckan_license.json
+sudo cp src/cioos-siooc-schema/ckan_license.json $VOL_CKAN_HOME/venv/src/cioos-siooc-schema/ckan_license.json
 ```
 
 Exporting volumes on windows does not work so another option for copying files to the volumes is to use the `docker cp` command. You must know the path of the named volume in the container you are connecting to and the container must be running for this to work
@@ -666,6 +678,7 @@ Exporting volumes on windows does not work so another option for copying files t
 ```bash
 cd ~/ckan/contrib/docker
 docker cp -r src/ckanext-cioos_theme/ ckan:/usr/lib/ckan/venv/src/
+docker cp -r src/ckanext-googleanalyticsbasic/ ckan:/usr/lib/ckan/venv/src/
 docker cp -r src/ckanext-cioos_harvest/ ckan:/usr/lib/ckan/venv/src/
 docker cp -r src/ckanext-harvest/ ckan:/usr/lib/ckan/venv/src/
 docker cp -r src/ckanext-spatial/ ckan:/usr/lib/ckan/venv/src/
@@ -674,8 +687,10 @@ docker cp -r src/ckanext-scheming/ ckan:/usr/lib/ckan/venv/src/
 docker cp -r src/ckanext-repeating/ ckan:/usr/lib/ckan/venv/src/
 docker cp -r src/ckanext-composite/ ckan:/usr/lib/ckan/venv/src/
 docker cp -r src/ckanext-fluent/ ckan:/usr/lib/ckan/venv/src/
+docker cp -r src/ckanext-dcat/ ckan:/usr/lib/ckan/venv/src/
 docker cp src/cioos-siooc-schema/cioos-siooc_schema.json ckan:/usr/lib/ckan/venv/src/ckanext-scheming/ckanext/scheming/cioos_siooc_schema.json
 docker cp src/cioos-siooc-schema/organization.json ckan:/usr/lib/ckan/venv/src/ckanext-scheming/ckanext/scheming/organization.json
+docker cp src/cioos-siooc-schema/ckan_license.json ckan:/usr/lib/ckan/venv/src/cioos-siooc-schema/ckan_license.json
 ```
 
 update permissions (optional)
@@ -793,8 +808,9 @@ You can examine the **hosts** file in the container using:
 
 ```bash
 sudo docker exec -u root -it ckan_gather_harvester cat /etc/hosts
-``
-## build project using docker hub images
+```
+
+### build project using docker hub images
 
 edit .env file and change compose file setting
 ​```bash
@@ -966,7 +982,7 @@ sudo docker-compose up -d ckan_gather_harvester ckan_fetch_harvester ckan_run_ha
 
 If you need to change the **production.ini** in the repo and rebuild then you may need to delete the volume first.
 
-**IMPORTANT:** Volume does not update during dockerfile run if it already exists.
+> **IMPORTANT:** Volume does not update during dockerfile run if it already exists.
 
 ```bash
 sudo docker-compose down
@@ -999,7 +1015,7 @@ sudo docker ps | grep ckan
 sudo docker-compose logs -f ckan
 ```
 
-if container isn’t running its probably because the db didn’t build in time.
+If container isn’t running its probably because the db didn’t build in time.
 
 Restart the CKAN container
 
@@ -1055,20 +1071,15 @@ When building ckan, in windows, you get the error:
 
 Delete and re clone the ckan repo.
 
-**NOTE:** You may want to backup config files first.
+> **NOTE:** You may want to backup config files first.
 
 ### When changing harvester config it does not take affect
 
-If you edit a harvester config and then reharvest the existing harvester will continue to use the in memory harvester config. To solve this you can either restart the harvester docker containers or reindex the harvesters
-
-```bash
-sudo docker-compose restart ckan_run_harvester ckan_fetch_harvester ckan_gather_harvester
-```
-
-or
+If you edit a harvester config and then reharvest the existing harvester will continue to use the in memory harvester config. To solve this you should reindex the harvesters and restart the harvester docker containers
 
 ```bash
 sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckanext-harvest harvester reindex --config=/etc/ckan/production.ini
+sudo docker-compose restart ckan_run_harvester ckan_fetch_harvester ckan_gather_harvester
 ```
 
 ### 500 Internal Server Error - when creating organizations or updating admin config settings
@@ -1086,7 +1097,7 @@ exit
 ### Build fails with 'Temporary failure resolving...' errors
 
 Likely the issue is that docker is passing the wrong DNS lookup addresses to the
-containers on build. See issue this issue on stack overflow <https://stackoverflow.com/a/45644890>
+containers on build. See this issue on stack overflow <https://stackoverflow.com/a/45644890>
 for a solution.
 
 ### Saving the admin config via the gui causes an internal server errors
