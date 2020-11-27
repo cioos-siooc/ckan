@@ -1,4 +1,6 @@
-- [Setup](#setup)
+# Setup CKAN
+
+- [Setup CKAN](#setup-ckan)
   - [Linux](#linux)
     - [Install Docker](#install-docker)
     - [Install docker-compose](#install-docker-compose)
@@ -30,10 +32,10 @@
     - [Test GetCapabilities](#test-getcapabilities)
     - [Useful pyCSW commands](#useful-pycsw-commands)
     - [Errors while pyCSW loading](#errors-while-pycsw-loading)
-- [Update SOLR schema](#update-solr-schema)
-- [Update CKAN](#update-ckan)
-- [Update CKAN extensions](#update-ckan-extensions)
-- [Other helpful commands](#other-helpful-commands)
+  - [Update SOLR schema](#update-solr-schema)
+  - [Update CKAN](#update-ckan)
+  - [Update CKAN extensions](#update-ckan-extensions)
+  - [Other helpful commands](#other-helpful-commands)
     - [Update a system file in a running container](#update-a-system-file-in-a-running-container)
     - [Set timezone](#set-timezone)
     - [Flush email notifications](#flush-email-notifications)
@@ -41,25 +43,23 @@
     - [Update language translation files](#update-language-translation-files)
     - [Add DHCP entries to docker container](#add-dhcp-entries-to-docker-container)
     - [Reindex if project was already installed / running](#reindex-if-project-was-already-installed--running)
-- [Customize interface](#customize-interface)
-- [Enable Google Analytics](#enable-google-analytics)
-- [Troubleshooting](#troubleshooting)
-  - [Issues building/starting CKAN:](#issues-buildingstarting-ckan)
-  - [Changes to production.ini](#changes-to-productionini)
-    - [Linux:](#linux-1)
-    - [Windows:](#windows-1)
-  - [Is CKAN running?](#is-ckan-running)
-  - [Connect to container as root to debug](#connect-to-container-as-root-to-debug)
-  - [No records are showing up](#no-records-are-showing-up)
-  - [Running out of hard drive space?](#running-out-of-hard-drive-space)
-  - [Errors when building CKAN](#errors-when-building-ckan)
-  - [When changing harvester config it does not take affect](#when-changing-harvester-config-it-does-not-take-affect)
-  - [500 Internal Server Error - when creating organizations or updating admin config settings](#500-internal-server-error---when-creating-organizations-or-updating-admin-config-settings)
-  - [Build fails with 'Temporary failure resolving...' errors](#build-fails-with-temporary-failure-resolving-errors)
-  - [Saving the admin config via the gui causes an internal server errors](#saving-the-admin-config-via-the-gui-causes-an-internal-server-errors)
-    - [if while starting ckan you get the error "from osgeo import ogr ImportError: No module named osgeo"](#if-while-starting-ckan-you-get-the-error-from-osgeo-import-ogr-importerror-no-module-named-osgeo)
-
-# Setup
+  - [Customize interface](#customize-interface)
+  - [Enable Google Analytics](#enable-google-analytics)
+  - [Troubleshooting](#troubleshooting)
+    - [Issues building/starting CKAN](#issues-buildingstarting-ckan)
+    - [Changes to production.ini](#changes-to-productionini)
+      - [Linux](#linux-1)
+      - [Windows](#windows-1)
+    - [Is CKAN running?](#is-ckan-running)
+    - [Connect to container as root to debug](#connect-to-container-as-root-to-debug)
+    - [No records are showing up](#no-records-are-showing-up)
+    - [Running out of hard drive space?](#running-out-of-hard-drive-space)
+    - [Errors when building CKAN](#errors-when-building-ckan)
+    - [When changing harvester config it does not take affect](#when-changing-harvester-config-it-does-not-take-affect)
+    - [500 Internal Server Error - when creating organizations or updating admin config settings](#500-internal-server-error---when-creating-organizations-or-updating-admin-config-settings)
+    - [Build fails with 'Temporary failure resolving...' errors](#build-fails-with-temporary-failure-resolving-errors)
+    - [Saving the admin config via the gui causes an internal server errors](#saving-the-admin-config-via-the-gui-causes-an-internal-server-errors)
+    - [Error when Starting CKAN: "from osgeo import ogr ImportError: No module named osgeo"](#error-when-starting-ckan-from-osgeo-import-ogr-importerror-no-module-named-osgeo)
 
 ## Linux
 
@@ -82,13 +82,11 @@ sudo chmod +x /usr/local/bin/docker-compose
 sudo docker-compose --version
 ```
 
-
-
 ## Windows
 
 It is possible to setup CKAN under Windows 10 using:
 
-- [Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/install-win10), Version 2 (WSL2) and 
+- [Windows Subsystem for Linux](https://docs.microsoft.com/en-us/windows/wsl/install-win10), Version 2 (WSL2) and
 - [Docker Desktop](https://www.docker.com/products/docker-desktop)
 
 This is useful for development purposes but has not been tested for production environments.
@@ -107,7 +105,7 @@ When Docker Desktop is installed you can make your life easier by enabling WSL I
 
 > This will allow you to view many aspects of the containers & applications running in docker as well start/stop/restart/delete them, and enter a CLI environment inside a running container from the dashboard.
 
-Open Docker Desktop, Open Settings and enable WSL Integration under the Resources section as illustrated below: 
+Open Docker Desktop, Open Settings and enable WSL Integration under the Resources section as illustrated below:
 
 <img src="./install-docker-desktop-wsl-integration.png" alt="Docker Desktop + WSL Integration" style="zoom: 80%;" />
 
@@ -127,8 +125,6 @@ git submodule init
 git submodule update
 ```
 
-
-
 ## Create config files
 
 Create environment file and populate with appropriate values
@@ -141,9 +137,9 @@ nano .env
 
 ### Installing CKAN as the root website
 
-If your CKAN installation will run at the root of your domain, for example http://yourdomain.com/
+If your CKAN installation will run at the root of your domain, for example <http://yourdomain.com/>
 
-```
+```bash
 cd ~/ckan/contrib/docker/
 cp production_root_url.ini production.ini
 cp who_root_url.ini who.ini
@@ -151,7 +147,7 @@ cp who_root_url.ini who.ini
 
 ### Installing CKAN off the root of a website
 
-Use this setup if your site will run at http://yourdomain.com**/ckan**
+Use this setup if your site will run at <http://yourdomain.com/ckan>
 
 ```bash
 cd ~/ckan/contrib/docker/
@@ -161,7 +157,7 @@ cp who_non_root_url.ini who.ini
 
 ### Configuring pyCSW
 
-Copy [pyCSW](https://pycsw.org/) config template file and update the database password. 
+Copy [pyCSW](https://pycsw.org/) config template file and update the database password.
 
 The database password is the same password entered in your **.env** file
 
@@ -170,8 +166,6 @@ cd ~/ckan/contrib/docker/pycsw
 cp pycsw.cfg.template pycsw.cfg
 nano pycsw.cfg
 ```
-
-
 
 ## Build CKAN
 
@@ -187,7 +181,7 @@ Build containers, this takes a while
   sudo docker-compose up -d --build
 ```
 
-If you don't see any error messages, check http://localhost:5000 to see if the installation worked.
+If you don't see any error messages, check <http://localhost:5000> to see if the installation worked.
 
 ```bash
 curl localhost:5000
@@ -213,21 +207,21 @@ in the admin page of ckan set style to default and homepage to CIOOS to get the 
 
 To access the admin section you can click on the hammer icon in the footer of the page or go to one of the following URLs:
 
-- ROOT Install: http://localhost:5000/ckan-admin/config
+- ROOT Install: <http://localhost:5000/ckan-admin/config>
 
-- Non-Root Install: http://localhost:5000**/ckan/**ckan-admin/config
+- Non-Root Install: <http://localhost:5000/ckan/ckan-admin/config>
 
 ## Setup Apache proxy
 
-CKAN by default will install to http://localhost:5000/
+CKAN by default will install to <http://localhost:5000/>
 
 This is fine for testing and development purposes but should not be used in a production environment.
 
-You can use Apache to forward requests from http://yourdomain.com or http://yourdomain.com/ckan to http://localhost:5000
+You can use Apache to forward requests from <http://yourdomain.com> or <http://yourdomain.com/ckan> to <http://localhost:5000>
 
 ## Install Apache
 
-If proxying docker behind [Apache](https://httpd.apache.org/) (recommended) you will need to have that installed as well. 
+If proxying docker behind [Apache](https://httpd.apache.org/) (recommended) you will need to have that installed as well.
 
 **NOTE:** [nginx](https://www.nginx.com/) will also work but is not covered in this guide.
 
@@ -249,8 +243,8 @@ sudo a2enmod deflate
 
 **Sources:**
 
-- Ubuntu https://rietta.com/blog/moddeflate-dramatic-website-speed/
-- CentOS 7 https://www.digitalocean.com/community/tutorials/how-to-install-and-configure-mod_deflate-on-centos-7
+- Ubuntu <https://rietta.com/blog/moddeflate-dramatic-website-speed/>
+- CentOS 7 <https://www.digitalocean.com/community/tutorials/how-to-install-and-configure-mod_deflate-on-centos-7>
 
 ### Configure Proxy Settings
 
@@ -259,41 +253,43 @@ Add the following to your sites configs to enable proxy:
 **NOTE:** The following settings assume you've enabled compression from the previous step, if you have not remove the lines under **# enable deflate**
 
 ```apache
-	# Non-Root Install
-	# CKAN
-	<location /ckan>
-  	    ProxyPass http://localhost:5000/
-  	    ProxyPassReverse http://localhost:5000/
-        # enable deflate
-        SetOutputFilter DEFLATE
-        SetEnvIfNoCase Request_URI "\.(?:gif|jpe?g|png)$" no-gzip
-   	</location>
+  # Non-Root Install
+  # CKAN
+  <location /ckan>
+    ProxyPass http://localhost:5000/
+    ProxyPassReverse http://localhost:5000/
 
-    # pycsw
-     <location /ckan/csw>
-         ProxyPass http://localhost:8000/pycsw/csw.js
-         ProxyPassReverse http://localhost:8000/pycsw/csw.js
-    </location>
+    # enable deflate
+    SetOutputFilter DEFLATE
+    SetEnvIfNoCase Request_URI "\.(?:gif|jpe?g|png)$" no-gzip
+  </location>
+
+  # pycsw
+  <location /ckan/csw>
+    ProxyPass http://localhost:8000/pycsw/csw.js
+    ProxyPassReverse http://localhost:8000/pycsw/csw.js
+  </location>
 ```
 
 or
 
 ```apache
-	# Root Install
-    # CKAN
-    <location />
-        ProxyPass http://localhost:5000/
-        ProxyPassReverse http://localhost:5000/
-        # enable deflate
-        SetOutputFilter DEFLATE
-        SetEnvIfNoCase Request_URI "\.(?:gif|jpe?g|png)$" no-gzip
-    </location>
+  # Root Install
+  # CKAN
+  <location />
+    ProxyPass http://localhost:5000/
+    ProxyPassReverse http://localhost:5000/
 
-    # pycsw
-    <location /csw>
-        ProxyPass http://localhost:8000/pycsw/csw.js
-        ProxyPassReverse http://localhost:8000/pycsw/csw.js
-    </location>
+    # enable deflate
+    SetOutputFilter DEFLATE
+    SetEnvIfNoCase Request_URI "\.(?:gif|jpe?g|png)$" no-gzip
+  </location>
+
+  # pycsw
+  <location /csw>
+    ProxyPass http://localhost:8000/pycsw/csw.js
+    ProxyPassReverse http://localhost:8000/pycsw/csw.js
+  </location>
 ```
 
 ### Redirect HTTP to HTTPS
@@ -319,10 +315,8 @@ sudo /usr/sbin/setsebool -P httpd_can_network_connect 1
 Once all these changes have been made you'll need to restart Apache to see the results
 
 ```bash
-  sudo apachectl restart
+sudo apachectl restart
 ```
-
-
 
 ## Setup Harvesters
 
@@ -469,15 +463,13 @@ Thus, in the above example the `spatial_filter` parameter will be ignored in fav
 
 ### Reindex Harvesters
 
-It may become necessary to reindex harvesters, especially if they no longer report the correct number of harvested datasets. 
+It may become necessary to reindex harvesters, especially if they no longer report the correct number of harvested datasets.
 
 **NOTE:** If modifying the harvester config you will also need to reindex to make the new config take affect.
 
 ```bash
 sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckanext-harvest harvester reindex --config=/etc/ckan/production.ini
 ```
-
-
 
 ## Finish setting up pyCSW
 
@@ -560,9 +552,7 @@ Add md5 index
 CREATE INDEX ix_records_abstract ON records((md5(abstract)));
 ```
 
-
-
-# Update SOLR schema
+## Update SOLR schema
 
 This method uses dockers copy command to copy the new schema file into a running solr container
 
@@ -584,9 +574,7 @@ Rebuild search index
 sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckan search-index rebuild --config=/etc/ckan/production.ini
 ```
 
-
-
-# Update CKAN
+## Update CKAN
 
 If you need to update CKAN to a new version you can either remove the docker_ckan_home volume or update the volume with the new ckan core files. After which you need to rebuild the CKAN image and any docker containers based on that image. If you are working with a live / production system the preferred method is to update the volume and rebuild which will result in the least amount of down time.
 
@@ -630,9 +618,7 @@ cd ~/ckan/contrib/docker
 sudo docker-compose up -d
 ```
 
-
-
-# Update CKAN extensions
+## Update CKAN extensions
 
 enable volume environment variables to make accessing the volumes easier
 
@@ -712,13 +698,11 @@ sudo docker-compose restart ckan
 sudo docker-compose restart ckan_run_harvester ckan_fetch_harvester ckan_gather_harvester
 ```
 
-
-
-# Other helpful commands
+## Other helpful commands
 
 ### Update a system file in a running container
 
-The easiest way is with the docker copy command. 
+The easiest way is with the docker copy command.
 
 For example to update the crontab of the ckan_run_harvester containers you first copy the file to the container:
 
@@ -746,7 +730,7 @@ sudo cp -r ./crontab $VOL_CKAN_HOME/venv/src/ckan/contrib/docker/crontab
 
 ### Set timezone
 
-```
+```bash
 timedatectl
 ls -l /etc/localtime
 timedatectl list-timezones
@@ -754,10 +738,9 @@ sudo timedatectl set-timezone UTC
 sudo timedatectl set-timezone America/Vancouver
 ```
 
-
 ### Flush email notifications
 
-```
+```bash
 sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckan post -c /etc/ckan/production.ini /api/action/send_email_notifications
 ```
 
@@ -795,7 +778,7 @@ nano docker-compose.yml
 
 Add extra hosts entrie to any services.
 
-In this example we add a hosts entry for **test.ckan.org** to the **ckan_gather_harvester** container. 
+In this example we add a hosts entry for **test.ckan.org** to the **ckan_gather_harvester** container.
 
 This will map the domain name to the local docker network.
 
@@ -818,11 +801,11 @@ edit .env file and change compose file setting
 COMPOSE_FILE=docker-cloud.yml
 ```
 
-Edit **docker-cloud.yml** to use correct image. 
+Edit **docker-cloud.yml** to use correct image.
 
-If the **CKAN_TAG** variable is set in the **.env** file then docker compose will use that setting by default. 
+If the **CKAN_TAG** variable is set in the **.env** file then docker compose will use that setting by default.
 
-The default setting for this variable is '**latest**'. To change to a different image tag you can change the setting in your **.env** file or overwrite at container launch using a shell environment variable. 
+The default setting for this variable is '**latest**'. To change to a different image tag you can change the setting in your **.env** file or overwrite at container launch using a shell environment variable.
 
 For example: to use the **PR37** tag of the cioos ckan image you would use the following command
 
@@ -840,16 +823,14 @@ sudo docker-compose up -d
 
 ### Reindex if project was already installed / running
 
-```
+```bash
 sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckan search-index rebuild --config=/etc/ckan/production.ini
 sudo docker exec -it ckan /usr/local/bin/ckaext-harvest harvester reindex --config=/etc/ckan/production.ini
 ```
 
+## Customize interface
 
-
-# Customize interface
-
-Now that you have ckan running you can customize the interface via the admin config page. Go to http://localhost:5000/ckan-admin/config and configure some of the site options.
+Now that you have ckan running you can customize the interface via the admin config page. Go to <http://localhost:5000/ckan-admin/config> and configure some of the site options.
 
 - Site_logo can be used to set the CIOOS logo that appears on every page.
 - Homepage should be set to CIOOS for the CIOOS style home page layout
@@ -934,101 +915,105 @@ background:rgb(185, 214, 242);
 }
 ```
 
-# Enable Google Analytics
+## Enable Google Analytics
+
 edit the **production.ini** file currently in the volume.
+
 ```bash
-  export VOL_CKAN_CONFIG=`sudo docker volume inspect docker_ckan_config | jq -r -c '.[] | .Mountpoint'`
-  sudo nano $VOL_CKAN_CONFIG/production.ini
+export VOL_CKAN_CONFIG=`sudo docker volume inspect docker_ckan_config | jq -r -c '.[] | .Mountpoint'`
+sudo nano $VOL_CKAN_CONFIG/production.ini
 ```
 
 uncomment the google analytics id config and update to your id and replace
 
 ```bash
-  # googleanalytics.ids = UA-1234567890000-1
+# googleanalytics.ids = UA-1234567890000-1
 ```
+
 with
+
 ```bash
-  googleanalytics.ids = [your Tracking IDs here seperated by spaces]
+googleanalytics.ids = [your Tracking IDs here seperated by spaces]
 ```
 
 ---
 
-# Troubleshooting
+## Troubleshooting
 
-## Issues building/starting CKAN:
+### Issues building/starting CKAN
 
 Try manually pulling the images first e.g.:
 
 ```bash
-  sudo docker pull --disable-content-trust clementmouchet/datapusher
-  sudo docker pull --disable-content-trust redis:latest
+sudo docker pull --disable-content-trust clementmouchet/datapusher
+sudo docker pull --disable-content-trust redis:latest
 ```
 
-Sometimes the containers start in the wrong order. 
+Sometimes the containers start in the wrong order.
 
 This often results in strange sql errors in the db logs.  If this happens you can manually start the containers by first building then using **docker-compose up**
 
 ```bash
-  sudo docker-compose build
-  sudo docker-compose up -d db
-  sudo docker-compose up -d solr redis
-  sudo docker-compose up -d ckan
-  sudo docker-compose up -d datapusher
-  sudo docker-compose up -d ckan_gather_harvester ckan_fetch_harvester ckan_run_harvester
+sudo docker-compose build
+sudo docker-compose up -d db
+sudo docker-compose up -d solr redis
+sudo docker-compose up -d ckan
+sudo docker-compose up -d datapusher
+sudo docker-compose up -d ckan_gather_harvester ckan_fetch_harvester ckan_run_harvester
 ```
 
-## Changes to production.ini 
+### Changes to production.ini
 
 If you need to change the **production.ini** in the repo and rebuild then you may need to delete the volume first.
 
 **IMPORTANT:** Volume does not update during dockerfile run if it already exists.
 
 ```bash
-  sudo docker-compose down
-  sudo docker volume rm docker_ckan_config
+sudo docker-compose down
+sudo docker volume rm docker_ckan_config
 ```
 
-### Linux:
+#### Linux
 
 update ckan/contrib/docker/production.ini
 
 ```bash
-  export VOL_CKAN_CONFIG=`sudo docker volume inspect docker_ckan_config | jq -r -c '.[] | .Mountpoint'`
-  sudo nano $VOL_CKAN_CONFIG/production.ini
+export VOL_CKAN_CONFIG=`sudo docker volume inspect docker_ckan_config | jq -r -c '.[] | .Mountpoint'`
+sudo nano $VOL_CKAN_CONFIG/production.ini
 ```
 
-### Windows: 
+#### Windows
 
 edit the production.ini file and copy it to the volume
 
 ```bash
-  docker cp production.ini ckan:/etc/ckan/
+docker cp production.ini ckan:/etc/ckan/
 ```
 
-## Is CKAN running? 
+### Is CKAN running?
 
 Check container is running and view logs
 
 ```bash
-  sudo docker ps | grep ckan
-  sudo docker-compose logs -f ckan
+sudo docker ps | grep ckan
+sudo docker-compose logs -f ckan
 ```
 
-if container isn’t running its probably because the db didn’t build in time. 
+if container isn’t running its probably because the db didn’t build in time.
 
 Restart the CKAN container
 
 ```bash
-  sudo docker-compose restart ckan
+sudo docker-compose restart ckan
 ```
 
-## Connect to container as root to debug
+### Connect to container as root to debug
 
 ```bash
-  sudo docker exec -u root -it ckan /bin/bash -c "export TERM=xterm; exec bash"
+sudo docker exec -u root -it ckan /bin/bash -c "export TERM=xterm; exec bash"
 ```
 
-## No records are showing up
+### No records are showing up
 
 If you rebuilt the ckan container and no records are showing up, you need to reindex the records.
 
@@ -1036,64 +1021,75 @@ If you rebuilt the ckan container and no records are showing up, you need to rei
 sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckan search-index rebuild --config=/etc/ckan/production.ini
 ```
 
-## Running out of hard drive space? 
+### Running out of hard drive space?
 
-You have done several builds of ckan and now you are running out of hard drive space? 
+You have done several builds of ckan and now you are running out of hard drive space?
 
 With ckan running you can clean up docker images, containers, volumes, cache etc.
 
 ```bash
-  sudo docker system prune -a
-  sudo docker volume prune
+sudo docker system prune -a
+sudo docker volume prune
 ```
 
 or remove only the images you want with
 
 ```bash
-	sudo docker image ls
-	sudo docker rmi [image name]
+sudo docker image ls
+sudo docker rmi [image name]
 ```
 
-## Errors when building CKAN
+### Errors when building CKAN
 
-When building ckan, in windows, you get the error `standard_init_linux.go:207: exec user process caused "no such file or directory"`
-delete c:/user/[your username]/lock.gitconfig
-Then change git line end characters to unix/linux style ones
+When building ckan, in windows, you get the error:
+
+> `standard_init_linux.go:207: exec user process caused "no such file or directory"`
+
+- Delete `c:/user/[your username]/lock.gitconfig`
+- Then change git line end characters to **unix/linux** style ones
+
+ ```bash
   git config --global core.eol lf
   git config --global core.autocrlf input
-Delete and re clone the ckan repo. You may want to backup config files first.
+  ```
 
-## When changing harvester config it does not take affect
+Delete and re clone the ckan repo.
+
+**NOTE:** You may want to backup config files first.
+
+### When changing harvester config it does not take affect
 
 If you edit a harvester config and then reharvest the existing harvester will continue to use the in memory harvester config. To solve this you can either restart the harvester docker containers or reindex the harvesters
 
 ```bash
 sudo docker-compose restart ckan_run_harvester ckan_fetch_harvester ckan_gather_harvester
 ```
+
 or
+
 ```bash
 sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckanext-harvest harvester reindex --config=/etc/ckan/production.ini
 ```
 
-## 500 Internal Server Error - when creating organizations or updating admin config settings
+### 500 Internal Server Error - when creating organizations or updating admin config settings
 
 This can be caused by ckan not having permissions to write to the internal storage of the ckan container. This should be setup during the build process. You can debug this by setting debug = true in the production.ini file. No error messages will be reported in the ckan logs for this issue without turning on debug.
 
 To fix change the owner of the ckan storage folder and its children
 
 ```bash
-  sudo docker exec -u root -it ckan /bin/bash -c "export TERM=xterm; exec bash"
-  chown -R ckan:ckan $CKAN_HOME $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH
-  exit
+sudo docker exec -u root -it ckan /bin/bash -c "export TERM=xterm; exec bash"
+chown -R ckan:ckan $CKAN_HOME $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH
+exit
 ```
 
-## Build fails with 'Temporary failure resolving...' errors
+### Build fails with 'Temporary failure resolving...' errors
 
 Likely the issue is that docker is passing the wrong DNS lookup addresses to the
-containers on build. See issue this issue on stack overflow https://stackoverflow.com/a/45644890
+containers on build. See issue this issue on stack overflow <https://stackoverflow.com/a/45644890>
 for a solution.
 
-## Saving the admin config via the gui causes an internal server errors
+### Saving the admin config via the gui causes an internal server errors
 
 To diagnose issue turn on debugging in the production.ini file ad restart ckan. The problem is likely caused by file permissions or a missing upload directory. Change file permissions using chown or create folder as as needed. Exact paths will be reported in ckan error log.
 
@@ -1101,7 +1097,8 @@ To diagnose issue turn on debugging in the production.ini file ad restart ckan. 
 - create upload folder: `sudo mkdir $VOL_CKAN_STIRAGE/storage/upload`
 - change file permissions: `sudo chown 900:900 -R $VOL_CKAN_HOME $VOL_CKAN_STORAGE`
 
-### if while starting ckan you get the error "from osgeo import ogr ImportError: No module named osgeo"
+### Error when Starting CKAN: "from osgeo import ogr ImportError: No module named osgeo"
+
 This issue also applies to "ImportError: No module named urllib3.contrib" errors or any python module which you know is installed but is not found when starting ckan
 
 You have re-build ckan after upgrading to a version that uses glad and ogr but have not recreated the docker_ckan_home volume. Delete the volume and restart ckan.
@@ -1120,4 +1117,3 @@ cd ~/ckan/contrib/docker
 sudo chown 900:900 -R $VOL_CKAN_HOME/venv/src/
 sudo docker-compose up -d
 ```
-
