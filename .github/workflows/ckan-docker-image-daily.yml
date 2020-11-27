@@ -54,7 +54,7 @@ jobs:
         submod_name=$(echo ${{github.event.client_payload.submodule}} | cut -d/ -f2)
         submod_full_path=$(echo "$submod_path/$submod_name")
         echo "SM_NAME=$submod_name" >> $GITHUB_ENV
-        git config --file=.gitmodules submodule.$submod_full_path.branch ${{github.event.client_payload.head_ref}}
+        git config --file=.gitmodules submodule.$submod_full_path.branch '${{github.event.client_payload.head_ref}}'
     - run: git submodule init
     - run: git submodule update --remote
     - run: cp ./contrib/docker/.env.template ./contrib/docker/.env
@@ -80,6 +80,9 @@ jobs:
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
+    - uses: satackey/action-docker-layer-caching@v0.0.8
+      # Ignore the failure of a step and avoid terminating the job.
+      continue-on-error: true
     - run: docker build -t cioos/ckan:$TAG -t cioos/ckan:latest .
     - run: docker push cioos/ckan:$TAG
     - if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
