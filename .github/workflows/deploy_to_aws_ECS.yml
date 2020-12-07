@@ -1,0 +1,51 @@
+name: Deploy to Amazon ECS
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Render TD add db container
+        id: render-db-container
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: task-definition.json
+          container-name: db
+          image: cioos/postgresql:latest
+      - name: Modify TD add solr container
+        id: render-solr-container
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: ${{ steps.render-db-container.outputs.task-definition }}
+          container-name: solr
+          image: cioos/solr:latest
+
+      - name: Modify TD add ckan container
+        id: render-ckan-container
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: ${{ steps.render-solr-container.outputs.task-definition }}
+          container-name: ckan
+          image: cioos/ckan:latest
+
+      - name: Modify TD add redis container
+        id: render-redis-container
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: ${{ steps.render-ckan-container.outputs.task-definition }}
+          container-name: redis
+          image: redis:latest
+
+      - name: Modify TD add datapusher container
+        id: render-datapusher-container
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: ${{ steps.render-redis-container.outputs.task-definition }}
+          container-name: datapusher
+          image: clementmouchet/datapusher
+
+      - name: print task defiition
+        run: echo ${{ steps.task-def.outputs.task-definition }}
