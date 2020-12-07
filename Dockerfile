@@ -93,8 +93,6 @@ RUN ckan-pip install flask_debugtoolbar
 
 # Copy extensions into container and Install
 WORKDIR $CKAN_VENV/src
-COPY ./contrib/docker/src/hakai-schema/hakai_schema.json $CKAN_VENV/src/ckanext-scheming/ckanext/scheming/hakai_schema.json
-COPY ./contrib/docker/src/ckanext-hakai_theme $CKAN_VENV/src/ckanext-hakai_theme
 
 COPY ./contrib/docker/src/ckanext-geoview/pip-requirements.txt $CKAN_VENV/src/ckanext-geoview/pip-requirements.txt
 RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src && ckan-pip install -r ckanext-geoview/pip-requirements.txt"
@@ -111,9 +109,6 @@ RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src && ckan-pi
 COPY ./contrib/docker/src/ckanext-scheming/requirements.txt $CKAN_VENV/src/ckanext-scheming/requirements.txt
 RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src && ckan-pip install -r ckanext-scheming/requirements.txt"
 
-RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-hakai_theme && python setup.py install && python setup.py develop"
-RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-cioos_harvest && python setup.py install && python setup.py develop"
-#RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-doi && python setup.py install && python setup.py develop"
 COPY ./contrib/docker/src/ckanext-cioos_theme/dev-requirements.txt $CKAN_VENV/src/ckanext-cioos_theme/dev-requirements.txt
 RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src && ckan-pip install -r ckanext-cioos_theme/dev-requirements.txt"
 
@@ -157,7 +152,8 @@ RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-re
 COPY ./contrib/docker/src/ckanext-composite $CKAN_VENV/src/ckanext-composite
 RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-composite && python setup.py install && python setup.py develop"
 
-COPY ./contrib/docker/src/cioos-siooc-schema/cioos-siooc_schema.json  $CKAN_VENV/src/ckanext-scheming/ckanext/scheming/cioos_siooc_schema.json
+COPY ./contrib/docker/src/hakai-schema/hakai_schema.json $CKAN_VENV/src/ckanext-scheming/ckanext/scheming/hakai_schema.json
+# COPY ./contrib/docker/src/cioos-siooc-schema/cioos-siooc_schema.json  $CKAN_VENV/src/ckanext-scheming/ckanext/scheming/cioos_siooc_schema.json
 COPY ./contrib/docker/src/cioos-siooc-schema/organization.json ./contrib/docker/src/cioos-siooc-schema/ckan_license.json $CKAN_VENV/src/ckanext-scheming/ckanext/scheming/
 
 WORKDIR $CKAN_VENV/src
