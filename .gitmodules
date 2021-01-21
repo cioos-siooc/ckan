@@ -40,3 +40,6 @@
 [submodule "contrib/docker/src/ckanext-dcat"]
 	path = contrib/docker/src/ckanext-dcat
 	url = https://github.com/ckan/ckanext-dcat.git
+[submodule "contrib/docker/src/ckanext-datesearch"]
+	path = contrib/docker/src/ckanext-datesearch
+	url = https://github.com/cioos-siooc/ckanext-datesearch.git

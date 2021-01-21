@@ -163,6 +163,21 @@ WORKDIR $CKAN_VENV/lib/python2.7/site-packages/
 RUN /bin/bash -c "find . -maxdepth 1 ! -name 'ckanext*' ! -name '..' ! -name '.' ! -name 'easy-install.pth' | xargs rm -R; mv easy-install.pth easy-install-B.pth"
 
 #------------------------------------------------------------------------------#
+FROM base as extensions3
+#------------------------------------------------------------------------------#
+WORKDIR $CKAN_VENV/src
+
+COPY ./contrib/docker/src/ckanext-datesearch $CKAN_VENV/src/ckanext-datesearch
+RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-datesearch && python setup.py install && python setup.py develop"
+
+WORKDIR $CKAN_VENV/src
+RUN /bin/bash -c "rm -R ./ckan"
+
+WORKDIR $CKAN_VENV/lib/python2.7/site-packages/
+RUN /bin/bash -c "find . -maxdepth 1 ! -name 'ckanext*' ! -name '..' ! -name '.' ! -name 'easy-install.pth' | xargs rm -R; mv easy-install.pth easy-install-C.pth"
+
+
+#------------------------------------------------------------------------------#
 FROM base as harvest_extensions
 #------------------------------------------------------------------------------#
 WORKDIR $CKAN_VENV/src
@@ -177,7 +192,7 @@ WORKDIR $CKAN_VENV/src
 RUN /bin/bash -c "rm -R ./ckan"
 
 WORKDIR $CKAN_VENV/lib/python2.7/site-packages/
-RUN /bin/bash -c "find . -maxdepth 1 ! -name 'ckanext*' ! -name '..' ! -name '.' ! -name 'easy-install.pth' | xargs rm -R; mv easy-install.pth easy-install-C.pth"
+RUN /bin/bash -c "find . -maxdepth 1 ! -name 'ckanext*' ! -name '..' ! -name '.' ! -name 'easy-install.pth' | xargs rm -R; mv easy-install.pth easy-install-D.pth"
 
 #------------------------------------------------------------------------------#
 FROM base as cioos_extensions
@@ -193,7 +208,7 @@ WORKDIR $CKAN_VENV/src
 RUN /bin/bash -c "rm -R ./ckan"
 
 WORKDIR $CKAN_VENV/lib/python2.7/site-packages/
-RUN /bin/bash -c "find . -maxdepth 1 ! -name 'ckanext*' ! -name '..' ! -name '.' ! -name 'easy-install.pth' | xargs rm -R; mv easy-install.pth easy-install-D.pth"
+RUN /bin/bash -c "find . -maxdepth 1 ! -name 'ckanext*' ! -name '..' ! -name '.' ! -name 'easy-install.pth' | xargs rm -R; mv easy-install.pth easy-install-E.pth"
 
 #------------------------------------------------------------------------------#
 FROM base
@@ -204,13 +219,16 @@ COPY --from=extensions1 $CKAN_VENV/lib/python2.7/site-packages/ $CKAN_VENV/lib/p
 COPY --from=extensions2 $CKAN_VENV/src/ $CKAN_VENV/src/
 COPY --from=extensions2 $CKAN_VENV/lib/python2.7/site-packages/ $CKAN_VENV/lib/python2.7/site-packages/
 
+COPY --from=extensions3 $CKAN_VENV/src/ $CKAN_VENV/src/
+COPY --from=extensions3 $CKAN_VENV/lib/python2.7/site-packages/ $CKAN_VENV/lib/python2.7/site-packages/
+
 COPY --from=harvest_extensions $CKAN_VENV/src/ $CKAN_VENV/src/
 COPY --from=harvest_extensions $CKAN_VENV/lib/python2.7/site-packages/ $CKAN_VENV/lib/python2.7/site-packages/
 
 COPY --from=cioos_extensions $CKAN_VENV/src/ $CKAN_VENV/src/
 COPY --from=cioos_extensions $CKAN_VENV/lib/python2.7/site-packages/ $CKAN_VENV/lib/python2.7/site-packages/
 
-RUN /bin/bash -c "sort -u $CKAN_VENV/lib/python2.7/site-packages/easy-install-[ABCD].pth > $CKAN_VENV/lib/python2.7/site-packages/easy-install.pth"
+RUN /bin/bash -c "sort -u $CKAN_VENV/lib/python2.7/site-packages/easy-install-[ABCDE].pth > $CKAN_VENV/lib/python2.7/site-packages/easy-install.pth"
 
 RUN  chown -R ckan:ckan $CKAN_HOME $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH
 
