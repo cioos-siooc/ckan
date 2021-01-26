@@ -212,6 +212,10 @@ COPY --from=cioos_extensions $CKAN_VENV/lib/python2.7/site-packages/ $CKAN_VENV/
 
 RUN /bin/bash -c "sort -u $CKAN_VENV/lib/python2.7/site-packages/easy-install-[ABCD].pth > $CKAN_VENV/lib/python2.7/site-packages/easy-install.pth"
 
+RUN mkdir -p $CKAN_VENV/src/logs
+RUN touch "$CKAN_VENV/src/logs/ckan_access.log"
+RUN touch "$CKAN_VENV/src/logs/ckan_default.log"
+
 RUN  chown -R ckan:ckan $CKAN_HOME $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH
 
 ENTRYPOINT ["/ckan-entrypoint.sh"]
