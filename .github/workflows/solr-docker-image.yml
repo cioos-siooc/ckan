@@ -16,6 +16,6 @@ jobs:
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
-    - run: docker build -t cioos/solr:$TAG -t cioos/solr:latest --file ./contrib/docker/solr/Dockerfile .
-    - run: docker push cioos/solr:$TAG
-    - run: docker push cioos/solr:latest
+    - run: docker build -t hakaiinstitute/solr:$TAG -t hakaiinstitute/solr:latest --file ./contrib/docker/solr/Dockerfile .
+    - run: docker push hakaiinstitute/solr:$TAG
+    - run: docker push hakaiinstitute/solr:latest
