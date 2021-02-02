@@ -4,7 +4,7 @@ version: "3.4"
 
 x-ckan: &ckan_app
   container_name: ckan
-  image: cioos/ckan:${CKAN_TAG}
+  image: hakaiinstitute/ckan:${CKAN_TAG}
   links:
     - db
     - solr
@@ -51,7 +51,7 @@ services:
   ckan_gather_harvester:
      <<: *ckan_app
      container_name: ckan_gather_harvester
-     image: cioos/ckan:${CKAN_TAG}
+     image: hakaiinstitute/ckan:${CKAN_TAG}
      entrypoint: /ckan-harvester-entrypoint.sh
      user: root
      command: ckan-paster --plugin=ckanext-harvest harvester gather_consumer -c /etc/ckan/production.ini
@@ -62,7 +62,7 @@ services:
   ckan_fetch_harvester:
      <<: *ckan_app
      container_name: ckan_fetch_harvester
-     image: cioos/ckan:${CKAN_TAG}
+     image: hakaiinstitute/ckan:${CKAN_TAG}
      entrypoint: /ckan-harvester-entrypoint.sh
      user: root
      command: ckan-paster --plugin=ckanext-harvest harvester fetch_consumer -c /etc/ckan/production.ini
@@ -74,7 +74,7 @@ services:
   ckan_run_harvester:
      <<: *ckan_app
      container_name: ckan_run_harvester
-     image: cioos/ckan:${CKAN_TAG}
+     image: hakaiinstitute/ckan:${CKAN_TAG}
      entrypoint: /ckan-run-harvester-entrypoint.sh
      user: root
      command: /bin/bash -c "echo 'ckan_run_harvester started' && cron -f 2>&1 "
@@ -93,7 +93,7 @@ services:
 
   db:
     container_name: db
-    image: cioos/postgresql:latest
+    image: hakaiinstitute/postgresql:latest
     ports:
        - "5432:5432"
     environment:
@@ -107,7 +107,7 @@ services:
 
   solr:
     container_name: solr
-    image: cioos/solr:latest
+    image: hakaiinstitute/solr:latest
     #restart: always
 
   # redis is used by the datapusher and the spatial fetch and gather harvesters
