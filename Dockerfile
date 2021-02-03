@@ -154,7 +154,7 @@ RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-co
 
 COPY ./contrib/docker/src/hakai-schema/hakai_schema.json $CKAN_VENV/src/ckanext-scheming/ckanext/scheming/hakai_schema.json
 # COPY ./contrib/docker/src/cioos-siooc-schema/cioos-siooc_schema.json  $CKAN_VENV/src/ckanext-scheming/ckanext/scheming/cioos_siooc_schema.json
-COPY ./contrib/docker/src/cioos-siooc-schema/organization.json ./contrib/docker/src/cioos-siooc-schema/ckan_license.json $CKAN_VENV/src/ckanext-scheming/ckanext/scheming/
+# COPY ./contrib/docker/src/cioos-siooc-schema/organization.json ./contrib/docker/src/cioos-siooc-schema/ckan_license.json $CKAN_VENV/src/ckanext-scheming/ckanext/scheming/
 
 WORKDIR $CKAN_VENV/src
 RUN /bin/bash -c "rm -R ./ckan"
