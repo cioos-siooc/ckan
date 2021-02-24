@@ -70,6 +70,7 @@ ADD ./contrib/docker/who.ini $CKAN_VENV/src/ckan/ckan/config/who.ini
 ADD ./contrib/docker/ckan-entrypoint.sh /ckan-entrypoint.sh
 ADD ./contrib/docker/ckan-harvester-entrypoint.sh /ckan-harvester-entrypoint.sh
 ADD ./contrib/docker/ckan-run-harvester-entrypoint.sh /ckan-run-harvester-entrypoint.sh
+ADD ./contrib/docker/crontab $CKAN_VENV/src/ckan/contrib/docker/crontab
 
 RUN ckan-pip install -U pip && \
     ckan-pip install --upgrade --no-cache-dir -r $CKAN_VENV/src/ckan/requirement-setuptools.txt && \
@@ -210,6 +211,10 @@ COPY --from=cioos_extensions $CKAN_VENV/src/ $CKAN_VENV/src/
 COPY --from=cioos_extensions $CKAN_VENV/lib/python2.7/site-packages/ $CKAN_VENV/lib/python2.7/site-packages/
 
 RUN /bin/bash -c "sort -u $CKAN_VENV/lib/python2.7/site-packages/easy-install-[ABCD].pth > $CKAN_VENV/lib/python2.7/site-packages/easy-install.pth"
+
+RUN mkdir -p $CKAN_VENV/src/logs
+RUN touch "$CKAN_VENV/src/logs/ckan_access.log"
+RUN touch "$CKAN_VENV/src/logs/ckan_default.log"
 
 RUN  chown -R ckan:ckan $CKAN_HOME $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH
 
