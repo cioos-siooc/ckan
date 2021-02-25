@@ -45,8 +45,8 @@ jobs:
     name: build ckan docker image
     runs-on: ubuntu-latest
     if: |
-      !(github.event_name == 'pull_request' && github.event.action == 'closed') &&
-      !(github.event_name == 'repository_dispatch' && github.event.client_payload.action == 'closed')
+      "!(github.event_name == 'pull_request' && github.event.action == 'closed') &&
+      !(github.event_name == 'repository_dispatch' && github.event.client_payload.action == 'closed')"
     steps:
     - name: Checkout with submodules
       uses: actions/checkout@v2
