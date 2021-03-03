@@ -216,7 +216,7 @@ RUN mkdir -p $CKAN_VENV/src/logs
 RUN touch "$CKAN_VENV/src/logs/ckan_access.log"
 RUN touch "$CKAN_VENV/src/logs/ckan_default.log"
 
-RUN  chown -R ckan:ckan $CKAN_HOME $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH
+RUN chown -R 900:900 $CKAN_HOME $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH
 
 ENTRYPOINT ["/ckan-entrypoint.sh"]
 
