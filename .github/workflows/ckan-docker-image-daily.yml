@@ -49,15 +49,18 @@ jobs:
       !(github.event_name == 'repository_dispatch' && github.event.client_payload.action == 'closed')
     steps:
     - if: github.event_name == 'pull_request'
-      name: Checkout with submodules
+      name: Checkout pull request with submodules
       uses: actions/checkout@v2
       with:
         ref: ${{ github.event.pull_request.head.sha }}
         submodules: 'recursive'
         fetch-depth: '0'
     - if: github.event_name != 'pull_request'
-      name: Checkout
+      name: Checkout non pull request with submodules
       uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
+        fetch-depth: '0'
     - if: github.event_name == 'repository_dispatch'
       run: |
         submod_name=$(echo ${{github.event.client_payload.submodule}} | cut -d/ -f2)
