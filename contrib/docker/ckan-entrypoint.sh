@@ -34,6 +34,7 @@ set_environment () {
   export CKAN_SMTP_PASSWORD=${CKAN_SMTP_PASSWORD}
   export CKAN_SMTP_MAIL_FROM=${CKAN_SMTP_MAIL_FROM}
   export CKAN_MAX_UPLOAD_SIZE_MB=${CKAN_MAX_UPLOAD_SIZE_MB}
+  export CKAN_LOG_PATH=${CKAN_LOG_PATH}
 }
 
 write_config () {
@@ -72,4 +73,7 @@ ckan-paster --plugin=ckan db init -c "${CKAN_CONFIG}/production.ini"
 ckan-paster --plugin=ckanext-harvest harvester initdb -c "${CKAN_CONFIG}/production.ini"
 ckan-paster --plugin=ckanext-spatial spatial initdb -c "${CKAN_CONFIG}/production.ini"
 ckan-paster --plugin=ckan datastore set-permissions -c /etc/ckan/production.ini | psql postgresql://ckan:$POSTGRES_PASSWORD@db
+
+chown -R ckan:ckan ${CKAN_VENV}/src/ckan/ckan/public/base/i18n
+
 exec "$@"
