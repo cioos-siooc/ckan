@@ -113,6 +113,9 @@ RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src && ckan-pi
 COPY ./contrib/docker/src/ckanext-cioos_theme/dev-requirements.txt $CKAN_VENV/src/ckanext-cioos_theme/dev-requirements.txt
 RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src && ckan-pip install -r ckanext-cioos_theme/dev-requirements.txt"
 
+COPY ./contrib/docker/src/ckanext-pdfview/dev-requirements.txt $CKAN_VENV/src/ckanext-pdfview/dev-requirements.txt
+RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src && ckan-pip install -r ckanext-pdfview/dev-requirements.txt"
+
 #------------------------------------------------------------------------------#
 FROM base as extensions1
 #------------------------------------------------------------------------------#
@@ -129,6 +132,9 @@ RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-ge
 
 COPY ./contrib/docker/src/ckanext-dcat $CKAN_VENV/src/ckanext-dcat
 RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-dcat && python setup.py install && python setup.py develop"
+
+COPY ./contrib/docker/src/ckanext-geoview $CKAN_VENV/src/ckanext-pdfview
+RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-pdfview && python setup.py install && python setup.py develop"
 
 WORKDIR $CKAN_VENV/src
 RUN /bin/bash -c "rm -R ./ckan"
