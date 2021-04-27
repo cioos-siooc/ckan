@@ -24,7 +24,7 @@ x-ckan: &ckan_app
     - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     - DS_RO_PASS=${DATASTORE_READONLY_PASSWORD}
     #- TZ=Canada/Vancouver
-  #restart: always
+  restart: unless-stopped
   volumes:
     - "/etc/localtime:/etc/localtime:ro" # remove and use TZ setting if running on windows
     - ckan_config:/etc/ckan
@@ -89,6 +89,7 @@ services:
   datapusher:
     container_name: datapusher
     image: clementmouchet/datapusher
+    restart: unless-stopped
     #restart: always
     ports:
       - "8800:8800"
@@ -102,6 +103,7 @@ services:
       - DS_RO_PASS=${DATASTORE_READONLY_PASSWORD}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       #- TZ=Canada/Vancouver
+    restart: unless-stopped
     #restart: always
     volumes:
       - "/etc/localtime:/etc/localtime:ro" # remove and use TZ setting if running on windows
@@ -110,10 +112,12 @@ services:
   solr:
     container_name: solr
     image: cioos/solr:latest
+    restart: unless-stopped
     #restart: always
 
   # redis is used by the datapusher and the spatial fetch and gather harvesters
   redis:
     container_name: redis
     image: redis:latest
+    restart: unless-stopped
     #restart: always
