@@ -2,9 +2,12 @@
 
 from logging import getLogger
 
+import six
+
 from ckan.common import json, config
 import ckan.plugins as p
 import ckan.plugins.toolkit as toolkit
+from ckan.plugins.toolkit import _
 
 log = getLogger(__name__)
 ignore_empty = p.toolkit.get_validator('ignore_empty')
@@ -17,8 +20,9 @@ def get_mapview_config():
     Extracts and returns map view configuration of the reclineview extension.
     '''
     namespace = 'ckanext.spatial.common_map.'
-    return dict([(k.replace(namespace, ''), v) for k, v in config.iteritems()
-                 if k.startswith(namespace)])
+    return {k.replace(namespace, ''): v
+            for k, v in six.iteritems(config)
+            if k.startswith(namespace)}
 
 
 def get_dataproxy_url():
@@ -103,7 +107,7 @@ class ReclineView(ReclineViewBase):
 
     def info(self):
         return {'name': 'recline_view',
-                'title': 'Data Explorer',
+                'title': _('Data Explorer'),
                 'filterable': True,
                 'icon': 'table',
                 'requires_datastore': False,
@@ -132,7 +136,7 @@ class ReclineGridView(ReclineViewBase):
 
     def info(self):
         return {'name': 'recline_grid_view',
-                'title': 'Grid',
+                'title': _('Grid'),
                 'filterable': True,
                 'icon': 'table',
                 'requires_datastore': True,
@@ -174,7 +178,7 @@ class ReclineGraphView(ReclineViewBase):
             'series': [ignore_empty, in_list(self.list_datastore_fields)]
         }
         return {'name': 'recline_graph_view',
-                'title': 'Graph',
+                'title': _('Graph'),
                 'filterable': True,
                 'icon': 'bar-chart-o',
                 'requires_datastore': True,
@@ -206,7 +210,7 @@ class ReclineMapView(ReclineViewBase):
 
     datastore_fields = []
 
-    datastore_field_latlon_types = ['numeric']
+    datastore_field_latlon_types = ['numeric', 'text']
 
     datastore_field_geojson_types = ['text']
 
@@ -235,7 +239,7 @@ class ReclineMapView(ReclineViewBase):
             'cluster_markers': [ignore_empty]
         }
         return {'name': 'recline_map_view',
-                'title': 'Map',
+                'title': _('Map'),
                 'schema': schema,
                 'filterable': True,
                 'icon': 'map-marker',

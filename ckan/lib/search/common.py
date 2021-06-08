@@ -5,8 +5,11 @@ import logging
 import re
 import pysolr
 import simplejson
+
 from six import string_types
-import urllib
+from six.moves.urllib.parse import quote_plus
+
+from ckan.common import config, asint
 
 log = logging.getLogger(__name__)
 
@@ -72,15 +75,17 @@ def make_connection(decode_dates=True):
         protocol = re.search('http(?:s)?://', solr_url).group()
         solr_url = re.sub(protocol, '', solr_url)
         solr_url = "{}{}:{}@{}".format(protocol,
-                                       urllib.quote_plus(solr_user),
-                                       urllib.quote_plus(solr_password),
+                                       quote_plus(solr_user),
+                                       quote_plus(solr_password),
                                        solr_url)
+
+    timeout = asint(config.get('solr_timeout', 60))
 
     if decode_dates:
         decoder = simplejson.JSONDecoder(object_hook=solr_datetime_decoder)
-        return pysolr.Solr(solr_url, decoder=decoder)
+        return pysolr.Solr(solr_url, decoder=decoder, timeout=timeout)
     else:
-        return pysolr.Solr(solr_url)
+        return pysolr.Solr(solr_url, timeout=timeout)
 
 
 def solr_datetime_decoder(d):

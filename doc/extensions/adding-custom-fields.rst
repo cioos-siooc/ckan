@@ -17,7 +17,12 @@ CKAN datasets, and can do custom validation of these fields.
 .. seealso::
 
    In this tutorial we are assuming that you have read the
-   :doc:`/extensions/tutorial`
+   :doc:`/extensions/tutorial`.
+
+   You may also want to check the [ckanext-scheming](https://github.com/ckan/ckanext-scheming) 
+   extension, as it will allow metadata schema configuration using a YAML or JSON 
+   schema description, replete with custom validation and template snippets for 
+   editing and display.
 
 CKAN schemas and validation
 ---------------------------
@@ -213,17 +218,29 @@ Any of the following objects may be used as validators as part
 of a custom dataset, group or organization schema. CKAN's validation
 code will check for and attempt to use them in this order:
 
-1. a `formencode Validator class <http://www.formencode.org/en/latest/Validator.html>`_ (not discussed)
 
-2. a formencode Validator instance (not discussed)
+1. a function taking a single parameter: ``validator(value)``
 
-3. a callable object taking a single parameter: ``validator(value)``
-
-4. a callable object taking four parameters:
+2. a function taking four parameters:
    ``validator(key, flattened_data, errors, context)``
 
-5. a callable object taking two parameters
+3. a function taking two parameters
    ``validator(value, context)``
+
+.. note::
+
+   Object constructors(including str, int, etc.) and some built-in functions
+   cannot be used as validators. In order to use them, create a thin wrapper
+   which passes values into these callables and converts expected exceptions
+   into :py:exc:`ckan.plugins.toolkit.Invalid`.
+
+   Example::
+
+     def int_validator(value):
+         try:
+             return int(value)
+         except ValueError:
+             raise Invalid(f"Invalid literal for integer: {value}")
 
 
 ``validator(value)``
@@ -279,9 +296,9 @@ Otherwise this is the same as the single-parameter form above.
 Validators that need to access or update multiple fields
 may be written as a callable taking four parameters.
 
-All fields and errors in a ``flattened`` form are passed to the 
-validator. The validator must fetch values from ``flattened_data`` 
-and may replace values in ``flattened_data``. The return value 
+All fields and errors in a ``flattened`` form are passed to the
+validator. The validator must fetch values from ``flattened_data``
+and may replace values in ``flattened_data``. The return value
 from this function is ignored.
 
 ``key`` is the flattened key for the field to which this validator was

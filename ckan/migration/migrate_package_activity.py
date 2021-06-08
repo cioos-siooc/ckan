@@ -28,8 +28,8 @@ package_revision table.)
 # whereas the main CLI is a list of tools for more frequent use.
 
 from __future__ import print_function
+from __future__ import absolute_import
 import argparse
-import sys
 from collections import defaultdict
 from six.moves import input
 from six import text_type
@@ -104,7 +104,7 @@ class PackageDictizeMonkeyPatch(object):
         except ImportError:
             # convenient to look for it in the current directory if you just
             # download these files because you are upgrading an older ckan
-            import revision_legacy_code
+            from . import revision_legacy_code
         self.existing_function = model_dictize.package_dictize
         model_dictize.package_dictize = \
             revision_legacy_code.package_dictize_with_revisions
@@ -116,6 +116,8 @@ class PackageDictizeMonkeyPatch(object):
 
 def migrate_dataset(dataset_name, errors):
     '''
+    Migrates a single dataset.
+
     NB this function should be run in a `with PackageDictizeMonkeyPatch():`
     '''
 
@@ -160,11 +162,13 @@ def migrate_dataset(dataset_name, errors):
         context = dict(
             get_context(),
             for_view=False,
-            revision_id=activity[u'revision_id'],
+            revision_id=activity_obj.revision_id,
             use_cache=False,  # avoid the cache (which would give us the
                               # latest revision)
         )
         try:
+            assert activity_obj.revision_id, \
+                u'Revision missing on the activity'
             dataset = logic.get_action(u'package_show')(
                 context,
                 {u'id': activity[u'object_id'], u'include_tracking': False})
@@ -174,8 +178,9 @@ def migrate_dataset(dataset_name, errors):
             else:
                 error_msg = text_type(exc)
             print(u'    Error: {}! Skipping this version '
-                  '(revision_id={})'
-                  .format(error_msg, activity[u'revision_id']))
+                  '(revision_id={}, timestamp={})'
+                  .format(error_msg, activity_obj.revision_id,
+                          activity_obj.timestamp))
             errors[error_msg] += 1
             # We shouldn't leave the activity.data['package'] with missing
             # resources, extras & tags, which could cause the package_read
@@ -267,8 +272,11 @@ if __name__ == u'__main__':
                         u'dataset - specify its name')
     args = parser.parse_args()
     assert args.config, u'You must supply a --config'
+    print(u'Loading config')
     try:
-        from ckan.lib.cli import load_config
+        from ckan.cli import load_config
+        from ckan.config.middleware import make_app
+        make_app(load_config(args.config))
     except ImportError:
         # for CKAN 2.6 and earlier
         def load_config(config):
@@ -281,13 +289,12 @@ if __name__ == u'__main__':
             cmd.options.config = config
             cmd._load_config()
             return
-
-    print(u'Loading config')
-    load_config(args.config)
+        load_config(args.config)
     if not args.dataset:
         migrate_all_datasets()
         wipe_activity_detail(delete_activity_detail=args.delete)
     else:
         errors = defaultdict(int)
-        migrate_dataset(args.dataset, errors)
+        with PackageDictizeMonkeyPatch():
+            migrate_dataset(args.dataset, errors)
         print_errors(errors)

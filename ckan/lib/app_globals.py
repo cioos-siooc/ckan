@@ -3,21 +3,21 @@
 ''' The application's Globals object '''
 
 import logging
-import time
 from threading import Lock
 import re
-
+import six
 from ckan.common import asbool
 from ckan.common import config
 
 import ckan
 import ckan.model as model
-import ckan.logic as logic
 from logic.schema import update_configuration_schema
 
 
 log = logging.getLogger(__name__)
 
+
+DEFAULT_MAIN_CSS_FILE = '/base/css/main.css'
 
 # mappings translate between config settings and globals because our naming
 # conventions are not well defined and/or implemented
@@ -139,11 +139,7 @@ def reset():
             value = None
         config_value = config.get(key)
         # sort encodeings if needed
-        if isinstance(config_value, str):
-            try:
-                config_value = config_value.decode('utf-8')
-            except UnicodeDecodeError:
-                config_value = config_value.decode('latin-1')
+        
         # we want to store the config the first time we get here so we can
         # reset them if needed
         if key not in _CONFIG_CACHE:
@@ -170,7 +166,8 @@ def reset():
         get_config_value(key)
 
     # custom styling
-    main_css = get_config_value('ckan.main_css', '/base/css/main.css')
+    main_css = get_config_value(
+        'ckan.main_css', DEFAULT_MAIN_CSS_FILE) or DEFAULT_MAIN_CSS_FILE
     set_main_css(main_css)
 
     if app_globals.site_logo:

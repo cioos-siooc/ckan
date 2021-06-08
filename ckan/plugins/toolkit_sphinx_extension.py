@@ -18,7 +18,6 @@ into plugins-toolkit.rst manually before running Sphinx).
 
 '''
 import inspect
-import types
 
 import ckan.plugins.toolkit as toolkit
 
@@ -170,7 +169,7 @@ def source_read(app, docname, source):
             source_ += format_function(name, thing, docstring=custom_docstring)
         elif inspect.isclass(thing):
             source_ += format_class(name, thing, docstring=custom_docstring)
-        elif isinstance(thing, types.ObjectType):
+        elif isinstance(thing, object):
             source_ += format_object(name, thing, docstring=custom_docstring)
 
         else:

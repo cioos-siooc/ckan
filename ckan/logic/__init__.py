@@ -3,10 +3,13 @@
 import functools
 import logging
 import re
-import sys
+import importlib
+import inspect
+
 from collections import defaultdict
 
-import formencode.validators
+from werkzeug.local import LocalProxy
+import six
 from six import string_types, text_type
 
 import ckan.model as model
@@ -35,7 +38,10 @@ class ActionError(Exception):
         super(ActionError, self).__init__(message)
 
     def __str__(self):
-        return self.message
+        msg = self.message
+        if not isinstance(msg, six.string_types):
+            msg = str(msg)
+        return six.ensure_text(msg)
 
 
 class NotFound(ActionError):
@@ -75,7 +81,8 @@ class ValidationError(ActionError):
                     tag_errors.append(', '.join(error['name']))
                 except KeyError:
                     # e.g. if it is a vocabulary_id error
-                    tag_errors.append(error)
+                    if error:
+                        tag_errors.append(error)
             error_dict['tags'] = tag_errors
         self.error_dict = error_dict
         self._error_summary = error_summary
@@ -94,7 +101,7 @@ class ValidationError(ActionError):
 
             summary = {}
 
-            for key, error in error_dict.iteritems():
+            for key, error in six.iteritems(error_dict):
                 if key == 'resources':
                     summary[_('Resources')] = _('Package resource(s) invalid')
                 elif key == 'extras':
@@ -195,7 +202,7 @@ def tuplize_dict(data_dict):
     May raise a DataError if the format of the key is incorrect.
     '''
     tuplized_dict = {}
-    for key, value in data_dict.iteritems():
+    for key, value in six.iteritems(data_dict):
         key_list = key.split('__')
         for num, key in enumerate(key_list):
             if num % 2 == 1:
@@ -210,7 +217,7 @@ def tuplize_dict(data_dict):
 def untuplize_dict(tuplized_dict):
 
     data_dict = {}
-    for key, value in tuplized_dict.iteritems():
+    for key, value in six.iteritems(tuplized_dict):
         new_key = '__'.join([str(item) for item in key])
         data_dict[new_key] = value
     return data_dict
@@ -231,6 +238,9 @@ def _prepopulate_context(context):
         context.setdefault('user', c.user)
     except AttributeError:
         # c.user not set
+        pass
+    except RuntimeError:
+        # Outside of request context
         pass
     except TypeError:
         # c not registered
@@ -383,30 +393,21 @@ def get_action(action):
         if action not in _actions:
             raise KeyError("Action '%s' not found" % action)
         return _actions.get(action)
-    # Otherwise look in all the plugins to resolve all possible
-    # First get the default ones in the ckan/logic/action directory
-    # Rather than writing them out in full will use __import__
+    # Otherwise look in all the plugins to resolve all possible First
+    # get the default ones in the ckan/logic/action directory Rather
+    # than writing them out in full will use importlib.import_module
     # to load anything from ckan.logic.action that looks like it might
     # be an action
     for action_module_name in ['get', 'create', 'update', 'delete', 'patch']:
-        module_path = 'ckan.logic.action.' + action_module_name
-        module = __import__(module_path)
-        for part in module_path.split('.')[1:]:
-            module = getattr(module, part)
-        for k, v in module.__dict__.items():
-            if not k.startswith('_'):
-                # Only load functions from the action module or already
-                # replaced functions.
-                if (hasattr(v, '__call__') and
-                        (v.__module__ == module_path or
-                         hasattr(v, '__replaced'))):
-                    _actions[k] = v
-
-                    # Whitelist all actions defined in logic/action/get.py as
-                    # being side-effect free.
-                    if action_module_name == 'get' and \
-                       not hasattr(v, 'side_effect_free'):
-                        v.side_effect_free = True
+        module = importlib.import_module(
+            '.' + action_module_name, 'ckan.logic.action')
+        for k, v in authz.get_local_functions(module):
+            _actions[k] = v
+            # Whitelist all actions defined in logic/action/get.py as
+            # being side-effect free.
+            if action_module_name == 'get' and \
+               not hasattr(v, 'side_effect_free'):
+                v.side_effect_free = True
 
     # Then overwrite them with any specific ones in the plugins:
     resolved_action_plugins = {}
@@ -429,7 +430,7 @@ def get_action(action):
                 # This needs to be resolved later
                 action_function.auth_audit_exempt = True
                 fetched_actions[name] = action_function
-    for name, func_list in chained_actions.iteritems():
+    for name, func_list in six.iteritems(chained_actions):
         if name not in fetched_actions and name not in _actions:
             # nothing to override from plugins or core
             raise NotFound('The action %r is not found for chained action' % (
@@ -437,7 +438,11 @@ def get_action(action):
         for func in reversed(func_list):
             # try other plugins first, fall back to core
             prev_func = fetched_actions.get(name, _actions.get(name))
-            fetched_actions[name] = functools.partial(func, prev_func)
+            new_func = functools.partial(func, prev_func)
+            # persisting attributes to the new partial function
+            for attribute, value in six.iteritems(func.__dict__):
+                setattr(new_func, attribute, value)
+            fetched_actions[name] = new_func
 
     # Use the updated ones in preference to the originals.
     _actions.update(fetched_actions)
@@ -480,12 +485,6 @@ def get_action(action):
                     pass
                 return result
             return wrapped
-
-        # If we have been called multiple times for example during tests then
-        # we need to make sure that we do not rewrap the actions.
-        if hasattr(_action, '__replaced'):
-            _actions[action_name] = _action.__replaced
-            continue
 
         fn = make_wrapped(_action, action_name)
         # we need to mirror the docstring
@@ -674,9 +673,9 @@ def get_validator(validator):
         _validators_cache.update(validators)
         validators = _import_module_functions('ckan.logic.validators')
         _validators_cache.update(validators)
-        _validators_cache.update({'OneOf': formencode.validators.OneOf})
         converters = _import_module_functions('ckan.logic.converters')
         _validators_cache.update(converters)
+        _validators_cache.update({'OneOf': _validators_cache['one_of']})
 
         for plugin in reversed(list(p.PluginImplementations(p.IValidators))):
             for name, fn in plugin.get_validators().items():
@@ -704,16 +703,8 @@ def model_name_to_class(model_module, model_name):
 
 def _import_module_functions(module_path):
     '''Import a module and get the functions and return them in a dict'''
-    functions_dict = {}
-    module = __import__(module_path)
-    for part in module_path.split('.')[1:]:
-        module = getattr(module, part)
-    for k, v in module.__dict__.items():
-
-        try:
-            if v.__module__ != module_path:
-                continue
-            functions_dict[k] = v
-        except AttributeError:
-            pass
-    return functions_dict
+    module = importlib.import_module(module_path)
+    return {
+        k: v
+        for k, v in authz.get_local_functions(module)
+    }

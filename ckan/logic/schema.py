@@ -3,7 +3,6 @@
 from functools import wraps
 import inspect
 
-from six import text_type
 import ckan.model
 import ckan.plugins as plugins
 from ckan.logic import get_validator
@@ -29,10 +28,9 @@ def validator_args(fn):
 def default_resource_schema(
         ignore_empty, unicode_safe, ignore, ignore_missing,
         remove_whitespace, if_empty_guess_format, clean_format, isodate,
-        int_validator, extras_unicode_convert, keep_extras):
+        int_validator, extras_valid_json, keep_extras):
     return {
         'id': [ignore_empty, unicode_safe],
-        'revision_id': [ignore_missing, unicode_safe],
         'package_id': [ignore],
         'url': [ignore_missing, unicode_safe, remove_whitespace],
         'description': [ignore_missing, unicode_safe],
@@ -53,14 +51,13 @@ def default_resource_schema(
         'cache_last_updated': [ignore_missing, isodate],
         'tracking_summary': [ignore_missing],
         'datastore_active': [ignore_missing],
-        '__extras': [ignore_missing, extras_unicode_convert, keep_extras],
+        '__extras': [ignore_missing, extras_valid_json, keep_extras],
     }
 
 
 @validator_args
 def default_update_resource_schema(ignore):
     schema = default_resource_schema()
-    schema['revision_id'] = [ignore]
     return schema
 
 
@@ -104,7 +101,7 @@ def default_create_tag_schema(
 def default_create_package_schema(
         duplicate_extras_key, ignore, empty_if_not_sysadmin, ignore_missing,
         unicode_safe, package_id_does_not_exist, not_empty, name_validator,
-        package_name_validator, if_empty_same_as, email_validator,
+        package_name_validator, if_empty_same_as, strip_value, email_validator,
         package_version_validator, ignore_not_package_admin,
         boolean_validator, datasets_with_no_organization_cannot_be_private,
         empty, tag_string_convert, owner_org_validator, no_http):
@@ -112,14 +109,15 @@ def default_create_package_schema(
         '__before': [duplicate_extras_key, ignore],
         'id': [empty_if_not_sysadmin, ignore_missing, unicode_safe,
                package_id_does_not_exist],
-        'revision_id': [ignore],
         'name': [
             not_empty, unicode_safe, name_validator, package_name_validator],
         'title': [if_empty_same_as("name"), unicode_safe],
         'author': [ignore_missing, unicode_safe],
-        'author_email': [ignore_missing, unicode_safe, email_validator],
+        'author_email': [ignore_missing, unicode_safe, strip_value,
+                         email_validator],
         'maintainer': [ignore_missing, unicode_safe],
-        'maintainer_email': [ignore_missing, unicode_safe, email_validator],
+        'maintainer_email': [ignore_missing, unicode_safe, strip_value,
+                             email_validator],
         'license_id': [ignore_missing, unicode_safe],
         'notes': [ignore_missing, unicode_safe],
         'url': [ignore_missing, unicode_safe],
@@ -194,13 +192,13 @@ def default_show_package_schema(
         'position': [not_empty],
         'last_modified': [],
         'cache_last_updated': [],
-        'revision_id': [],
         'package_id': [],
         'size': [],
         'state': [],
         'mimetype': [],
         'cache_url': [],
         'name': [],
+        'description': [],
         'mimetype_inner': [],
         'resource_type': [],
         'url_type': [],
@@ -210,7 +208,6 @@ def default_show_package_schema(
         'state': [ignore_missing],
         'isopen': [ignore_missing],
         'license_url': [ignore_missing],
-        'revision_id': [],
     })
 
     schema['groups'].update({
@@ -241,7 +238,6 @@ def default_show_package_schema(
     schema['organization'] = []
     schema['owner_org'] = []
     schema['private'] = []
-    schema['revision_id'] = []
     schema['tracking_summary'] = [ignore_missing]
     schema['license_title'] = []
 
@@ -255,7 +251,6 @@ def default_group_schema(
         no_loops_in_hierarchy, ignore_not_group_admin):
     return {
         'id': [ignore_missing, unicode_safe],
-        'revision_id': [ignore],
         'name': [
             not_empty, unicode_safe, name_validator, group_name_validator],
         'title': [ignore_missing, unicode_safe],
@@ -327,7 +322,6 @@ def default_show_group_schema(
     schema['extras'] = {'__extras': [keep_extras]}
     schema['package_count'] = [ignore_missing]
     schema['packages'] = {'__extras': [keep_extras]}
-    schema['revision_id'] = []
     schema['state'] = []
     schema['users'] = {'__extras': [keep_extras]}
 
@@ -351,13 +345,13 @@ def default_extras_schema(
 
 @validator_args
 def default_relationship_schema(
-        ignore_missing, unicode_safe, not_empty, OneOf, ignore):
+        ignore_missing, unicode_safe, not_empty, one_of, ignore):
     return {
         'id': [ignore_missing, unicode_safe],
         'subject': [ignore_missing, unicode_safe],
         'object': [ignore_missing, unicode_safe],
         'type': [not_empty,
-                 OneOf(ckan.model.PackageRelationship.get_all_types())],
+                 one_of(ckan.model.PackageRelationship.get_all_types())],
         'comment': [ignore_missing, unicode_safe],
         'state': [ignore],
     }
@@ -392,9 +386,9 @@ def default_update_relationship_schema(
 @validator_args
 def default_user_schema(
         ignore_missing, unicode_safe, name_validator, user_name_validator,
-        user_password_validator, user_password_not_empty,
-        ignore_not_sysadmin, not_empty, email_validator,
-        user_about_validator, ignore, boolean_validator):
+        user_password_validator, user_password_not_empty, email_is_unique,
+        ignore_not_sysadmin, not_empty, strip_value, email_validator,
+        user_about_validator, ignore, boolean_validator, json_object):
     return {
         'id': [ignore_missing, unicode_safe],
         'name': [
@@ -403,7 +397,8 @@ def default_user_schema(
         'password': [user_password_validator, user_password_not_empty,
                      ignore_missing, unicode_safe],
         'password_hash': [ignore_missing, ignore_not_sysadmin, unicode_safe],
-        'email': [not_empty, unicode_safe, email_validator],
+        'email': [not_empty, strip_value, email_validator, email_is_unique,
+                  unicode_safe],
         'about': [ignore_missing, user_about_validator, unicode_safe],
         'created': [ignore],
         'sysadmin': [ignore_missing, ignore_not_sysadmin],
@@ -412,18 +407,23 @@ def default_user_schema(
         'activity_streams_email_notifications': [ignore_missing,
                                                  boolean_validator],
         'state': [ignore_missing],
+        'image_url': [ignore_missing, unicode_safe],
+        'image_display_url': [ignore_missing, unicode_safe],
+        'plugin_extras': [ignore_missing, json_object, ignore_not_sysadmin],
     }
 
 
 @validator_args
 def user_new_form_schema(
         unicode_safe, user_both_passwords_entered,
-        user_password_validator, user_passwords_match):
+        user_password_validator, user_passwords_match,
+        email_is_unique):
     schema = default_user_schema()
 
-    schema['password1'] = [text_type, user_both_passwords_entered,
+    schema['email'] = [email_is_unique]
+    schema['password1'] = [unicode_safe, user_both_passwords_entered,
                            user_password_validator, user_passwords_match]
-    schema['password2'] = [text_type]
+    schema['password2'] = [unicode_safe]
 
     return schema
 
@@ -431,9 +431,10 @@ def user_new_form_schema(
 @validator_args
 def user_edit_form_schema(
         ignore_missing, unicode_safe, user_both_passwords_entered,
-        user_password_validator, user_passwords_match):
+        user_password_validator, user_passwords_match, email_is_unique):
     schema = default_user_schema()
 
+    schema['email'] = [email_is_unique]
     schema['password'] = [ignore_missing]
     schema['password1'] = [ignore_missing, unicode_safe,
                            user_password_validator, user_passwords_match]
@@ -445,11 +446,14 @@ def user_edit_form_schema(
 @validator_args
 def default_update_user_schema(
         ignore_missing, name_validator, user_name_validator,
-        unicode_safe, user_password_validator):
+        unicode_safe, user_password_validator, email_is_unique,
+        not_empty, strip_value, email_validator):
     schema = default_user_schema()
 
     schema['name'] = [
         ignore_missing, name_validator, user_name_validator, unicode_safe]
+    schema['email'] = [
+        not_empty, strip_value, email_validator, email_is_unique, unicode_safe]
     schema['password'] = [
         user_password_validator, ignore_missing, unicode_safe]
 
@@ -469,7 +473,7 @@ def default_generate_apikey_user_schema(
 def default_user_invite_schema(
         not_empty, unicode_safe):
     return {
-        'email': [not_empty, text_type],
+        'email': [not_empty, unicode_safe],
         'group_id': [not_empty],
         'role': [not_empty],
     }
@@ -532,9 +536,6 @@ def default_create_activity_schema(
                     convert_user_name_or_id_to_id],
         'object_id': [
             not_missing, not_empty, unicode_safe, object_id_validator],
-        # We don't bother to validate revision ID, since it's always created
-        # internally by the activity_create() logic action function.
-        'revision_id': [],
         'activity_type': [not_missing, not_empty, unicode_safe,
                           activity_type_exists],
         'data': [ignore_empty, ignore_missing],
@@ -617,7 +618,8 @@ def default_dashboard_activity_list_schema(
 def default_activity_list_schema(
         not_missing, unicode_safe, configured_default,
         natural_number_validator, limit_to_configured_maximum,
-        ignore_missing, boolean_validator, ignore_not_sysadmin):
+        ignore_missing, boolean_validator, ignore_not_sysadmin,
+        list_of_strings):
     schema = default_pagination_schema()
     schema['id'] = [not_missing, unicode_safe]
     schema['limit'] = [
@@ -626,6 +628,8 @@ def default_activity_list_schema(
         limit_to_configured_maximum('ckan.activity_list_limit_max', 100)]
     schema['include_hidden_activity'] = [
         ignore_missing, ignore_not_sysadmin, boolean_validator]
+    schema['activity_types'] = [ignore_missing, list_of_strings]
+    schema['exclude_activity_types'] = [ignore_missing, list_of_strings]
     return schema
 
 
@@ -793,4 +797,40 @@ def job_list_schema(ignore_missing, list_of_strings):
 def job_clear_schema(ignore_missing, list_of_strings):
     return {
         u'queues': [ignore_missing, list_of_strings],
+    }
+
+
+@validator_args
+def default_create_api_token_schema(
+        not_empty, unicode_safe,
+        ignore_missing, json_object, ignore_not_sysadmin):
+    return {
+        u'name': [not_empty, unicode_safe],
+        u'user': [not_empty, unicode_safe],
+        u'plugin_extras': [ignore_missing, json_object, ignore_not_sysadmin],
+    }
+
+
+@validator_args
+def package_revise_schema(
+        ignore_missing, list_of_strings,
+        collect_prefix_validate, json_or_string,
+        json_list_or_string, dict_only):
+    return {
+        u'__before': [
+            collect_prefix_validate(
+                u'match__', u'json_or_string'),
+            collect_prefix_validate(
+                u'update__', u'json_or_string')],
+        u'match': [
+            ignore_missing, json_or_string, dict_only],
+        u'filter': [
+            ignore_missing, json_list_or_string, list_of_strings],
+        u'update': [
+            ignore_missing, json_or_string, dict_only],
+        u'include': [
+            ignore_missing, json_list_or_string, list_of_strings],
+        # collect_prefix moves values to these, always dicts:
+        u'match__': [],
+        u'update__': [],
     }

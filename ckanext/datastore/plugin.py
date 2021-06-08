@@ -6,7 +6,6 @@ from six import string_types
 
 import ckan.plugins as p
 import ckan.logic as logic
-import ckan.model as model
 from ckan.model.core import State
 
 import ckanext.datastore.helpers as datastore_helpers
@@ -19,6 +18,7 @@ from ckanext.datastore.backend import (
     DatastoreBackend
 )
 from ckanext.datastore.backend.postgres import DatastorePostgresqlBackend
+import ckanext.datastore.blueprint as view
 
 log = logging.getLogger(__name__)
 _get_or_bust = logic.get_or_bust
@@ -39,6 +39,7 @@ class DatastorePlugin(p.SingletonPlugin):
     p.implements(p.IForkObserver, inherit=True)
     p.implements(interfaces.IDatastore, inherit=True)
     p.implements(interfaces.IDatastoreBackend, inherit=True)
+    p.implements(p.IBlueprint)
 
     resource_show_action = None
 
@@ -115,19 +116,6 @@ class DatastorePlugin(p.SingletonPlugin):
             'datastore_run_triggers': auth.datastore_run_triggers,
         }
 
-    # IRoutes
-
-    def before_map(self, m):
-        m.connect(
-            '/datastore/dump/{resource_id}',
-            controller='ckanext.datastore.controller:DatastoreController',
-            action='dump')
-        m.connect(
-            'resource_dictionary', '/dataset/{id}/dictionary/{resource_id}',
-            controller='ckanext.datastore.controller:DatastoreController',
-            action='dictionary', ckan_icon='book')
-        return m
-
     # IResourceController
 
     def before_show(self, resource_dict):
@@ -135,8 +123,7 @@ class DatastorePlugin(p.SingletonPlugin):
         # they link to the datastore dumps.
         if resource_dict.get('url_type') == 'datastore':
             resource_dict['url'] = p.toolkit.url_for(
-                controller='ckanext.datastore.controller:DatastoreController',
-                action='dump', resource_id=resource_dict['id'],
+                'datastore.dump', resource_id=resource_dict['id'],
                 qualified=True)
 
         if 'datastore_active' not in resource_dict:
@@ -157,9 +144,10 @@ class DatastorePlugin(p.SingletonPlugin):
             if res.extras.get('datastore_active') is True]
 
         for res in deleted:
-            self.backend.delete(context, {
-                'resource_id': res.id,
-            })
+            if self.backend.resource_exists(res.id):
+                self.backend.delete(context, {
+                    'resource_id': res.id,
+                })
             res.extras['datastore_active'] = False
             res_query.filter_by(id=res.id).update(
                 {'extras': res.extras}, synchronize_session=False)
@@ -167,10 +155,10 @@ class DatastorePlugin(p.SingletonPlugin):
     # IDatastore
 
     def datastore_validate(self, context, data_dict, fields_types):
-        column_names = fields_types.keys()
+        column_names = list(fields_types.keys())
 
         filters = data_dict.get('filters', {})
-        for key in filters.keys():
+        for key in list(filters.keys()):
             if key in fields_types:
                 del filters[key]
 
@@ -180,7 +168,7 @@ class DatastorePlugin(p.SingletonPlugin):
                 del data_dict['q']
                 column_names.append(u'rank')
             elif isinstance(q, dict):
-                for key in q.keys():
+                for key in list(q.keys()):
                     if key in fields_types and isinstance(q[key],
                                                           string_types):
                         column_names.append(u'rank ' + key)
@@ -230,6 +218,11 @@ class DatastorePlugin(p.SingletonPlugin):
             if is_positive_int:
                 del data_dict['offset']
 
+        full_text = data_dict.get('full_text')
+        if full_text:
+            if isinstance(full_text, string_types):
+                del data_dict['full_text']
+
         return data_dict
 
     def datastore_delete(self, context, data_dict, fields_types, query_dict):
@@ -257,3 +250,10 @@ class DatastorePlugin(p.SingletonPlugin):
             pass
         else:
             before_fork()
+
+    # IBlueprint
+
+    def get_blueprint(self):
+        u'''Return a Flask Blueprint object to be registered by the app.'''
+
+        return view.datastore

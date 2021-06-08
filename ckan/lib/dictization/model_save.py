@@ -5,17 +5,16 @@ import uuid
 import logging
 
 from sqlalchemy.orm import class_mapper
+import six
 from six import string_types
 
 import ckan.lib.dictization as d
-import ckan.lib.helpers as h
 import ckan.authz as authz
 
 log = logging.getLogger(__name__)
 
 
 def resource_dict_save(res_dict, context):
-
     model = context["model"]
     session = context["session"]
 
@@ -36,33 +35,24 @@ def resource_dict_save(res_dict, context):
     if res_dict.get('url') and res_dict.get('url_type') == u'upload':
         res_dict['url'] = res_dict['url'].rsplit('/')[-1]
 
-    # Resource extras not submitted will be removed from the existing extras
-    # dict
-    new_extras = {}
-    for key, value in res_dict.iteritems():
-        if isinstance(value, list):
-            continue
-        if key in ('extras', 'revision_timestamp', 'tracking_summary'):
-            continue
-        if key in fields:
-            if isinstance(getattr(obj, key), datetime.datetime):
-                if getattr(obj, key).isoformat() == value:
-                    continue
-                if key == 'last_modified' and not new:
-                    obj.url_changed = True
-            if key == 'url' and not new and obj.url != value:
-                obj.url_changed = True
-            setattr(obj, key, value)
-        else:
-            # resources save extras directly onto the object, instead
-            # of in a separate extras field like packages and groups
-            new_extras[key] = value
+    # unconditionally ignored fields
+    res_dict.pop('extras', None)
+    res_dict.pop('revision_timestamp', None)
+    res_dict.pop('tracking_summary', None)
 
+    changed, skipped = obj.from_dict(res_dict)
+
+    if 'url' in changed or ('last_modified' in changed and not new):
+        obj.url_changed = True
+
+    if changed or obj.extras != skipped:
+        obj.metadata_modified = datetime.datetime.utcnow()
     obj.state = u'active'
-    obj.extras = new_extras
+    obj.extras = skipped
 
     session.add(obj)
     return obj
+
 
 def package_resource_list_save(res_dicts, package, context):
     allow_partial_update = context.get("allow_partial_update", False)
@@ -128,7 +118,7 @@ def package_extras_save(extra_dicts, pkg, context):
     #deleted
     for key in set(old_extras.keys()) - set(new_extras.keys()):
         extra = old_extras[key]
-        extra.delete()
+        session.delete(extra)
 
 
 def package_tag_list_save(tag_dicts, package, context):
@@ -415,7 +405,7 @@ def group_dict_save(group_dict, context, prevent_packages_update=False):
     package_ids.extend( pkgs_edited['added'] )
     if package_ids:
         session.commit()
-        map( rebuild, package_ids )
+        [rebuild(package_id) for package_id in package_ids]
 
     return group
 
@@ -433,7 +423,12 @@ def user_dict_save(user_dict, context):
     if 'password' in user_dict and not len(user_dict['password']):
         del user_dict['password']
 
-    user = d.table_dict_save(user_dict, User, context)
+    user = d.table_dict_save(
+        user_dict,
+        User,
+        context,
+        extra_attrs=['_password'],  # for setting password_hash directly
+    )
 
     return user
 
@@ -446,7 +441,7 @@ def package_api_to_dict(api1_dict, context):
 
     dictized = {}
 
-    for key, value in api1_dict.iteritems():
+    for key, value in six.iteritems(api1_dict):
         new_value = value
         if key == 'tags':
             if isinstance(value, string_types):
@@ -461,7 +456,7 @@ def package_api_to_dict(api1_dict, context):
 
             new_value = []
 
-            for extras_key, extras_value in updated_extras.iteritems():
+            for extras_key, extras_value in six.iteritems(updated_extras):
                 new_value.append({"key": extras_key,
                                   "value": extras_value})
 
@@ -485,7 +480,7 @@ def group_api_to_dict(api1_dict, context):
 
     dictized = {}
 
-    for key, value in api1_dict.iteritems():
+    for key, value in six.iteritems(api1_dict):
         new_value = value
         if key == 'packages':
             new_value = [{"id": item} for item in value]
@@ -512,13 +507,12 @@ def activity_dict_save(activity_dict, context):
     session = context['session']
     user_id = activity_dict['user_id']
     object_id = activity_dict['object_id']
-    revision_id = activity_dict['revision_id']
     activity_type = activity_dict['activity_type']
-    if activity_dict.has_key('data'):
+    if 'data' in activity_dict:
         data = activity_dict['data']
     else:
         data = None
-    activity_obj = model.Activity(user_id, object_id, revision_id,
+    activity_obj = model.Activity(user_id, object_id,
             activity_type, data)
     session.add(activity_obj)
 
@@ -551,7 +545,7 @@ def vocabulary_dict_save(vocabulary_dict, context):
     vocabulary_obj = model.Vocabulary(vocabulary_name)
     session.add(vocabulary_obj)
 
-    if vocabulary_dict.has_key('tags'):
+    if 'tags' in vocabulary_dict:
         vocabulary_tag_list_save(vocabulary_dict['tags'], vocabulary_obj,
             context)
 
@@ -564,10 +558,10 @@ def vocabulary_dict_update(vocabulary_dict, context):
 
     vocabulary_obj = model.vocabulary.Vocabulary.get(vocabulary_dict['id'])
 
-    if vocabulary_dict.has_key('name'):
+    if 'name' in vocabulary_dict:
         vocabulary_obj.name = vocabulary_dict['name']
 
-    if vocabulary_dict.has_key('tags'):
+    if 'tags' in vocabulary_dict:
         vocabulary_tag_list_save(vocabulary_dict['tags'], vocabulary_obj,
             context)
 
@@ -597,10 +591,21 @@ def resource_view_dict_save(data_dict, context):
     if resource_view:
         data_dict['id'] = resource_view.id
     config = {}
-    for key, value in data_dict.iteritems():
+    for key, value in six.iteritems(data_dict):
         if key not in model.ResourceView.get_columns():
             config[key]  = value
     data_dict['config'] = config
 
 
     return d.table_dict_save(data_dict, model.ResourceView, context)
+
+
+def api_token_save(data_dict, context):
+    model = context[u"model"]
+    return d.table_dict_save(
+        {
+            u"user_id": model.User.get(data_dict['user']).id,
+            u"name": data_dict[u"name"]
+        },
+        model.ApiToken, context
+    )
