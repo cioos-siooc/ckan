@@ -61,3 +61,7 @@ contrib/docker/monitoring/prometheus_db/
 contrib/docker/monitoring/grafana_db/
 
 contrib/docker/monitoring/.env
+
+contrib/docker/env/
+
+workspace.code-workspace
