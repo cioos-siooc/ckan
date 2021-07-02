@@ -523,19 +523,19 @@ def package_relationship_create(context, data_dict):
     id, id2, rel_type = _get_or_bust(data_dict, ['subject', 'object', 'type'])
     comment = data_dict.get('comment', u'')
 
+    _check_access('package_relationship_create', context, data_dict)
+
     pkg1 = model.Package.get(id)
     pkg2 = model.Package.get(id2)
     if not pkg1:
         raise NotFound('Subject package %r was not found.' % id)
     if not pkg2:
-        return NotFound('Object package %r was not found.' % id2)
+        raise NotFound('Object package %r was not found.' % id2)
 
     data, errors = _validate(data_dict, schema, context)
     if errors:
         model.Session.rollback()
         raise ValidationError(errors)
-
-    _check_access('package_relationship_create', context, data_dict)
 
     # Create a Package Relationship.
     existing_rels = pkg1.get_relationships_with(pkg2, rel_type)
