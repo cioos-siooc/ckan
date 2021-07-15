@@ -1,5 +1,6 @@
 # encoding: utf-8
 
+import inspect
 import functools
 import logging
 import re
@@ -8,7 +9,7 @@ import inspect
 
 from collections import defaultdict
 
-from werkzeug.local import LocalProxy
+from werkzeug.utils import import_string
 import six
 from six import string_types, text_type
 
@@ -331,6 +332,33 @@ def clear_actions_cache():
 
 
 def chained_action(func):
+    '''Decorator function allowing action function to be chained.
+
+    This allows a plugin to modify the behaviour of an existing action
+    function. A Chained action function must be defined as
+    ``action_function(original_action, context, data_dict)`` where the
+    first parameter will be set to the action function in the next plugin
+    or in core ckan. The chained action may call the original_action
+    function, optionally passing different values, handling exceptions,
+    returning different values and/or raising different exceptions
+    to the caller.
+
+    Usage::
+
+        from ckan.plugins.toolkit import chained_action
+
+        @chained_action
+        @side_effect_free
+        def package_search(original_action, context, data_dict):
+            return original_action(context, data_dict)
+
+    :param func: chained action function
+    :type func: callable
+
+    :returns: chained action function
+    :rtype: callable
+
+    '''
     func.chained_action = True
     return func
 
@@ -483,6 +511,7 @@ def get_action(action):
                         context['__auth_audit'].pop()
                 except IndexError:
                     pass
+
                 return result
             return wrapped
 
@@ -493,7 +522,6 @@ def get_action(action):
         if getattr(_action, 'side_effect_free', False):
             fn.side_effect_free = True
         _actions[action_name] = fn
-
     return _actions.get(action)
 
 
@@ -633,6 +661,33 @@ def auth_disallow_anonymous_access(action):
 def chained_auth_function(func):
     '''
     Decorator function allowing authentication functions to be chained.
+
+    This chain starts with the last chained auth function to be registered and
+    ends with the original auth function (or a non-chained plugin override
+    version). Chained auth functions must accept an extra parameter,
+    specifically the next auth function in the chain, for example::
+
+        auth_function(next_auth, context, data_dict).
+
+    The chained auth function may call the next_auth function, optionally
+    passing different values, handling exceptions, returning different
+    values and/or raising different exceptions to the caller.
+
+    Usage::
+
+        from ckan.plugins.toolkit import chained_auth_function
+
+        @chained_auth_function
+        @auth_allow_anonymous_access
+        def user_show(next_auth, context, data_dict=None):
+            return next_auth(context, data_dict)
+
+    :param func: chained authentication function
+    :type func: callable
+
+    :returns: chained authentication function
+    :rtype: callable
+
     '''
     func.chained_auth_function = True
     return func
