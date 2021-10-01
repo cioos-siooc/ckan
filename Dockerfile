@@ -88,6 +88,7 @@ RUN ckan-pip install factory_boy
 RUN ckan-pip install mock
 RUN ckan-pip install urllib3
 RUN ckan-pip install --global-option=build_ext --global-option="-I/usr/include/gdal" GDAL==2.1.0
+RUN ckan-pip install -U requests[security] --no-cache
 
 # for debugging
 RUN ckan-pip install flask_debugtoolbar
