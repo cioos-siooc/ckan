@@ -5,6 +5,9 @@
 {% block primary %}
   <article class="module">
     <div class="module-content">
+      {% if name %}
+      <h1>{{ code }} {{ name }}</h1>
+      {% endif %}
       {{ content}}
     </div>
   </article>

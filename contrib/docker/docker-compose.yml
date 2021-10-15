@@ -4,7 +4,7 @@ version: "3.4"
 
 x-ckan: &ckan_app
   container_name: ckan
-  image: hakaiinstitute/ckan:${CKAN_TAG}
+  image: cioos/ckan:${CKAN_TAG}
   links:
     - db
     - solr
@@ -24,7 +24,7 @@ x-ckan: &ckan_app
     - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
     - DS_RO_PASS=${DATASTORE_READONLY_PASSWORD}
     #- TZ=Canada/Vancouver
-  #restart: always
+  restart: unless-stopped
   volumes:
     - "/etc/localtime:/etc/localtime:ro" # remove and use TZ setting if running on windows
     - ckan_config:/etc/ckan
@@ -37,6 +37,9 @@ volumes:
   ckan_home:
   ckan_storage:
   pg_data:
+  solr_data:
+
+
 
 
 
@@ -53,10 +56,10 @@ services:
   ckan_gather_harvester:
      <<: *ckan_app
      container_name: ckan_gather_harvester
-     image: hakaiinstitute/ckan:${CKAN_TAG}
+     image: cioos/ckan:${CKAN_TAG}
      entrypoint: /ckan-harvester-entrypoint.sh
      user: root
-     command: ckan-paster --plugin=ckanext-harvest harvester gather_consumer -c /etc/ckan/production.ini
+     command: ckan --config=/etc/ckan/production.ini harvester gather-consumer
      ports: []
      depends_on:
        - ckan
@@ -64,10 +67,10 @@ services:
   ckan_fetch_harvester:
      <<: *ckan_app
      container_name: ckan_fetch_harvester
-     image: hakaiinstitute/ckan:${CKAN_TAG}
+     image: cioos/ckan:${CKAN_TAG}
      entrypoint: /ckan-harvester-entrypoint.sh
      user: root
-     command: ckan-paster --plugin=ckanext-harvest harvester fetch_consumer -c /etc/ckan/production.ini
+     command: ckan --config=/etc/ckan/production.ini harvester fetch-consumer
      ports: []
      depends_on:
        - ckan
@@ -76,7 +79,7 @@ services:
   ckan_run_harvester:
      <<: *ckan_app
      container_name: ckan_run_harvester
-     image: hakaiinstitute/ckan:${CKAN_TAG}
+     image: cioos/ckan:${CKAN_TAG}
      entrypoint: /ckan-run-harvester-entrypoint.sh
      user: root
      command: /bin/bash -c "echo 'ckan_run_harvester started' && cron -f 2>&1 "
@@ -89,31 +92,47 @@ services:
   datapusher:
     container_name: datapusher
     image: clementmouchet/datapusher
+    restart: unless-stopped
     #restart: always
     ports:
       - "8800:8800"
 
   db:
     container_name: db
-    image: hakaiinstitute/postgresql:latest
+    image: cioos/postgresql:latest
     ports:
        - "5432:5432"
     environment:
       - DS_RO_PASS=${DATASTORE_READONLY_PASSWORD}
       - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
-      #- TZ=Canada/Vancouver
-    #restart: always
+      - PGDATA=/var/lib/postgresql/data
     volumes:
       - "/etc/localtime:/etc/localtime:ro" # remove and use TZ setting if running on windows
       - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "ckan"]
 
   solr:
     container_name: solr
-    image: hakaiinstitute/solr:latest
-    #restart: always
+    build:
+      context: ../../
+      dockerfile: contrib/docker/solr/Dockerfile
+    volumes:
+      - solr_data:/opt/solr/server/solr/ckan/data
 
   # redis is used by the datapusher and the spatial fetch and gather harvesters
   redis:
     container_name: redis
     image: redis:latest
+    restart: unless-stopped
     #restart: always
+
+  pycsw:
+    container_name: pycsw
+    image: geopython/pycsw
+    ports:
+      - "8000:8000"
+    build:
+      context: ../../
+    volumes:
+      - ./pycsw/pycsw.cfg:/etc/pycsw/pycsw.cfg

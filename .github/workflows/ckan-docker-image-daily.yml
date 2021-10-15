@@ -3,10 +3,9 @@ name: CKAN Docker Image
 on:
   workflow_dispatch:
   push:
-   branches: [ hakai_master ]
+   branches: [ cioos ]
   pull_request:
-    branches: [ hakai_master ]
-    types: [opened, synchronize, reopened, closed]
+    branches: [ cioos ]
   release:
     types: [published]
   repository_dispatch:
@@ -16,21 +15,12 @@ env:
   submod_path: "contrib/docker/src"
 
 jobs:
-  debug:
-    name: Print action debug info
-    runs-on: ubuntu-latest
-    steps:
-      - name: Debug Action
-        uses: hmarr/debug-action@v1.0.0
-      - run: echo ${{github.event_name}}:${{github.event_name == 'pull_request'}}
-      - run: echo ${{github.event.action}}:${{github.event.action == 'closed'}}
-
   delete_pr:
+    if: |
+      (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true) ||
+      (github.event_name == 'repository_dispatch' && github.event.client_payload.action == 'closed' && github.event.client_payload.merged == true)
     name: Delete docker tag on pull request merge
     runs-on: ubuntu-latest
-    if: |
-      (github.event_name == 'pull_request' && github.event.action == 'closed') ||
-      (github.event_name == 'repository_dispatch' && github.event.client_payload.action == 'closed')
     steps:
       - name: Set PR number as TAG env variable for pull requests
         if: github.event_name == 'pull_request'
@@ -39,14 +29,11 @@ jobs:
         if: github.event_name == 'repository_dispatch'
         run: echo "TAG=$SM_NAME-PR${{ github.event.client_payload.prn }}" >> $GITHUB_ENV
 
-      - run: docker run --rm lumir/remove-dockerhub-tag --user ${{ secrets.DOCKER_USERNAME }} --password ${{ secrets.DOCKER_PASSWORD }} hakaiinstitute/ckan:$TAG
+      - run: docker run --rm -it lumir/remove-dockerhub-tag --user ${{ secrets.DOCKER_USERNAME }} --password ${{ secrets.DOCKER_PASSWORD }} cioos/ckan:$TAG
 
   build_ckan:
     name: build ckan docker image
     runs-on: ubuntu-latest
-    if: |
-      !(github.event_name == 'pull_request' && github.event.action == 'closed') &&
-      !(github.event_name == 'repository_dispatch' && github.event.client_payload.action == 'closed')
     steps:
     - if: github.event_name == 'pull_request'
       name: Checkout pull request with submodules
@@ -95,24 +82,24 @@ jobs:
     - uses: satackey/action-docker-layer-caching@v0.0.8
       # Ignore the failure of a step and avoid terminating the job.
       continue-on-error: true
-    - run: docker build -t hakaiinstitute/ckan:$TAG -t hakaiinstitute/ckan:latest .
-    - run: docker push hakaiinstitute/ckan:$TAG
+    - run: docker build -t cioos/ckan:$TAG -t cioos/ckan:latest .
+    - run: docker push cioos/ckan:$TAG
     - if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-      run: docker push hakaiinstitute/ckan:latest
+      run: docker push cioos/ckan:latest
     - if: github.event_name == 'pull_request' || github.event_name == 'repository_dispatch'
       uses: mshick/add-pr-comment@v1
       with:
         message: |
-          Image has been pushed to [hakaiinstitute/ckan](https://hub.docker.com/repository/docker/hakaiinstitute/ckan)
+          Image has been pushed to [cioos/ckan](https://hub.docker.com/repository/docker/cioos/ckan)
           ## Testing Quick Start
           ### Pull image
-          `sudo docker pull hakaiinstitute/ckan:${{ env.TAG }}`
+          `sudo docker pull cioos/ckan:${{ env.TAG }}`
           or
           `sudo CKAN_TAG=${{ env.TAG }} docker-compose pull ckan`
           ### Remove Home Volume and Restart
           ```
-          sudo docker volume rm docker_ckan_home
           sudo docker-compose down
+          sudo docker volume rm docker_ckan_home
           sudo CKAN_TAG=${{ env.TAG }} docker-compose up -d
           ```
           for full documentation see *TBD*

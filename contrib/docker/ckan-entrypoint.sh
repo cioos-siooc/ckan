@@ -38,11 +38,12 @@ set_environment () {
 }
 
 write_config () {
-  ckan-paster make-config --no-interactive ckan "$CONFIG"
+  echo "Generating config at ${CONFIG}..."
+  ckan generate config "$CONFIG"
 }
 
 # Wait for PostgreSQL
-while ! pg_isready -h db -U postgres; do
+while ! pg_isready -h db -U ckan; do
   sleep 1;
 done
 
@@ -69,10 +70,11 @@ if [ -z "$CKAN_DATAPUSHER_URL" ]; then
 fi
 
 set_environment
-ckan-paster --plugin=ckan db init -c "${CKAN_CONFIG}/production.ini"
-ckan-paster --plugin=ckanext-harvest harvester initdb -c "${CKAN_CONFIG}/production.ini"
-ckan-paster --plugin=ckanext-spatial spatial initdb -c "${CKAN_CONFIG}/production.ini"
-ckan-paster --plugin=ckan datastore set-permissions -c /etc/ckan/production.ini | psql postgresql://ckan:$POSTGRES_PASSWORD@db
+ckan --config "$CONFIG" db init
+# ckan-paster --plugin=ckan db init -c "${CKAN_CONFIG}/production.ini"
+# ckan-paster --plugin=ckanext-harvest harvester initdb -c "${CKAN_CONFIG}/production.ini"
+# ckan-paster --plugin=ckanext-spatial spatial initdb -c "${CKAN_CONFIG}/production.ini"
+# ckan-paster --plugin=ckan datastore set-permissions -c /etc/ckan/production.ini | psql postgresql://ckan:$POSTGRES_PASSWORD@db
 
 chown -R ckan:ckan ${CKAN_VENV}/src/ckan/ckan/public/base/i18n
 

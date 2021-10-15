@@ -7,6 +7,7 @@ syntax: glob
 ckan.egg-info/*
 sandbox/*
 dist
+.mypy_cache
 
 # pylons
 development.ini*
@@ -22,8 +23,8 @@ build/*
 tmp/*
 solr_runtime/*
 fl_notes.txt
-production.ini
-who.ini
+*.ini
+!ckan/migration/alembic.ini
 .noseids
 *~
 .idea
@@ -46,6 +47,7 @@ node_modules/
 
 # docker
 contrib/docker/.env
+cypress.env.json
 
 
 contrib/docker/pycsw/pycsw\.cfg
@@ -61,7 +63,3 @@ contrib/docker/monitoring/prometheus_db/
 contrib/docker/monitoring/grafana_db/
 
 contrib/docker/monitoring/.env
-
-contrib/docker/env/
-
-workspace.code-workspace
