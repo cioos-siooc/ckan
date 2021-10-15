@@ -3,9 +3,10 @@ name: CKAN Docker Image
 on:
   workflow_dispatch:
   push:
-   branches: [ cioos ]
+   branches: [ hakai_master ]
   pull_request:
-    branches: [ cioos ]
+    branches: [ hakai_master ]
+    types: [opened, synchronize, reopened, closed]
   release:
     types: [published]
   repository_dispatch:
@@ -82,18 +83,18 @@ jobs:
     - uses: satackey/action-docker-layer-caching@v0.0.8
       # Ignore the failure of a step and avoid terminating the job.
       continue-on-error: true
-    - run: docker build -t cioos/ckan:$TAG -t cioos/ckan:latest .
-    - run: docker push cioos/ckan:$TAG
+    - run: docker build -t hakaiinstitute/ckan:$TAG -t hakaiinstitute/ckan:latest .
+    - run: docker push hakaiinstitute/ckan:$TAG
     - if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-      run: docker push cioos/ckan:latest
+      run: docker push hakaiinstitute/ckan:latest
     - if: github.event_name == 'pull_request' || github.event_name == 'repository_dispatch'
       uses: mshick/add-pr-comment@v1
       with:
         message: |
-          Image has been pushed to [cioos/ckan](https://hub.docker.com/repository/docker/cioos/ckan)
+          Image has been pushed to [hakaiinstitute/ckan](https://hub.docker.com/repository/docker/cioos/ckan)
           ## Testing Quick Start
           ### Pull image
-          `sudo docker pull cioos/ckan:${{ env.TAG }}`
+          `sudo docker pull hakaiinstitute/ckan:${{ env.TAG }}`
           or
           `sudo CKAN_TAG=${{ env.TAG }} docker-compose pull ckan`
           ### Remove Home Volume and Restart
