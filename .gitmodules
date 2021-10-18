@@ -31,3 +31,5 @@
 [submodule "contrib/docker/src/ckanext-pdfview"]
   path = contrib/docker/src/ckanext-pdfview
 	url = https://github.com/ckan/ckanext-pdfview.git
+[submodule "contrib/docker/src/hakai-schema"]
+	url = https://github.com/HakaiInstitute/hakai-schema.git
