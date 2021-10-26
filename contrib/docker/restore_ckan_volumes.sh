@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [[ $1 == "-h" || $1 == "--help" ]]; then
-    echo "Usage: restore_ckan_volumes.sh [LOCAL_BACKUP_PATH] [BACKUP_TAG] [CKAN_CONTAINER] [TEMP_CONTAINER_IMAGE]"
+    echo "Usage: restore_ckan_volumes.sh [BACKUP_TAG] [LOCAL_BACKUP_PATH] [CKAN_CONTAINER] [TEMP_CONTAINER_IMAGE]"
     echo "Restores CKAN volume contents from the TAR files stored in a sub-directory of LOCAL_BACKUP_PATH denoted by BACKUP_TAG"
     echo "  CKAN_CONTAINER default is \"ckan\""
     echo "  LOCAL_BACKUP_PATH default is the current directory"
@@ -13,8 +13,8 @@ fi
 # Root directory in the temporary container to dump CKAN backups into
 BACKUP_ROOT="/ckan_backup"
 
-LOCAL_BACKUP_PATH=$1
-BACKUP_TAG=$2
+BACKUP_TAG=$1
+LOCAL_BACKUP_PATH=$2
 CKAN_CONTAINER=$3
 TEMP_CONTAINER_IMAGE=$4
 
