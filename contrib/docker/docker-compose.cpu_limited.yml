@@ -1,10 +1,14 @@
 # docker-compose build && docker-compose up -d
 # If "docker-compose logs ckan" shows DB not ready, run "docker-compose restart ckan" a few times.
+#
+# If using CPU limiting you must start with compatibility mode enabled.
+#   sudo docker-compose --compatibility up -d
+
 version: "3.4"
 
 x-ckan: &ckan_app
   container_name: ckan
-  image: hakaiinstitute/ckan:${CKAN_TAG}
+  image: cioos/ckan:${CKAN_TAG}
   links:
     - db
     - solr
@@ -41,8 +45,6 @@ volumes:
 
 
 
-
-
 services:
   ckan:
     depends_on:
@@ -50,16 +52,24 @@ services:
       - solr
       # - redis
     <<: *ckan_app
+    deploy:
+      resources:
+        limits:
+          cpus: '${LIMIT_CPU_CKAN:-0.5}'
     # ports:
       # - "5678:5678" # used by the debugger during development. NOT for production
 
   ckan_gather_harvester:
      <<: *ckan_app
      container_name: ckan_gather_harvester
-     image: hakaiinstitute/ckan:${CKAN_TAG}
+     image: cioos/ckan:${CKAN_TAG}
      entrypoint: /ckan-harvester-entrypoint.sh
      user: root
      command: ckan --config=/etc/ckan/production.ini harvester gather-consumer
+     deploy:
+       resources:
+         limits:
+           cpus: '${LIMIT_CPU_CKAN_GATHER_HARVESTER:-0.25}'
      ports: []
      depends_on:
        - ckan
@@ -67,11 +77,15 @@ services:
   ckan_fetch_harvester:
      <<: *ckan_app
      container_name: ckan_fetch_harvester
-     image: hakaiinstitute/ckan:${CKAN_TAG}
+     image: cioos/ckan:${CKAN_TAG}
      entrypoint: /ckan-harvester-entrypoint.sh
      user: root
      command: ckan --config=/etc/ckan/production.ini harvester fetch-consumer
      ports: []
+     deploy:
+       resources:
+         limits:
+           cpus: '${LIMIT_CPU_CKAN_FETCH_HARVESTER:-0.5}'
      depends_on:
        - ckan
        - ckan_gather_harvester
@@ -79,11 +93,15 @@ services:
   ckan_run_harvester:
      <<: *ckan_app
      container_name: ckan_run_harvester
-     image: hakaiinstitute/ckan:${CKAN_TAG}
+     image: cioos/ckan:${CKAN_TAG}
      entrypoint: /ckan-run-harvester-entrypoint.sh
      user: root
      command: /bin/bash -c "echo 'ckan_run_harvester started' && cron -f 2>&1 "
      ports: []
+     deploy:
+       resources:
+         limits:
+           cpus: '${LIMIT_CPU_CKAN_RUN_HARVESTER:-0.25}'
      depends_on:
        - ckan
        - ckan_gather_harvester
@@ -94,12 +112,20 @@ services:
     image: clementmouchet/datapusher
     restart: unless-stopped
     #restart: always
+    deploy:
+      resources:
+        limits:
+          cpus: '${LIMIT_CPU_DATAPUSHER:-0.25}'
     ports:
       - "8800:8800"
 
   db:
     container_name: db
-    image: hakaiinstitute/postgresql:latest
+    image: cioos/postgresql:latest
+    deploy:
+      resources:
+        limits:
+          cpus: '${LIMIT_CPU_DB:-0.5}'
     ports:
        - "5432:5432"
     environment:
@@ -115,13 +141,17 @@ services:
   solr:
     container_name: solr
     image: cioos/solr:latest
-    restart: unless-stopped
-    volumes:
-      - solr_data:/opt/solr/server/solr/ckan/data
+    deploy:
+      resources:
+        limits:
+          cpus: '${LIMIT_CPU_SOLR:-1.0}'
 
   # redis is used by the datapusher and the spatial fetch and gather harvesters
   redis:
     container_name: redis
     image: redis:latest
-    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '${LIMIT_CPU_REDIS:-0.25}'
     #restart: always

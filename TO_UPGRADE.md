@@ -1,3 +1,10 @@
+stop and clear all harvesters.
+
+
+sudo docker exec -it ckan ckan  --config=/etc/ckan/production.ini db upgrade
+sudo docker exec -it ckan ckan  --config=/etc/ckan/production.ini asset build
+
+
 ## Update who.ini
 use = ckan.lib.auth_tkt:make_plugin
 to
@@ -29,3 +36,8 @@ in file add plugin to list
     ...
     scheming_nerf_index
 ```
+
+## remove repeating and composit plugins
+
+## turn off tracking in the config, it dosnt seem to work
+ckan.tracking_enabled = false
