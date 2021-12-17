@@ -1,7 +1,7 @@
 # BACKUP!
 ```
 cd ~/ckan/contrib/docker/postgresql
-sudo bash ./ph_backup_rotated.sh
+sudo bash ./pg_backup_rotated.sh
 ```
 # Update config
 Compare existin production.ini with template. make updates as needed. You may need to generate a new config file to populate some of the missing api keys.
@@ -72,5 +72,6 @@ sudo docker exec -it ckan ckan --config=/etc/ckan/production.ini harvester reind
 
 # Run this after updating ckan:
 ```bash
-sudo docker exec -u root -it ckan  /bin/bash -c "python /usr/lib/ckan/venv/src/ckan/ckan/migration/migrate_package_activity.py -c /etc/ckan/production.ini"
+sudo cp -r ../../ckan/migration $VOL_CKAN_HOME/venv/src/ckan/
+sudo docker exec -u root -it ckan  /bin/bash -c "source ../bin/activate && python /usr/lib/ckan/venv/src/ckan/ckan/migration/migrate_package_activity.py -c /etc/ckan/production.ini"
 ```
