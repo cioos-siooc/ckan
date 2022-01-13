@@ -29,7 +29,8 @@ ckan_ps() {
 }
 
 ckan_logs() {
-    sudo docker logs ckan
+    cd $CKAN_DOCKER
+    sudo docker-compose logs --tail 50 -f ckan
 }
 
 ckan_stop() {
@@ -47,7 +48,7 @@ ckan_start() {
     sudo docker-compose start ckan_gather_harvester
     sudo docker-compose start ckan_fetch_harvester
     sudo docker-compose start ckan_run_harvester
-    popd    
+    popd
 }
 
 ckan_down() {
@@ -78,12 +79,56 @@ ckan_create_admin() {
     sudo docker exec -i ckan -c /etc/ckan/default/ckan.ini sysadmin add admin
 }
 
-ckan_upgrade() {
+ckan_upgrade_all() {
     cd $CKAN_DOCKER
     sudo docker-compose down -v
     git pull
     sudo docker-compose pull
     sudo docker-compose up -d --build
+}
+
+ckan_upgrade_ckan() {
+    cd $CKAN_BASE
+    git pull
+    git submodule init
+    git submodule sync
+    git submodule update
+    cd $CKAN_DOCKER
+    sudo docker-compose pull ckan
+    sudo docker-compose stop ckan
+    sudo docker-compose stop ckan_gather_harvester
+    sudo docker-compose stop ckan_fetch_harvester
+    sudo docker-compose stop ckan_run_harvester
+    sudo docker-compose rm -f ckan
+    sudo docker-compose rm -f ckan_gather_harvester
+    sudo docker-compose rm -f ckan_fetch_harvester
+    sudo docker-compose rm -f ckan_run_harvester
+    sudo docker volume rm docker_ckan_home
+    sudo docker-compose up -d
+    sudo chown 900:900 -R $VOL_CKAN_HOME/venv/src/
+    sudo docker-compose up -d
+}
+
+ckan_upgrade_db() {
+    cd $CKAN_BASE
+    git pull
+    git submodule init
+    git submodule sync
+    git submodule update
+    cd $CKAN_DOCKER
+    sudo docker-compose pull db
+    sudo docker-compose up -d
+}
+
+ckan_upgrade_solr() {
+    cd $CKAN_BASE
+    git pull
+    git submodule init
+    git submodule sync
+    git submodule update
+    cd $CKAN_DOCKER
+    sudo docker-compose pull solr
+    sudo docker-compose up -d
 }
 
 ckan_api_setup() {
@@ -118,7 +163,7 @@ ckan_api() {
     if [[ z $CONDA_SH ]] || [[ -z $CONDA_ENV ]] || [[ -z $CKAN_URL ]] || [[ -z $CKAN_API_KEY ]]; then
         echo "A required environment variable for the CKAN API setup is not set."
         echo "Run the ckan_api_setup command to set these first."
-    else 
+    else
         source $CONDA_SH
         conda activate $CONDA_ENV
         ckanapi -r $CKAN_URL -a $CKAN_API_KEY "$@"
