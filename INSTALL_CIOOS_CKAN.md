@@ -572,7 +572,7 @@ It may become necessary to reindex harvesters, especially if they no longer repo
 > **NOTE:** If modifying the harvester config you will also need to reindex to make the new config take affect and restart the ckan_fetch_harvester container
 
 ```bash
-sudo docker exec -it ckan ckan --config=/etc/ckan/production.ini harvester reindex 
+sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckanext-harvest harvester reindex --config=/etc/ckan/production.ini
 cd ~/ckan/contrib/docker
 sudo docker-compose restart ckan_fetch_harvester
 ```
@@ -799,6 +799,7 @@ sudo cp -r src/ckanext-scheming/ $VOL_CKAN_HOME/venv/src/
 sudo cp -r src/ckanext-fluent/ $VOL_CKAN_HOME/venv/src/
 sudo cp -r src/ckanext-dcat/ $VOL_CKAN_HOME/venv/src/
 sudo cp src/cioos-siooc-schema/cioos-siooc_schema.json $VOL_CKAN_HOME/venv/src/ckanext-scheming/ckanext/scheming/cioos_siooc_schema.json
+sudo cp src/hakai-schema/hakai_schema.json $VOL_CKAN_HOME/venv/src/ckanext-scheming/ckanext/scheming/hakai_schema.json
 sudo cp src/cioos-siooc-schema/organization.json $VOL_CKAN_HOME/venv/src/ckanext-scheming/ckanext/scheming/organization.json
 sudo cp src/cioos-siooc-schema/ckan_license.json $VOL_CKAN_HOME/venv/src/ckanext-scheming/ckanext/scheming/ckan_license.json
 ```
