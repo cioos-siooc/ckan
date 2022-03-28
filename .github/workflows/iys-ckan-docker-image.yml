@@ -31,6 +31,6 @@ jobs:
     - uses: satackey/action-docker-layer-caching@v0.0.8
       # Ignore the failure of a step and avoid terminating the job.
       continue-on-error: true
-    - run: docker build -t hakaiinstitute/ckan_IYS:$TAG -t hakaiinstitute/ckan:latest .
-    - run: docker push hakaiinstitute/ckan:$TAG
-    - run: docker push hakaiinstitute/ckan:latest
+    - run: docker build -t hakaiinstitute/ckan:iys_$TAG -t hakaiinstitute/ckan:iys_latest .
+    - run: docker push hakaiinstitute/ckan:iys_$TAG
+    - run: docker push hakaiinstitute/ckan:iys_latest
