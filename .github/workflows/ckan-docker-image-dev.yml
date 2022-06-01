@@ -1,0 +1,85 @@
+name: CKAN Docker Image
+
+on:
+  workflow_dispatch:
+  push:
+   branches: [ cioos_dev]
+  pull_request:
+    branches: [ cioos_dev ]
+
+jobs:
+  delete_pr:
+    if: |
+      (github.event_name == 'pull_request' && github.event.action == 'closed' && github.event.pull_request.merged == true)
+    name: Delete docker tag on pull request merge
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set PR number as TAG env variable for pull requests
+        if: github.event_name == 'pull_request'
+        run: echo "TAG=PR${{ github.event.pull_request.number }}" >> $GITHUB_ENV
+
+      - run: docker run --rm -it lumir/remove-dockerhub-tag --user ${{ secrets.DOCKER_USERNAME }} --password ${{ secrets.DOCKER_PASSWORD }} cioos/ckan:DEV_$TAG
+
+  build_ckan:
+    name: build ckan docker image
+    runs-on: ubuntu-latest
+    steps:
+    - if: github.event_name == 'pull_request'
+      name: Checkout pull request with submodules
+      uses: actions/checkout@v2
+      with:
+        ref: ${{ github.event.pull_request.head.sha }}
+        submodules: 'recursive'
+        fetch-depth: '0'
+    - if: github.event_name != 'pull_request'
+      name: Checkout non pull request with submodules
+      uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
+        fetch-depth: '0'
+    - run: cp ./contrib/docker/.env.template ./contrib/docker/.env
+    - run: cp ./contrib/docker/production_root_url.ini ./contrib/docker/production.ini
+    - run: cp ./contrib/docker/who_root_url.ini ./contrib/docker/who.ini
+
+    - name: Set current date as TAG env variable for push requests
+      if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+      run: echo "TAG=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
+    - name: Set PR number as TAG env variable for pull requests
+      if: github.event_name == 'pull_request'
+      run: echo "TAG=PR${{ github.event.pull_request.number }}" >> $GITHUB_ENV
+    - name: Set git tag as TAG env variable for releases
+      if: github.event_name == 'release'
+      run: echo "TAG=${{ github.event.release.tag_name }}" >> $GITHUB_ENV
+
+    - name: Login to DockerHub
+      uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+    - uses: satackey/action-docker-layer-caching@v0.0.8
+      # Ignore the failure of a step and avoid terminating the job.
+      continue-on-error: true
+    - run: docker build -t cioos/ckan:DEV_$TAG -t cioos/ckan:DEV_latest .
+    - run: docker push cioos/ckan:DEV_$TAG
+    - if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+      run: docker push cioos/ckan:DEV_latest
+    - if: github.event_name == 'pull_request'
+      uses: mshick/add-pr-comment@v1
+      with:
+        message: |
+          Image has been pushed to [cioos/ckan](https://hub.docker.com/repository/docker/cioos/ckan)
+          ## Testing Quick Start
+          ### Pull image
+          `sudo docker pull cioos/ckan:DEV_${{ env.TAG }}`
+          or
+          `sudo CKAN_TAG=DEV_${{ env.TAG }} docker-compose pull ckan`
+          ### Remove Home Volume and Restart
+          ```
+          sudo docker-compose down
+          sudo docker volume rm docker_ckan_home
+          sudo CKAN_TAG=DEV_${{ env.TAG }} docker-compose up -d
+          ```
+          for full documentation see *TBD*
+        repo-token: ${{ secrets.GITHUB_TOKEN }}
+        repo-token-user-login: 'github-actions[bot]' # The user.login for temporary GitHub tokens
+        allow-repeats: false # This is the default
