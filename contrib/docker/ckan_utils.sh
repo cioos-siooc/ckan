@@ -4,9 +4,9 @@
 # To get started, source this file and then run ckan_utils_list
 
 CKAN_IMAGE_NAME="ckan"
-DOCKER_CMD="docker" # or perhaps "$DOCKER_CMD"
-DOCKER_COMPOSE_CMD="docker-compose" # or perhaps "$DOCKER_COMPOSE_CMD"
-EDIT_CMD="vim"
+DOCKER_CMD="docker" # or perhaps "sudo docker"
+DOCKER_COMPOSE_CMD="docker compose" # or perhaps "sudo docker-compose"
+EDIT_CMD="vim" # or maybe nano
 
 export CKAN_DOCKER=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 export CKAN_BASE=$(readlink -f ${CKAN_DOCKER}/../../)
@@ -76,15 +76,6 @@ ckan_up() {
     popd
 }
 
-ckan_generate_config() {
-    $DOCKER_CMD exec -it $CKAN_IMAGE_NAME ckan -c /etc/ckan/production.ini generate config /etc/ckan/production.gen.ini
-    sudo cp $VOL_CKAN_CONFIG/production.gen.ini $CKAN_DOCKER/production.gen.ini
-    sudo chown $USER:$USER $CKAN_DOCKER/production.gen.ini
-    printf "Generated production.gen.ini in two locations:\n$CKAN_DOCKER/production.gen.ini\n$VOL_CKAN_CONFIG/production.gen.ini\n"
-    printf "Key values to pull into main production.ini before down/up:\n"
-    printf "  api_token.jwt.encode.secret\n  api_token.jwt.decode.secret\n  beaker.session.secret\n"
-}
-
 ckan_perms() {
     sudo chown 900:900 -R $VOL_CKAN_HOME/venv/src/
 }
@@ -124,16 +115,19 @@ ckan_compile_css() {
 
 ckan_generate_config() {
     $DOCKER_CMD exec -it $CKAN_IMAGE_NAME ckan -c /etc/ckan/production.ini generate config /etc/ckan/production.gen.ini
-    sudo cp $VOL_CKAN_CONFIG/production.gen.ini $CKAN_DOCKER/production.gen.ini
-    sudo chown $USER:$USER $CKAN_DOCKER/production.gen.ini
-    printf "Generated production.gen.ini in two locations:\n$CKAN_DOCKER/production.gen.ini\n$VOL_CKAN_CONFIG/production.gen.ini\n"
+    prod_gen=$CKAN_DOCKER/production.gen.ini
+    sudo cp $VOL_CKAN_CONFIG/production.gen.ini $prod_gen
+    sudo chown $USER:$USER $prod_gen
+    printf "Generated production.gen.ini in two locations:\n$CKAN_DOCKER/production.gen.ini\n$prod_gen\n"
     printf "Key values to pull into main production.ini before down/up:\n"
-    printf "  api_token.jwt.encode.secret\n  api_token.jwt.decode.secret\n  beaker.session.secret\n"
+    grep "beaker.session.secret" $prod_gen
+    grep "app_instance_uuid" $prod_gen
+    grep "api_token.jwt.encode.secret" $prod_gen
+    grep "api_token.jwt.decode.secret" $prod_gen
 }
 
 ckan_edit_production_ini() {
     sudo $EDIT_CMD $VOL_CKAN_CONFIG/production.ini
-
 }
 
 # install miniconda
