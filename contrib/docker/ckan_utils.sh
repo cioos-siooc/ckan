@@ -8,8 +8,8 @@ DOCKER_CMD="docker" # or "sudo docker"
 DOCKER_COMPOSE_CMD="docker compose" # or "sudo docker-compose"
 EDIT_CMD="vim" # or nano
 CKAN_PRODUCTION_INI="$CKAN_PRODUCTION_INI"
-CIOOS_NATIONAL_CATALOGUE="https://catalogue.cioos.ca"
-# CIOOS_NATIONAL_CATALOGUE="https://cioos-national-ckan.preprod.ogsl.ca" # dev
+#CIOOS_NATIONAL_CATALOGUE="https://catalogue.cioos.ca"
+CIOOS_NATIONAL_CATALOGUE="https://cioos-national-ckan.preprod.ogsl.ca" # dev
 
 export CKAN_DOCKER=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 export CKAN_BASE=$(readlink -f ${CKAN_DOCKER}/../../)
@@ -203,6 +203,7 @@ ckan_dump_national_org() {
         conda activate $CONDA_ENV
         ckanapi dump organizations $org_name -O /tmp/${org_name}.jsonl -r $CIOOS_NATIONAL_CATALOGUE
         echo "Dumped national organization $org_name to /tmp/${org_name}.jsonl."
+    fi
 }
 
 # Upload an organization .jsonl file to a CKAN you have API access to
