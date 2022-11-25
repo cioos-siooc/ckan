@@ -4,9 +4,12 @@
 # To get started, source this file and then run ckan_utils_list
 
 CKAN_IMAGE_NAME="ckan"
-DOCKER_CMD="docker" # or perhaps "sudo docker"
-DOCKER_COMPOSE_CMD="docker compose" # or perhaps "sudo docker-compose"
-EDIT_CMD="vim" # or maybe nano
+DOCKER_CMD="docker" # or "sudo docker"
+DOCKER_COMPOSE_CMD="docker compose" # or "sudo docker-compose"
+EDIT_CMD="vim" # or nano
+CKAN_PRODUCTION_INI="$CKAN_PRODUCTION_INI"
+CIOOS_NATIONAL_CATALOGUE="https://catalogue.cioos.ca"
+# CIOOS_NATIONAL_CATALOGUE="https://cioos-national-ckan.preprod.ogsl.ca" # dev
 
 export CKAN_DOCKER=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 export CKAN_BASE=$(readlink -f ${CKAN_DOCKER}/../../)
@@ -87,15 +90,15 @@ ckan_reload() {
 # Run the CKAN command inside the container with arbitrary arguments
 # Try ckan_ckan --help to get started
 ckan_ckan() {
-    $DOCKER_CMD exec -it $CKAN_IMAGE_NAME ckan -c /etc/ckan/production.ini "$@"
+    $DOCKER_CMD exec -it $CKAN_IMAGE_NAME ckan -c $CKAN_PRODUCTION_INI "$@"
 }
 
 ckan_reindex() {
-    $DOCKER_CMD exec -it $CKAN_IMAGE_NAME ckan -c /etc/ckan/production.ini search-index rebuild
+    $DOCKER_CMD exec -it $CKAN_IMAGE_NAME ckan -c $CKAN_PRODUCTION_INI search-index rebuild
 }
 
 ckan_create_admin() {
-    $DOCKER_CMD exec -i $CKAN_IMAGE_NAME ckan -c /etc/ckan/production.ini sysadmin add admin
+    $DOCKER_CMD exec -i $CKAN_IMAGE_NAME ckan -c $CKAN_PRODUCTION_INI sysadmin add admin
 }
 
 ckan_upgrade() {
@@ -114,7 +117,7 @@ ckan_compile_css() {
 }
 
 ckan_generate_config() {
-    $DOCKER_CMD exec -it $CKAN_IMAGE_NAME ckan -c /etc/ckan/production.ini generate config /etc/ckan/production.gen.ini
+    $DOCKER_CMD exec -it $CKAN_IMAGE_NAME ckan -c $CKAN_PRODUCTION_INI generate config /etc/ckan/production.gen.ini
     prod_gen=$CKAN_DOCKER/production.gen.ini
     sudo cp $VOL_CKAN_CONFIG/production.gen.ini $prod_gen
     sudo chown $USER:$USER $prod_gen
@@ -190,14 +193,24 @@ ckan_api() {
     fi
 }
 
-# Download the 'ec' (ECCC) organization from cioos.ca
-ckan_dump_ec() {
-    source $CONDA_SH
-    conda activate $CONDA_ENV
-    ckanapi dump organizations ec -O ./ec.jsonl -r https://cioos-national-ckan.preprod.ogsl.ca
+# Download the given (ECCC) organization from national catalogue
+ckan_dump_national_org() {
+    if [ -z $1 ]; then
+        echo "Error - usage: ckan_dump_national_org <organization short name>"
+    else
+        org_name=$1
+        source $CONDA_SH
+        conda activate $CONDA_ENV
+        ckanapi dump organizations $org_name -O /tmp/${org_name}.jsonl -r $CIOOS_NATIONAL_CATALOGUE
+        echo "Dumped national organization $org_name to /tmp/${org_name}.jsonl."
 }
 
-# Upload the 'ec' (ECCC) organization to a CKAN you have API access to
-ckan_load_ec() {
-    ckan_api load organizations -I ec.jsonl
+# Upload an organization .jsonl file to a CKAN you have API access to
+ckan_load_organization() {
+    if [ -z $1 ]; then
+        echo "Error - usage: ckan_load_organization <path to organization jsonl file>"
+    else
+        org_file=$1
+        ckan_api load organizations -I $org_file
+    fi
 }
