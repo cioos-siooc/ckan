@@ -100,6 +100,45 @@ sudo a2enmod proxy_http
 sudo service apache2 restart
 ```
 
+#### Add noindex robot tags to headers
+
+You may want to prevent search engins from indexing some your ckan pages. The
+following mod_header rules have the same affect as the robots.txt file in the
+theme repo. I add them to the location field
+
+```
+# CKAN
+<location />
+...
+  <IfModule mod_headers.c>
+      <If "%{THE_REQUEST} =~ m#[\S]+\?[\S]+#">
+          Header Set X-Robots-Tag "noindex, noarchive, nosnippet"
+      </If>
+      <If "%{THE_REQUEST} =~ m#[\S]+/dataset/rate/[\S]*#">
+          Header Set X-Robots-Tag "noindex, noarchive, nosnippet"
+      </If>
+      <If "%{THE_REQUEST} =~ m#[\S]+/revision/[\S]*#">
+          Header Set X-Robots-Tag "noindex, noarchive, nosnippet"
+      </If>
+      <If "%{THE_REQUEST} =~ m#[\S]+/dataset/[\S]+/history/[\S]*#">
+          Header Set X-Robots-Tag "noindex, noarchive, nosnippet"
+      </If>
+      <If "%{THE_REQUEST} =~ m#[\S]+/api/[\S]*#">
+          Header Set X-Robots-Tag "noindex, noarchive, nosnippet"
+      </If>
+      <If "%{THE_REQUEST} =~ m#[\S]+/harvest[\S]*#">
+          Header Set X-Robots-Tag "noindex, noarchive, nosnippet"
+      </If>
+      <If "%{THE_REQUEST} =~ m#[\S]+/_tracking[\S]*#">
+          Header Set X-Robots-Tag "noindex, noarchive, nosnippet"
+      </If>
+  </IfModule>
+
+    ProxyPass http://localhost:5000/
+    ProxyPassReverse http://localhost:5000/
+</location>
+```
+
 ## Windows
 
 It is possible to setup CKAN under Windows 10 using:
@@ -134,7 +173,7 @@ Open Docker Desktop, Open Settings and enable WSL Integration under the Resource
 ```bash
 git clone -b cioos https://github.com/cioos-siooc/ckan.git
 cd ckan
-git checkout cioos
+git checkout hakai_master
 ```
 
 add submodules
@@ -144,6 +183,7 @@ cd ~/ckan
 git submodule init
 git submodule update
 ```
+
 
 ## Create config files
 
@@ -993,7 +1033,11 @@ sudo cp src/cioos-siooc-schema/organization.json $VOL_CKAN_HOME/venv/src/ckanext
 sudo cp src/cioos-siooc-schema/ckan_license.json $VOL_CKAN_HOME/venv/src/ckan/contrib/docker/src/cioos-siooc-schema/ckan_license.json
 ```
 
-update permissions
+## Troubleshooting
+
+### Issues building/starting CKAN
+
+Try manually pulling the images first e.g.:
 
 ```bash
 sudo docker pull --disable-content-trust clementmouchet/datapusher
