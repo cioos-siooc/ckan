@@ -25,3 +25,6 @@
 [submodule "contrib/docker/src/ckanext-dcat"]
 	path = contrib/docker/src/ckanext-dcat
 	url = https://github.com/ckan/ckanext-dcat.git
+[submodule "contrib/docker/src/ckanext-restricted_search"]
+	path = contrib/docker/src/ckanext-restricted_search
+	url = https://github.com/cioos-atlantic/ckanext-restricted_search.git
