@@ -127,3 +127,13 @@ services:
     restart: unless-stopped
     volumes:
       - redis_data:/data
+
+  pg_tileserv:
+    image: pramsey/pg_tileserv
+    container_name: pg_tileserv
+    environment:
+      - DATABASE_URL=postgres://ckan:ckan@db/ckan
+    depends_on:
+      - db
+    ports:
+      - 7800:7800
