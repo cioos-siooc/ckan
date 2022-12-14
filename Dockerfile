@@ -195,6 +195,9 @@ RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-ci
 COPY ./contrib/docker/src/ckanext-cioos_theme $CKAN_VENV/src/ckanext-cioos_theme
 RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-cioos_theme && python setup.py compile_catalog -f && python setup.py install && python setup.py develop"
 
+COPY ./contrib/docker/src/ckanext-restricted_search $CKAN_VENV/src/ckanext-restricted_search
+RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-restricted_search && python setup.py install && python setup.py develop"
+
 WORKDIR $CKAN_VENV/src
 RUN /bin/bash -c "rm -R ./ckan"
 
