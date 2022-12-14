@@ -84,40 +84,8 @@ ckan  menu create --url [path to wordpress api endpoint] --output [output menu l
 sudo docker exec -u root -it ckan  ckan --config /etc/ckan/production.ini menu create --url https://cioospacific.ca/wp-json/ra/menu/ --output /menu/pacific_menu_list.html
 ```
 
-## Troubleshooting
+# organization_list api end point
+added a fq paramiter to organization_list so that results can be filtered on fields other then name, description, and title.
+not queries are supported by adding a negative sign in front of the field name.
 
-If you enter an improper value into the config interface you may *accidentally* lock yourself out of it.  If this happens you'll need to update the values by using the CKAN API with an [authorization token](https://ckan.readthedocs.io/en/2.9/api/index.html#authentication-and-api-tokens).
-
-**NOTE:** If you do not have the `api_token.jwt.encode.secret`, `api_token.jwt.decode.secret` and `beaker.session.secret` fields specified in **production.ini** then you will get an error message when you try to generate a token.
-
-A token will still be generated but will not be displayed to you, which is less than helpful.
-
-### Generating an Authorization token
-
-Substitute `[username]` with the username of the user you want to generate a token for, the `[token_name]` field is an arbitrary value to describe the purpose of the token.
-
-Do not be surprised if the generated token is quite long.
-
-```bash
-sudo docker exec -it ckan ckan --config /etc/ckan/production.ini user token add [username] [token_name]
-```
-
-### Updating config settings using the CKAN API
-
-Now that you have an authorization token you can use the `config_option_update` command to update your CKAN configuration.  To see what values you can alter at runtime make a call to the `config_option_list` command.  Both commands require an authorization token or you'll get a permission denied error.
-
-Configuration updates must be in the form of JSON as per the example below.
-
-**NOTE:** Substitute `XXX` below with your authorization token.
-
-Get list of configuration options that can be updated:
-
-```bash
-curl -H "Authorization: XXX" http://localhost:5000/api/action/config_option_list
-```
-
-Example of updating a configuration value
-
-```bash
-curl -H "Authorization: XXX" http://localhost:5000/api/action/config_option_update -d "{\"ckan.header_file_name\": \"/menu/atlantic_menu_list.html\"}"
-```
+example query ```/api/3/action/organization_list?q=hakai&all_fields=true&include_extras=true&fq=-organization-uri:code"_ "",&fq=organization-uri:__```

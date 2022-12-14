@@ -100,6 +100,45 @@ sudo a2enmod proxy_http
 sudo service apache2 restart
 ```
 
+#### Add noindex robot tags to headers
+
+You may want to prevent search engins from indexing some your ckan pages. The
+following mod_header rules have the same affect as the robots.txt file in the
+theme repo. I add them to the location field
+
+```
+# CKAN
+<location />
+...
+  <IfModule mod_headers.c>
+      <If "%{THE_REQUEST} =~ m#[\S]+\?[\S]+#">
+          Header Set X-Robots-Tag "noindex, noarchive, nosnippet"
+      </If>
+      <If "%{THE_REQUEST} =~ m#[\S]+/dataset/rate/[\S]*#">
+          Header Set X-Robots-Tag "noindex, noarchive, nosnippet"
+      </If>
+      <If "%{THE_REQUEST} =~ m#[\S]+/revision/[\S]*#">
+          Header Set X-Robots-Tag "noindex, noarchive, nosnippet"
+      </If>
+      <If "%{THE_REQUEST} =~ m#[\S]+/dataset/[\S]+/history/[\S]*#">
+          Header Set X-Robots-Tag "noindex, noarchive, nosnippet"
+      </If>
+      <If "%{THE_REQUEST} =~ m#[\S]+/api/[\S]*#">
+          Header Set X-Robots-Tag "noindex, noarchive, nosnippet"
+      </If>
+      <If "%{THE_REQUEST} =~ m#[\S]+/harvest[\S]*#">
+          Header Set X-Robots-Tag "noindex, noarchive, nosnippet"
+      </If>
+      <If "%{THE_REQUEST} =~ m#[\S]+/_tracking[\S]*#">
+          Header Set X-Robots-Tag "noindex, noarchive, nosnippet"
+      </If>
+  </IfModule>
+
+    ProxyPass http://localhost:5000/
+    ProxyPassReverse http://localhost:5000/
+</location>
+```
+
 ## Windows
 
 It is possible to setup CKAN under Windows 10 using:
@@ -129,7 +168,11 @@ Open Docker Desktop, Open Settings and enable WSL Integration under the Resource
 
 ### Windows Terminal
 
-#### Download CKAN git repo
+The rest of the instructions assume you are using a terminal in a Linux environment.  WSL will already provide you with one by opening one of your installed Linux distros, [Windows Terminal](https://aka.ms/terminal) is also excellent for this purpose.
+
+## Download CKAN git repo and submodules
+
+> **NOTE:** The following instructions assume you are installing CKAN in your home directory (~)
 
 ```bash
 git clone -b cioos https://github.com/cioos-siooc/ckan.git
@@ -147,7 +190,7 @@ git submodule update
 
 ## Create config files
 
-create environment file and populate with appropriate values
+Create environment file and populate with appropriate values
 
 ```bash
 cd ~/ckan/contrib/docker/
@@ -155,14 +198,14 @@ cp .env.template .env
 nano .env
 ```
 
-create ckan config files for later import into ckan
+### Installing CKAN as the root website
 
 If your CKAN installation will run at the root of your domain, for example <http://yourdomain.com/>
 
 ```bash
 cd ~/ckan/contrib/docker/
-cp production_non_root_url.ini production.ini
-cp who_non_root_url.ini who.ini
+cp production_root_url.ini production.ini
+cp who_root_url.ini who.ini
 ```
 
 ### Installing CKAN off the root of a website
@@ -171,11 +214,15 @@ Use this setup if your site will run at <http://yourdomain.com/ckan>
 
 ```bash
 cd ~/ckan/contrib/docker/
-cp production_root_url.ini production.ini
-cp who_root_url.ini who.ini
+cp production_non_root_url.ini production.ini
+cp who_non_root_url.ini who.ini
 ```
 
-copy pyCSW config file and update the database password. This ist he same password enetered in your .env file
+### Configuring pyCSW
+
+Copy [pyCSW](https://pycsw.org/) config template file and update the database password.
+
+The database password is the same password entered in your **.env** file
 
 ```bash
 cd ~/ckan/contrib/docker/pycsw
@@ -191,91 +238,19 @@ Change to ckan docker config folder
   cd ~/ckan/contrib/docker
 ```
 
-Build containers
+Build containers, this takes a while
 
 ```bash
   sudo docker-compose up -d --build
 ```
 
-if this fails try manually pulling the images first e.g.:
+If you don't see any error messages, check <http://localhost:5000> to see if the installation worked.
 
 ```bash
 curl localhost:5000
 ```
 
-Sometimes the containers start in the wrong order. This often results in strange sql errors in the db logs. If this happens you can manually start the containers by first building then using docker-compose up
-
-```
-sudo docker-compose build
-sudo docker-compose up db
-sudo docker-compose up solr redis
-sudo docker-compose up ckan
-sudo docker-compose up datapusher
-sudo docker-compose up ckan_gather_harvester ckan_fetch_harvester ckan_run_harvester
-```
-
-if you need to change the production.ini in the repo and rebuild then you may need to delete the volume first. volume does not update during dockerfile run if it already exists.
-
-```
-docker-compose down
-docker volume rm docker_ckan_config
-```
-
-update ckan/contrib/docker/production.ini
-
-```
-  export VOL_CKAN_CONFIG=`sudo docker volume inspect docker_ckan_config | jq -r -c '.[] | .Mountpoint'`
-  sudo nano $VOL_CKAN_CONFIG/production.ini
-```
-
-#### Setup Apache proxy
-
-add the following to your sites configs
-
-```
-    # CKAN
-		<location /ckan>
-  	    ProxyPass http://localhost:5000/
-  	    ProxyPassReverse http://localhost:5000/
-   	</location>
-
-    # pycsw
-     <location /ckan/csw>
-         ProxyPass http://localhost:8000/pycsw/csw.js
-         ProxyPassReverse http://localhost:8000/pycsw/csw.js
-    </location>
-```
-
-or
-
-```
-    # CKAN
-    <location />
-        ProxyPass http://localhost:5000/
-        ProxyPassReverse http://localhost:5000/
-    </location>
-
-    # pycsw
-    <location /csw>
-        ProxyPass http://localhost:8000/pycsw/csw.js
-        ProxyPassReverse http://localhost:8000/pycsw/csw.js
-    </location>
-
-```
-
-If you use rewrite rules to redirect none ssl traffic to https and you are using a non-root install, such as /ckan, then you will likely need to add a no escape flag to your rewrite rules. something like the following should work, note the NE.
-
-```
-  RewriteEngine on
-  ReWriteCond %{SERVER_PORT} !^443$
-  RewriteRule ^/(.*) https://%{HTTP_HOST}/$1 [NC,R,L,NE]
-```
-
-restart apache
-
-```
-  sudo service apache2 restart
-```
+> **NOTE:** If there was an error message, see [Troubleshooting](#Troubleshooting) below.
 
 ### Create CKAN admin user
 
@@ -419,6 +394,19 @@ Once all these changes have been made you'll need to restart Apache to see the r
 
 ```bash
 sudo apachectl restart
+```
+
+### Enable sitemap generation
+create a cronjob on the host machine to generate a sitemap. Daily is likely sufficent. The cron job must be run as the same user running docker. This could be root on some systems. The sitemap files will be placed into the ckan home volume via the ckan container. The sitemap will be accesable at https://[ckan_site]/sitemap/sitemap.xml
+
+```bash
+crontab -e
+or
+sudo crontab -e
+```
+
+```crontab
+0 * * * * docker exec -it ckan ckan --config=/etc/ckan/production.ini sitemap create
 ```
 
 ## Setup Harvesters
@@ -685,18 +673,6 @@ restart the ckan container
 cd ~/ckan/contrib/docker
 sudo docker-compose restart ckan
 ```
----
-
-# Troubleshooting
-
-Issues building/starting CKAN:
-
-Try manually pulling the images first e.g.:
-
-```bash
-cd ~/ckan/contrib/docker
-sudo docker-compose up -d
-```
 
 ## Update CKAN extensions
 
@@ -776,7 +752,30 @@ sudo docker-compose restart ckan
 sudo docker-compose restart ckan_run_harvester ckan_fetch_harvester ckan_gather_harvester
 ```
 
-#### When creating organizations or updating admin config settings you get a 500 Internal Server Error
+## Other helpful commands
+
+### Update a system file in a running container
+
+The easiest way is with the docker copy command.
+
+For example to update the crontab of the ckan_run_harvester containers you first copy the file to the container:
+
+```base
+cd ~/ckan/contrib/docker
+sudo docker cp ./crontab ckan_run_harvester:/etc/cron.d/crontab
+```
+
+Then update the crontab in the container by connecting to it's bash shell and running the crontab commands
+
+```base
+sudo docker exec -u root -it ckan_run_harvester /bin/bash -c "export TERM=xterm; exec bash"
+chown root:root /etc/cron.d/crontab
+chmod 0644 /etc/cron.d/crontab
+/usr/bin/crontab /etc/cron.d/crontab
+exit
+```
+
+In this example the entrypoint file for this container also copies the file over from the volume so you should update the file in the volume as well so that when the container is restarted the correct file contents is used.
 
 ```base
 cd ~/ckan/contrib/docker
@@ -795,12 +794,34 @@ sudo timedatectl set-timezone America/Vancouver
 
 ### Flush email notifications
 
-Likely the issue is that docker is passing the wrong DNS lookup addresses to the
-containers on build. See issue this issue on stack overflow https://stackoverflow.com/a/45644890
-for a solution.
+```bash
+sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckan post -c /etc/ckan/production.ini /api/action/send_email_notifications
+```
 
----
-# Update solr schema
+### Get public IP of server
+
+```bash
+curl ifconfig.me
+```
+
+### Update language translation files
+
+Build translation file
+
+```bash
+pip install babel
+cd ~/ckan/contrib/docker/src/ckanext-cioos_theme
+python setup.py compile_catalog --locale fr
+```
+
+Copy to volume
+
+```bash
+cd ~/ckan/contrib/docker
+sudo cp -r src/ckanext-cioos_theme/ $VOL_CKAN_HOME/venv/src/
+```
+
+### Add DHCP entries to docker container
 
 Edit **docker-compose.xml**
 
@@ -975,24 +996,14 @@ uncomment the google analytics id config and update to your id and replace
 with
 
 ```bash
-cd ~/ckan/contrib/docker
-sudo cp -r src/ckanext-cioos_theme/ $VOL_CKAN_HOME/venv/src/
-sudo cp -R src/ckanext-googleanalyticsbasic $VOL_CKAN_HOME/venv/src/
-sudo cp -r src/ckanext-cioos_harvest/ $VOL_CKAN_HOME/venv/src/
-sudo cp -r src/ckanext-harvest/ $VOL_CKAN_HOME/venv/src/
-sudo cp -r src/ckanext-spatial/ $VOL_CKAN_HOME/venv/src/
-sudo cp -r src/pycsw/ $VOL_CKAN_HOME/venv/src/
-sudo cp -r src/ckanext-scheming/ $VOL_CKAN_HOME/venv/src/
-sudo cp -r src/ckanext-package_converter/ $VOL_CKAN_HOME/venv/src/
-sudo cp -r src/ckanext-fluent/ $VOL_CKAN_HOME/venv/src/
-sudo cp -r src/ckanext-dcat/ $VOL_CKAN_HOME/venv/src/
-sudo cp -r src/ckanext-geoview/ $VOL_CKAN_HOME/venv/src/
-sudo cp src/cioos-siooc-schema/cioos-siooc_schema.json $VOL_CKAN_HOME/venv/src/ckanext-scheming/ckanext/scheming/cioos_siooc_schema.json
-sudo cp src/cioos-siooc-schema/organization.json $VOL_CKAN_HOME/venv/src/ckanext-scheming/ckanext/scheming/organization.json
-sudo cp src/cioos-siooc-schema/ckan_license.json $VOL_CKAN_HOME/venv/src/ckan/contrib/docker/src/cioos-siooc-schema/ckan_license.json
+googleanalytics.ids = [your Tracking IDs here seperated by spaces]
 ```
 
-update permissions
+## Troubleshooting
+
+### Issues building/starting CKAN
+
+Try manually pulling the images first e.g.:
 
 ```bash
 sudo docker pull --disable-content-trust clementmouchet/datapusher
@@ -1011,6 +1022,12 @@ sudo docker-compose up -d ckan
 sudo docker-compose up -d datapusher
 sudo docker-compose up -d ckan_gather_harvester ckan_fetch_harvester ckan_run_harvester
 ```
+
+### Changes to production.ini
+
+If you need to change the **production.ini** in the repo and rebuild then you may need to delete the volume first.
+
+> **IMPORTANT:** Volume does not update during dockerfile run if it already exists.
 
 ```bash
 sudo docker-compose down
@@ -1155,4 +1172,106 @@ You may get a file permissions error after the new volume is created. reset perm
 cd ~/ckan/contrib/docker
 sudo chown 900:900 -R $VOL_CKAN_HOME/venv/src/ $VOL_CKAN_STORAGE
 sudo docker-compose up -d
+```
+
+### reseting the config
+
+If you enter an improper value into the config interface you may *accidentally* lock yourself out of it.  If this happens you'll need to update the values by using the CKAN API with an [authorization token](https://ckan.readthedocs.io/en/2.9/api/index.html#authentication-and-api-tokens).
+
+**NOTE:** If you do not have the `api_token.jwt.encode.secret`, `api_token.jwt.decode.secret` and `beaker.session.secret` fields specified in **production.ini** then you will get an error message when you try to generate a token.
+
+A token will still be generated but will not be displayed to you, which is less than helpful.
+
+#### Generating an Authorization token
+
+Substitute `[username]` with the username of the user you want to generate a token for, the `[token_name]` field is an arbitrary value to describe the purpose of the token.
+
+Do not be surprised if the generated token is quite long.
+
+```bash
+sudo docker exec -it ckan ckan --config /etc/ckan/production.ini user token add [username] [token_name]
+```
+
+#### Updating config settings using the CKAN API
+
+Now that you have an authorization token you can use the `config_option_update` command to update your CKAN configuration.  To see what values you can alter at runtime make a call to the `config_option_list` command.  Both commands require an authorization token or you'll get a permission denied error.
+
+Configuration updates must be in the form of JSON as per the example below.
+
+**NOTE:** Substitute `XXX` below with your authorization token.
+
+Get list of configuration options that can be updated:
+
+```bash
+curl -H "Authorization: XXX" http://localhost:5000/api/action/config_option_list
+```
+
+Example of updating a configuration value
+
+```bash
+curl -H "Authorization: XXX" http://localhost:5000/api/action/config_option_update -d "{\"ckan.header_file_name\": \"/menu/atlantic_menu_list.html\"}"
+```
+
+
+### Clearing a harvester crashes the site
+
+If very large numbers of harvest objects are created without being cleaned out it
+is possible for the number to get to the point where trying to clear a harvester
+will cause the database to max out it's cpu usage and take down the site. This will
+likely also crash the DB eventually thus causing the transaction to fail and
+preventing the system from fixing the problem. To solve we need to delete harvest
+objects in chunks
+
+Connect to db instance using psql
+```bash
+sudo docker exec -u ckan -it ckan psql -h db
+```
+
+Run delete by chunk code
+```sql
+select count(id) from harvest_object;
+select count(*) from harvest_object_extra
+
+begin;
+  with a as (
+    select id from harvest_object where package_id IS NULL
+  )
+  delete from harvest_object_error
+    USING a
+    where harvest_object_id = a.id;
+
+  with a as (
+    select id from harvest_object where package_id IS NULL
+  )
+  delete from harvest_object_extra
+    USING a
+    where harvest_object_id = a.id;
+
+  DO $$
+  DECLARE
+  BEGIN
+    LOOP
+      raise notice '.';
+      delete from harvest_object where id
+        in (select id from harvest_object where package_id IS NULL limit 500);
+      IF NOT FOUND THEN
+        EXIT;
+      END IF;
+      perform pg_sleep(0.05);
+    END LOOP;
+  END $$;
+
+  delete from harvest_gather_error;
+
+  delete from harvest_job as hj
+    where not exists (
+    select 1
+    from harvest_object ho
+    where hj.id = ho.harvest_job_id
+  );
+
+commit;
+
+select count(id) from harvest_object;
+select count(*) from harvest_object_extra
 ```
