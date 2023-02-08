@@ -28,7 +28,7 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         OUTPUT_FOLDER: temp_release_notes
         USE_MILESTONE_TITLE: true
-        FILENAME: EIMS_${{ env.MILESTONEID }}
+        FILENAME: CIOOS_CKAN_${{ env.MILESTONEID }}
     - name: Commit release notes
       run: |
         git config user.name 'Git release notes bot'
