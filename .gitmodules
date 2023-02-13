@@ -28,4 +28,3 @@
 [submodule "contrib/docker/src/ckanext-restricted_search"]
 	path = contrib/docker/src/ckanext-restricted_search
 	url = https://github.com/cioos-atlantic/ckanext-restricted_search.git
-	branch = cioos-1.3.0
