@@ -7,7 +7,8 @@ CKAN_IMAGE_NAME="ckan"
 DOCKER_CMD="docker" # or "sudo docker"
 DOCKER_COMPOSE_CMD="docker compose" # or "sudo docker-compose"
 EDIT_CMD="vim" # or nano
-CKAN_PRODUCTION_INI="$CKAN_PRODUCTION_INI"
+CKAN_PRODUCTION_INI_LOCAL="$VOL_CKAN_CONFIG/production.ini"
+CKAN_PRODUCTION_INI_DOCKER="/etc/ckan/production.ini"
 #CIOOS_NATIONAL_CATALOGUE="https://catalogue.cioos.ca"
 CIOOS_NATIONAL_CATALOGUE="https://cioos-national-ckan.preprod.ogsl.ca" # dev
 
@@ -22,7 +23,7 @@ export VOL_CKAN_STORAGE=`$DOCKER_CMD volume inspect docker_ckan_storage | jq -r 
 # List all the available ckan_ utility functions
 ckan_utils_list() {
     compgen -A function ckan_
-    echo "Run 'type <function name>' for function definition each utility listed above."
+    echo "Run 'type <function name>' for function definition of each utility listed above."
 }
 
 ckan_variables() {
@@ -93,8 +94,16 @@ ckan_ckan() {
     $DOCKER_CMD exec -it $CKAN_IMAGE_NAME ckan -c $CKAN_PRODUCTION_INI "$@"
 }
 
+ckan_rebuild() {
+    CMD="$DOCKER_CMD exec -it $CKAN_IMAGE_NAME ckan -c $CKAN_PRODUCTION_INI_DOCKER search-index rebuild"
+    echo $CMD
+    eval $CMD
+}
+
 ckan_reindex() {
-    $DOCKER_CMD exec -it $CKAN_IMAGE_NAME ckan -c $CKAN_PRODUCTION_INI search-index rebuild
+    CMD="$DOCKER_CMD exec -it $CKAN_IMAGE_NAME ckan -c $CKAN_PRODUCTION_INI_DOCKER harvester reindex"
+    echo $CMD
+    eval $CMD
 }
 
 ckan_create_admin() {
