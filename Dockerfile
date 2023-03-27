@@ -8,40 +8,40 @@ MAINTAINER Open Knowledge
 RUN apt-get -q -y update \
     && DEBIAN_FRONTEND=noninteractive apt-get -q -y upgrade \
     && DEBIAN_FRONTEND=noninteractive apt-get -q -y install \
-        python-dev \
-        python-pip \
-        python-virtualenv \
-        python-wheel \
-        python-lxml \
-        python-owslib \
-        python-gdal \
-        python3 \
-        python3-dev \
-        python3-pip \
-        python3-virtualenv \
-        python3-venv \
-        python3-wheel \
-        python3-owslib \
-        python3-gdal \
-        libpq-dev \
-        libxml2-dev \
-        libxslt-dev \
-        libgeos-dev \
-        libssl-dev \
-        libffi-dev \
-        postgresql-client \
-        build-essential \
-        gdal-bin \
-        libgdal-dev\
-        git-core \
-        vim \
-        wget \
-        python-factory-boy \
-        python-mock \
-        supervisor \
-        cron \
-        wait-for-it \
-        curl \
+    python-dev \
+    python-pip \
+    python-virtualenv \
+    python-wheel \
+    python-lxml \
+    python-owslib \
+    python-gdal \
+    python3 \
+    python3-dev \
+    python3-pip \
+    python3-virtualenv \
+    python3-venv \
+    python3-wheel \
+    python3-owslib \
+    python3-gdal \
+    libpq-dev \
+    libxml2-dev \
+    libxslt-dev \
+    libgeos-dev \
+    libssl-dev \
+    libffi-dev \
+    postgresql-client \
+    build-essential \
+    gdal-bin \
+    libgdal-dev\
+    git-core \
+    vim \
+    wget \
+    python-factory-boy \
+    python-mock \
+    supervisor \
+    cron \
+    wait-for-it \
+    curl \
     && DEBIAN_FRONTEND=noninteractive apt-get -q clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -91,7 +91,7 @@ RUN ckan-pip install -U pip && \
 # Install needed libraries
 RUN ckan-pip install factory_boy
 RUN ckan-pip install mock
-RUN ckan-pip install urllib3
+RUN ckan-pip install "urllib3>=1.26.14"
 RUN ckan-pip install --global-option=build_ext --global-option="-I/usr/include/gdal" GDAL==2.4.0
 RUN ckan-pip install ckanapi
 RUN ckan-pip install -U requests[security] --no-cache
@@ -109,9 +109,9 @@ ADD ./contrib/docker/wait-for-postgres.sh /wait-for-postgres.sh
 
 # Set file permissions
 RUN chmod +x /ckan-entrypoint.sh && \
-chmod +x /ckan-harvester-entrypoint.sh && \
-chmod +x /ckan-run-harvester-entrypoint.sh && \
-chmod +x /wait-for-postgres.sh
+    chmod +x /ckan-harvester-entrypoint.sh && \
+    chmod +x /ckan-run-harvester-entrypoint.sh && \
+    chmod +x /wait-for-postgres.sh
 
 # Copy extensions into container and Install
 RUN  chown -R ckan:ckan $CKAN_HOME $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH

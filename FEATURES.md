@@ -1,4 +1,3 @@
-
 # Search Engines
 
 - sitemap (/sitemap/sitemap.xml)
@@ -6,13 +5,13 @@
 
 ## Generating a sitemap
 
-Generating a sitemap can enable searching and harvesting of a CIOOS catalogue by some external organizations like the [Ocean Data and Information System (ODIS)](https://catalogue.odis.org/).  
+Generating a sitemap can enable searching and harvesting of a CIOOS catalogue by some external organizations like the [Ocean Data and Information System (ODIS)](https://catalogue.odis.org/).
 
 ```bash
  sudo docker exec -it ckan ckan --config=/etc/ckan/production.ini sitemap create
 ```
 
-The sitemap needs to be regenerated whenever a new dataset is added or removed to accurately reflect the contents of the catalogue.  Scheduling this task to occur daily is perhaps the easiest way to ensure the sitemap is reasonably up-to-date.
+The sitemap needs to be regenerated whenever a new dataset is added or removed to accurately reflect the contents of the catalogue. Scheduling this task to occur daily is perhaps the easiest way to ensure the sitemap is reasonably up-to-date.
 
 # Harvesting
 
@@ -31,10 +30,10 @@ Config settings:
 
 - clean_tags: munge tags to remove special characters
 - force_all: boolean (true|false) - force harvester to gather all datasets even if the dataset was not updated since the last time the harvester was run. Only datasets whose content have changed will be updated.
-force_package_type
+  force_package_type
 
 - default_tags: list - Set default tags if needed eg: ['waf', 'test']
-- remote_groups: string ('only_local'|'create') -  populate group if exists,
+- remote_groups: string ('only_local'|'create') - populate group if exists,
   create remote groups, or nothing
 - remote_orgs: string ('only_local'|'create') - same as above but for
   organizations. If organization can not be determined from dataset it falls
@@ -43,7 +42,14 @@ force_package_type
 - default_extras: dictionary
 - override_extras: (default: False)
 
+## CIOOS CKAN Harvester Type
+
+all config settings listed above, plus:
+
+- source_title, and source_description - used to populate included_in_data_catalogue if the source catalogue does not populate this field.
+
 ## CKAN Spatial Harvester Type
+
 This is a custom harvester that allows harvesting datasets from a remote ckan
 instance who's spatial geometry intersects with a given polygon, multipolygon,
 or bbox.
@@ -68,7 +74,7 @@ it is now possible to sync the menu items from a compatible wordpress site, into
 /wp-json/ra/menu/fr
 ```
 
-To use, first set the 'Custome Header Filename' config option to the appropriate value, for example `/menu/pacific_menu_list.html`.  If you are using an existing file then you could stop there. CKAN will pull the menu items from the appropriate template in the /menu/ folder.
+To use, first set the 'Custome Header Filename' config option to the appropriate value, for example `/menu/pacific_menu_list.html`. If you are using an existing file then you could stop there. CKAN will pull the menu items from the appropriate template in the /menu/ folder.
 
 To sync menu items from a wordpress site we run the `menu create` CLI command.
 
@@ -85,7 +91,8 @@ sudo docker exec -u root -it ckan  ckan --config /etc/ckan/production.ini menu c
 ```
 
 # organization_list api end point
+
 added a fq paramiter to organization_list so that results can be filtered on fields other then name, description, and title.
 not queries are supported by adding a negative sign in front of the field name.
 
-example query ```/api/3/action/organization_list?q=hakai&all_fields=true&include_extras=true&fq=-organization-uri:code"_ "",&fq=organization-uri:__```
+example query `/api/3/action/organization_list?q=hakai&all_fields=true&include_extras=true&fq=-organization-uri:code"_ "",&fq=organization-uri:__`
