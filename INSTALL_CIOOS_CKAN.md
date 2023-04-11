@@ -1173,3 +1173,105 @@ cd ~/ckan/contrib/docker
 sudo chown 900:900 -R $VOL_CKAN_HOME/venv/src/ $VOL_CKAN_STORAGE
 sudo docker-compose up -d
 ```
+
+### reseting the config
+
+If you enter an improper value into the config interface you may *accidentally* lock yourself out of it.  If this happens you'll need to update the values by using the CKAN API with an [authorization token](https://ckan.readthedocs.io/en/2.9/api/index.html#authentication-and-api-tokens).
+
+**NOTE:** If you do not have the `api_token.jwt.encode.secret`, `api_token.jwt.decode.secret` and `beaker.session.secret` fields specified in **production.ini** then you will get an error message when you try to generate a token.
+
+A token will still be generated but will not be displayed to you, which is less than helpful.
+
+#### Generating an Authorization token
+
+Substitute `[username]` with the username of the user you want to generate a token for, the `[token_name]` field is an arbitrary value to describe the purpose of the token.
+
+Do not be surprised if the generated token is quite long.
+
+```bash
+sudo docker exec -it ckan ckan --config /etc/ckan/production.ini user token add [username] [token_name]
+```
+
+#### Updating config settings using the CKAN API
+
+Now that you have an authorization token you can use the `config_option_update` command to update your CKAN configuration.  To see what values you can alter at runtime make a call to the `config_option_list` command.  Both commands require an authorization token or you'll get a permission denied error.
+
+Configuration updates must be in the form of JSON as per the example below.
+
+**NOTE:** Substitute `XXX` below with your authorization token.
+
+Get list of configuration options that can be updated:
+
+```bash
+curl -H "Authorization: XXX" http://localhost:5000/api/action/config_option_list
+```
+
+Example of updating a configuration value
+
+```bash
+curl -H "Authorization: XXX" http://localhost:5000/api/action/config_option_update -d "{\"ckan.header_file_name\": \"/menu/atlantic_menu_list.html\"}"
+```
+
+
+### Clearing a harvester crashes the site
+
+If very large numbers of harvest objects are created without being cleaned out it
+is possible for the number to get to the point where trying to clear a harvester
+will cause the database to max out it's cpu usage and take down the site. This will
+likely also crash the DB eventually thus causing the transaction to fail and
+preventing the system from fixing the problem. To solve we need to delete harvest
+objects in chunks
+
+Connect to db instance using psql
+```bash
+sudo docker exec -u ckan -it ckan psql -h db
+```
+
+Run delete by chunk code
+```sql
+select count(id) from harvest_object;
+select count(*) from harvest_object_extra
+
+begin;
+  with a as (
+    select id from harvest_object where package_id IS NULL
+  )
+  delete from harvest_object_error
+    USING a
+    where harvest_object_id = a.id;
+
+  with a as (
+    select id from harvest_object where package_id IS NULL
+  )
+  delete from harvest_object_extra
+    USING a
+    where harvest_object_id = a.id;
+
+  DO $$
+  DECLARE
+  BEGIN
+    LOOP
+      raise notice '.';
+      delete from harvest_object where id
+        in (select id from harvest_object where package_id IS NULL limit 500);
+      IF NOT FOUND THEN
+        EXIT;
+      END IF;
+      perform pg_sleep(0.05);
+    END LOOP;
+  END $$;
+
+  delete from harvest_gather_error;
+
+  delete from harvest_job as hj
+    where not exists (
+    select 1
+    from harvest_object ho
+    where hj.id = ho.harvest_job_id
+  );
+
+commit;
+
+select count(id) from harvest_object;
+select count(*) from harvest_object_extra
+```
