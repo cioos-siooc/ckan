@@ -81,7 +81,7 @@ ADD ./scripts/ $CKAN_VENV/src/ckan/scripts/
 COPY ./*.py ./*.txt ./*.ini ./*.rst $CKAN_VENV/src/ckan/
 ADD ./contrib/docker/who.ini $CKAN_VENV/src/ckan/ckan/config/who.ini
 
-RUN ckan-pip install -U pip && \
+RUN ckan-pip install pip==22.3.1 && \
     ckan-pip install --upgrade --no-cache-dir -r $CKAN_VENV/src/ckan/requirement-setuptools.txt && \
     # ckan-pip install --upgrade --no-cache-dir -r $CKAN_VENV/src/ckan/requirements-py2.txt && \
     ckan-pip install --upgrade --no-cache-dir -r $CKAN_VENV/src/ckan/requirements.txt && \
@@ -92,7 +92,7 @@ RUN ckan-pip install -U pip && \
 RUN ckan-pip install factory_boy
 RUN ckan-pip install mock
 RUN ckan-pip install "urllib3>=1.26.14"
-RUN ckan-pip install --global-option=build_ext --global-option="-I/usr/include/gdal" GDAL==2.4.0
+RUN ckan-pip install GDAL==2.4.0
 RUN ckan-pip install ckanapi
 RUN ckan-pip install -U requests[security] --no-cache
 
