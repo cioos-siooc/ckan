@@ -157,7 +157,7 @@ with the form `ckan-X.Y` -->
     <field name="organization" type="string" indexed="true" stored="true" multiValued="false"/>
     <field name="organization_en" type="string" indexed="true" stored="true" multiValued="false"/>
     <field name="organization_fr" type="string" indexed="true" stored="true" multiValued="false"/>
-    <field name="projects" type="string" indexed="true" stored="true" multiValued="true"/>
+    <field name="projects" type="stringCollection" indexed="true" stored="true" multiValued="true"/>
 
     <field name="capacity" type="string" indexed="true" stored="true" multiValued="false"/>
     <field name="permission_labels" type="string" indexed="true" stored="false" multiValued="true"/>
