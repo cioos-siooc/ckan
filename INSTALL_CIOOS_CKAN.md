@@ -618,7 +618,7 @@ sudo docker-compose restart solr
 Rebuild search index
 
 ```bash
-sudo docker exec -it ckan ckan --config=/etc/ckan/production.ini search-index rebuild -o
+sudo docker exec -it ckan ckan --config=/etc/ckan/production.ini search-index rebuild -r
 ```
 
 ## Update CKAN
