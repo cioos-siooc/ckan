@@ -105,7 +105,8 @@ with the form `ckan-X.Y` -->
   </types>
 
   <fields>
-
+  
+    <field name="projects" type="string" indexed="true" stored="true" multiValued="true"/>
     <field name="citation" type="text" indexed="true" stored="true" multiValued="false"/>
     <field name="responsible_organizations" type="string" indexed="true" stored="true" multiValued="true"/>
     <field name="temporal-extent-range" type="date_range" indexed="true" stored="true" multiValued="false"/>
@@ -157,7 +158,6 @@ with the form `ckan-X.Y` -->
     <field name="organization" type="string" indexed="true" stored="true" multiValued="false"/>
     <field name="organization_en" type="string" indexed="true" stored="true" multiValued="false"/>
     <field name="organization_fr" type="string" indexed="true" stored="true" multiValued="false"/>
-    <field name="projects" type="string" indexed="true" stored="true" multiValued="true"/>
 
     <field name="capacity" type="string" indexed="true" stored="true" multiValued="false"/>
     <field name="permission_labels" type="string" indexed="true" stored="false" multiValued="true"/>

@@ -140,6 +140,10 @@ services:
   solr:
     container_name: solr
     image: cioos/solr:latest
+    build:
+      context: ../../
+      dockerfile: contrib/docker/solr/Dockerfile
+    restart: unless-stopped
     deploy:
       resources:
         limits:
