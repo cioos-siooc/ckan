@@ -65,6 +65,17 @@ from must have implemented our modified /api/2/search/dataset/geo endpoint to
 allow searching by polygon. The default endpoint only allows searching using
 bounding box.
 
+## WAF Harvester
+
+ckanext-cioos_harvest extends the waf harvester by adding a `data_catalogue_source` config setting. This setting is used to manually populate the `included_in_data_catalogue` dataset field. An example of the harvest source config is:
+```
+"data_catalogue_source": [{
+  "name": "DataStream",
+  "description": "DataStream is an open access platform for water quality data",
+  "url": "https://datastream.org"
+}]
+```
+
 # Menu
 
 it is now possible to sync the menu items from a compatible wordpress site, into ckan. The wordpress instance must implement the following endpoints
