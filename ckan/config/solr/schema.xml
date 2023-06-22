@@ -106,16 +106,27 @@ with the form `ckan-X.Y` -->
 
   <fields>
 
-    <field name="projects" type="string" indexed="true" stored="true" multiValued="true"/>
-    <field name="citation" type="text" indexed="true" stored="true" multiValued="false"/>
-    <field name="responsible_organizations" type="string" indexed="true" stored="true" multiValued="true"/>
-    <field name="temporal-extent-range" type="date_range" indexed="true" stored="true" multiValued="false"/>
-    <field name="temporal-extent-begin" type="date" indexed="true" stored="true" multiValued="false"/>
-    <field name="temporal-extent-end" type="date" indexed="true" stored="true" multiValued="false"/>
-    <field name="vertical-extent-min" type="float" indexed="true" stored="true" multiValued="false"/>
-    <field name="vertical-extent-max" type="float" indexed="true" stored="true" multiValued="false"/>
-    <field name="unique-resource-identifier-full" type="string" indexed="true" stored="true" multiValued="true"/>
-    <field name="bbox_area" type="float" indexed="true" stored="true"/>
+    <field name="projects" type="string" indexed="true" stored="true" multiValued="true" />
+    <field name="citation" type="text" indexed="true" stored="true" multiValued="false" />
+    <field name="responsible_organizations" type="string" indexed="true" stored="true"
+      multiValued="true" />
+    <field name="temporal-extent-range" type="date_range" indexed="true" stored="true"
+      multiValued="false" />
+    <field name="temporal-extent-begin" type="date" indexed="true" stored="true" multiValued="false" />
+    <field name="temporal-extent-end" type="date" indexed="true" stored="true" multiValued="false" />
+    <field name="vertical-extent-min" type="float" indexed="true" stored="true" multiValued="false" />
+    <field name="vertical-extent-max" type="float" indexed="true" stored="true" multiValued="false" />
+    <field name="unique-resource-identifier-full" type="string" indexed="true" stored="true"
+      multiValued="true" />
+    <field name="metadata-reference-date" type="string" indexed="true" stored="true"
+      multiValued="true" />
+    <field name="dataset-reference-date" type="string" indexed="true" stored="true"
+      multiValued="true" />
+    <field name="datacentre" type="string" indexed="true" stored="true" multiValued="true" />
+    <field name="included_in_data_catalogue" type="string" indexed="true" stored="true"
+      multiValued="true" />
+
+    <field name="bbox_area" type="float" indexed="true" stored="true" />
     <field name="maxx" type="float" indexed="true" stored="true"/>
     <field name="maxy" type="float" indexed="true" stored="true"/>
     <field name="minx" type="float" indexed="true" stored="true"/>
