@@ -76,6 +76,8 @@ ckanext-cioos_harvest extends the waf harvester by adding a `data_catalogue_sour
 }]
 ```
 
+Add the `harvest_source_quality_level` extra to harvester configs. this field can be set to 'unknown' or 'external'. if set it will trigger the display of the metadata quality statment box on dataset pages. This can should be set by adding the key to the 'default_extras' field in the harvester config.
+
 # Menu
 
 it is now possible to sync the menu items from a compatible wordpress site, into ckan. The wordpress instance must implement the following endpoints
