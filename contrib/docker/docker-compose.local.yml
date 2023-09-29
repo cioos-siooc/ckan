@@ -130,6 +130,9 @@ services:
   solr:
     container_name: solr
     image: cioos/solr:latest
+    # access solr console on port 8983
+    ports:
+      - "8983:8983"
     build:
       context: ../../
       dockerfile: contrib/docker/solr/Dockerfile
