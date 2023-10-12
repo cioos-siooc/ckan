@@ -15,6 +15,8 @@ The sitemap needs to be regenerated whenever a new dataset is added or removed t
 
 # Harvesting
 
+adding an extra of `harvest_source_quality_level` to a harvester config with a value in ('unknown','external') will add a `external data source` warning message to the dataset page of any dataset from this harvester 
+
 ## CKAN Harvester Type
 
 Config settings:
@@ -109,3 +111,10 @@ added a fq paramiter to organization_list so that results can be filtered on fie
 not queries are supported by adding a negative sign in front of the field name.
 
 example query `/api/3/action/organization_list?q=hakai&all_fields=true&include_extras=true&fq=-organization-uri:code"_ "",&fq=organization-uri:__`
+
+# map background tiles
+we have switched to stadia maps as the tile provider. as such we are using the free accounts with an api key. register for an account at https://stadiamaps.com/stamen/onboarding/ and add the your api key to your production.ini
+
+```
+ckanext.spatial.common_map.stadia.API_key = YOURKEYHERE
+```
