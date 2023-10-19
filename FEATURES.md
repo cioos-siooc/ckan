@@ -118,3 +118,11 @@ we have switched to stadia maps as the tile provider. as such we are using the f
 ```
 ckanext.spatial.common_map.stadia.API_key = YOURKEYHERE
 ```
+
+# map RA polygons layer
+To add a polygon layer of Regional Associations to the map, add the following key to the production.ini file. This should be the path to the json file on disk, not a url.
+example:
+```
+ckan.cioos.ra_json_file = ./ckanext-cioos_theme/ckanext/cioos_theme/public/base/layers/RA.json
+```
+once added a Regional Associations layer will be avilable in the layer button in the spatial search map on the dataset page

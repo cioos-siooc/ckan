@@ -123,6 +123,8 @@ services:
     container_name: solr
     image: cioos/solr:latest
     restart: unless-stopped
+    ports:
+      - "8983:8983"
     volumes:
       - solr_data:/var/solr
 
