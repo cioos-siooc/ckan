@@ -34,6 +34,15 @@ harvester config
 "harvest_source_quality_level": "unknown",
 ```
 
+If using a harvester that utilizes amazon translate you will need to set the AWS keys in your .env file
+```.env
+# to use amazone translate you must have the following AWS keys set
+AWS_DEFAULT_REGION=us-east-1
+AWS_ACCESS_KEY_ID=[YOUR_KEY_ID]
+AWS_SECRET_ACCESS_KEY=(YOUR_ACCESS_KEY)
+```
+
+
 ### Once you have the above config set correctly you can update to the latest release by
 
 Update ckan
