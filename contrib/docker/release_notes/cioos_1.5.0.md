@@ -8,8 +8,18 @@ a path to a geojson file in the config.
 
 production.ini
 ```
+ckan.plugins =
+...
+scheming_groups
+...
+
+scheming.group_schemas = ckanext.scheming:group.json
+
+
 ckanext.spatial.common_map.stadia.API_key = [YOUR KEY HERE]
 ckan.cioos.ra_json_file = ./ckanext-cioos_theme/ckanext/cioos_theme/public/base/layers/pacific_RA.json (or similar json file for your ra)
+
+
 ```
 
 We are now making groups from responsible organizations during harvest. if you would like to 
