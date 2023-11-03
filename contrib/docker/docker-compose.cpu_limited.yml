@@ -46,10 +46,14 @@ volumes:
 
 services:
   ckan:
+    build:
+      context: ../../
+      args:
+        - CKAN_SITE_URL=${CKAN_SITE_URL}
     depends_on:
       - db
       - solr
-      # - redis
+      - redis
     <<: *ckan_app
     deploy:
       resources:
@@ -63,7 +67,7 @@ services:
      container_name: ckan_gather_harvester
      image: cioos/ckan:${CKAN_TAG}
      entrypoint: /ckan-harvester-entrypoint.sh
-     user: root
+     user: ckan
      command: ckan --config=/etc/ckan/production.ini harvester gather-consumer
      deploy:
        resources:
@@ -78,7 +82,7 @@ services:
      container_name: ckan_fetch_harvester
      image: cioos/ckan:${CKAN_TAG}
      entrypoint: /ckan-harvester-entrypoint.sh
-     user: root
+     user: ckan
      command: ckan --config=/etc/ckan/production.ini harvester fetch-consumer
      ports: []
      deploy:
@@ -94,7 +98,7 @@ services:
      container_name: ckan_run_harvester
      image: cioos/ckan:${CKAN_TAG}
      entrypoint: /ckan-run-harvester-entrypoint.sh
-     user: root
+     user: ckan
      command: /bin/bash -c "echo 'ckan_run_harvester started' && cron -f 2>&1 "
      ports: []
      deploy:
@@ -140,6 +144,10 @@ services:
   solr:
     container_name: solr
     image: cioos/solr:latest
+    build:
+      context: ../../
+      dockerfile: contrib/docker/solr/Dockerfile
+    restart: unless-stopped
     deploy:
       resources:
         limits:

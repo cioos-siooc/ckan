@@ -15,6 +15,8 @@ The sitemap needs to be regenerated whenever a new dataset is added or removed t
 
 # Harvesting
 
+adding an extra of `harvest_source_quality_level` to a harvester config with a value in ('unknown','external') will add a `external data source` warning message to the dataset page of any dataset from this harvester 
+
 ## CKAN Harvester Type
 
 Config settings:
@@ -65,6 +67,19 @@ from must have implemented our modified /api/2/search/dataset/geo endpoint to
 allow searching by polygon. The default endpoint only allows searching using
 bounding box.
 
+## WAF Harvester
+
+ckanext-cioos_harvest extends the waf harvester by adding a `data_catalogue_source` config setting. This setting is used to manually populate the `included_in_data_catalogue` dataset field. An example of the harvest source config is:
+```
+"data_catalogue_source": [{
+  "name": "DataStream",
+  "description": "DataStream is an open access platform for water quality data",
+  "url": "https://datastream.org"
+}]
+```
+
+Add the `harvest_source_quality_level` extra to harvester configs. this field can be set to 'unknown' or 'external'. if set it will trigger the display of the metadata quality statment box on dataset pages. This can should be set by adding the key to the 'default_extras' field in the harvester config.
+
 # Menu
 
 it is now possible to sync the menu items from a compatible wordpress site, into ckan. The wordpress instance must implement the following endpoints
@@ -96,3 +111,18 @@ added a fq paramiter to organization_list so that results can be filtered on fie
 not queries are supported by adding a negative sign in front of the field name.
 
 example query `/api/3/action/organization_list?q=hakai&all_fields=true&include_extras=true&fq=-organization-uri:code"_ "",&fq=organization-uri:__`
+
+# map background tiles
+we have switched to stadia maps as the tile provider. as such we are using the free accounts with an api key. register for an account at https://stadiamaps.com/stamen/onboarding/ and add the your api key to your production.ini
+
+```
+ckanext.spatial.common_map.stadia.API_key = YOURKEYHERE
+```
+
+# map RA polygons layer
+To add a polygon layer of Regional Associations to the map, add the following key to the production.ini file. This should be the path to the json file on disk, not a url.
+example:
+```
+ckan.cioos.ra_json_file = ./ckanext-cioos_theme/ckanext/cioos_theme/public/base/layers/RA.json
+```
+once added a Regional Associations layer will be avilable in the layer button in the spatial search map on the dataset page

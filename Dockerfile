@@ -51,8 +51,8 @@ RUN apt-get -q -y update \
 FROM prebase as base
 #------------------------------------------------------------------------------#
 
-RUN export CPLUS_INCLUDE_PATH=/usr/include/gdal
-RUN export C_INCLUDE_PATH=/usr/include/gdal
+# RUN export CPLUS_INCLUDE_PATH=/usr/include/gdal
+# RUN export C_INCLUDE_PATH=/usr/include/gdal
 
 # Define environment variables
 ENV CKAN_HOME /usr/lib/ckan
@@ -129,6 +129,8 @@ RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src && ckan-pi
 # RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src && ckan-pip install -r ckanext-scheming/requirements.txt"
 
 COPY ./contrib/docker/src/ckanext-cioos_theme/dev-requirements.txt $CKAN_VENV/src/ckanext-cioos_theme/dev-requirements.txt
+COPY ./contrib/docker/src/ckanext-cioos_theme/requirements.txt $CKAN_VENV/src/ckanext-cioos_theme/requirements.txt
+RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src && ckan-pip install -r ckanext-cioos_theme/requirements.txt"
 RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src && ckan-pip install -r ckanext-cioos_theme/dev-requirements.txt"
 
 #------------------------------------------------------------------------------#
@@ -160,7 +162,9 @@ COPY ./contrib/docker/src/ckanext-fluent $CKAN_VENV/src/ckanext-fluent
 RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-fluent && python setup.py install && python setup.py develop"
 
 COPY ./contrib/docker/src/cioos-siooc-schema/cioos-siooc_schema.json  $CKAN_VENV/src/ckanext-scheming/ckanext/scheming/cioos_siooc_schema.json
-COPY ./contrib/docker/src/cioos-siooc-schema/organization.json ./contrib/docker/src/cioos-siooc-schema/ckan_license.json $CKAN_VENV/src/ckanext-scheming/ckanext/scheming/
+COPY ./contrib/docker/src/cioos-siooc-schema/organization.json $CKAN_VENV/src/ckanext-scheming/ckanext/scheming/
+COPY ./contrib/docker/src/cioos-siooc-schema/ckan_license.json $CKAN_VENV/src/ckanext-scheming/ckanext/scheming/
+COPY ./contrib/docker/src/cioos-siooc-schema/group.json $CKAN_VENV/src/ckanext-scheming/ckanext/scheming/
 
 WORKDIR $CKAN_VENV/src
 RUN /bin/bash -c "rm -R ./ckan"

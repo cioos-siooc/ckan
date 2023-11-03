@@ -32,8 +32,10 @@ set_environment () {
   export CKAN_SMTP_PASSWORD=${CKAN_SMTP_PASSWORD}
   export CKAN_SMTP_MAIL_FROM=${CKAN_SMTP_MAIL_FROM}
   export CKAN_MAX_UPLOAD_SIZE_MB=${CKAN_MAX_UPLOAD_SIZE_MB}
+  export CKAN_LOG_PATH=${CKAN_LOG_PATH}
+  export SECRET_KEY=${SECRET_KEY}
 }
 
-printenv | grep -v "no_proxy" >> /etc/environment
+set_environment
 
 exec "$@"
