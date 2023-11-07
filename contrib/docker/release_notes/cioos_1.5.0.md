@@ -8,8 +8,18 @@ a path to a geojson file in the config.
 
 production.ini
 ```
+ckan.plugins =
+...
+scheming_groups
+...
+
+scheming.group_schemas = ckanext.scheming:group.json
+
+
 ckanext.spatial.common_map.stadia.API_key = [YOUR KEY HERE]
 ckan.cioos.ra_json_file = ./ckanext-cioos_theme/ckanext/cioos_theme/public/base/layers/pacific_RA.json (or similar json file for your ra)
+
+
 ```
 
 We are now making groups from responsible organizations during harvest. if you would like to 
@@ -33,6 +43,15 @@ harvester config
 ```
 "harvest_source_quality_level": "unknown",
 ```
+
+If using a harvester that utilizes amazon translate you will need to set the AWS keys in your .env file
+```.env
+# to use amazone translate you must have the following AWS keys set
+AWS_DEFAULT_REGION=us-east-1
+AWS_ACCESS_KEY_ID=[YOUR_KEY_ID]
+AWS_SECRET_ACCESS_KEY=(YOUR_ACCESS_KEY)
+```
+
 
 ### Once you have the above config set correctly you can update to the latest release by
 

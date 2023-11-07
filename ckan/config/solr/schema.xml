@@ -203,8 +203,8 @@ with the form `ckan-X.Y` -->
     <!-- <field name="license" type="string" indexed="true" stored="true" /> -->
     <field name="license_id" type="string" indexed="true" stored="true" />
     <field name="tags" type="text_general" indexed="true" stored="true" multiValued="true" />
-    <field name="tags_en" type="text" indexed="true" stored="true" multiValued="true" />
-    <field name="tags_fr" type="text_fr" indexed="true" stored="true" multiValued="true" />
+    <field name="tags_en" type="string" indexed="true" stored="true" multiValued="true" />
+    <field name="tags_fr" type="string" indexed="true" stored="true" multiValued="true" />
     <field name="keywords" type="string" indexed="true" stored="true" />
     <field name="eov" type="string" indexed="true" stored="true" multiValued="true" />
     <field name="ecv" type="string" indexed="true" stored="true" multiValued="true" />
