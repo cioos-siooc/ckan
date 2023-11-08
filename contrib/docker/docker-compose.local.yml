@@ -16,7 +16,7 @@ x-common-ckan-variables: &common-ckan-variables
 
 x-ckan: &ckan_app
   container_name: ckan
-  image: docker_ckan
+  image: cioos/ckan:${CKAN_TAG}
   links:
     - db
     - solr
@@ -36,12 +36,6 @@ x-ckan: &ckan_app
     - ckan_storage:/var/lib/ckan
     - ${CKAN_LOG_PATH}:/usr/lib/ckan/venv/src/logs
 
-x-ckan_build: &ckan_build
-  build:
-    context: ../../
-    args:
-      - CKAN_SITE_URL=${CKAN_SITE_URL}
-
 volumes:
   ckan_config:
   ckan_home:
@@ -52,6 +46,10 @@ volumes:
 
 services:
   ckan:
+    build:
+      context: ../../
+      args:
+        - CKAN_SITE_URL=${CKAN_SITE_URL}
     ports:
       - "0.0.0.0:${CKAN_PORT}:5000"
       - "5678:5678" # used by the debugger during development. NOT for production
@@ -60,15 +58,15 @@ services:
       # REMOTE_DEBUG: 1
     depends_on:
       - db
+      - solr
+      - redis
     <<: *ckan_app
-    <<: *ckan_build
 
   ckan_gather_harvester:
     <<: *ckan_app
     container_name: ckan_gather_harvester
-    image: docker_ckan
     entrypoint: /ckan-harvester-entrypoint.sh
-    user: root
+    user: ckan
     command: ckan --config=/etc/ckan/production.ini harvester gather-consumer
     ports: []
     # ports:
@@ -82,9 +80,8 @@ services:
   ckan_fetch_harvester:
     <<: *ckan_app
     container_name: ckan_fetch_harvester
-    image: docker_ckan
     entrypoint: /ckan-harvester-entrypoint.sh
-    user: root
+    user: ckan
     command: ckan --config=/etc/ckan/production.ini harvester fetch-consumer
     ports: []
     depends_on:
@@ -94,9 +91,8 @@ services:
   ckan_run_harvester:
     <<: *ckan_app
     container_name: ckan_run_harvester
-    image: docker_ckan
     entrypoint: /ckan-run-harvester-entrypoint.sh
-    user: root
+    user: ckan
     command: /bin/bash -c "echo 'ckan_run_harvester started' && cron -f 2>&1 "
     ports: []
     depends_on:

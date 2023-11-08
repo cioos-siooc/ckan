@@ -16,11 +16,8 @@ abort () {
   exit 1
 }
 
-# copy crontab contents into root users crontab
-cp ./ckan/contrib/docker/crontab /etc/cron.d/crontab
-chown root:root /etc/cron.d/crontab
-chmod 0644 /etc/cron.d/crontab
-/usr/bin/crontab /etc/cron.d/crontab
+# setup crontab jobs
+cat ./ckan/contrib/docker/crontab | crontab -
 
 set_environment () {
   export CKAN_SITE_ID=${CKAN_SITE_ID}
@@ -38,8 +35,9 @@ set_environment () {
   export CKAN_SMTP_PASSWORD=${CKAN_SMTP_PASSWORD}
   export CKAN_SMTP_MAIL_FROM=${CKAN_SMTP_MAIL_FROM}
   export CKAN_MAX_UPLOAD_SIZE_MB=${CKAN_MAX_UPLOAD_SIZE_MB}
+  export CKAN_LOG_PATH=${CKAN_LOG_PATH}
+  export SECRET_KEY=${SECRET_KEY}
 }
-
-printenv | grep -v "no_proxy" >> /etc/environment
+set_environment
 
 exec "$@"

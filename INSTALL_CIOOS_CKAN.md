@@ -601,6 +601,7 @@ possible wordpress depending on how your site is configured.
 
 ## Update SOLR schema
 
+### OLD METHOD
 This method uses dockers copy command to copy the new schema file into a running solr container
 
 ```bash
@@ -620,6 +621,24 @@ Rebuild search index
 ```bash
 sudo docker exec -it ckan ckan --config=/etc/ckan/production.ini search-index rebuild -r
 ```
+
+### NEW Method
+With the switch to solr 8 we are using managed schemas and you can not update this without rebuilding the solr image. First build or pull a new image and then restart the container.
+
+build or pull
+```bash
+cd ~/ckan/contrib/docker
+sudo docker-compose pull solr
+or 
+sudo docker-compose build solr
+```
+
+recreate container with new schema using shell script
+```bash
+./update_solr.sh 
+```
+
+This will recreate and container and start a index automatically.
 
 ## Update CKAN
 
@@ -711,6 +730,7 @@ sudo cp -r src/ckanext-fluent/ $VOL_CKAN_HOME/venv/src/
 sudo cp -r src/ckanext-dcat/ $VOL_CKAN_HOME/venv/src/
 sudo cp src/cioos-siooc-schema/cioos-siooc_schema.json $VOL_CKAN_HOME/venv/src/ckanext-scheming/ckanext/scheming/cioos_siooc_schema.json
 sudo cp src/cioos-siooc-schema/organization.json $VOL_CKAN_HOME/venv/src/ckanext-scheming/ckanext/scheming/organization.json
+sudo cp src/cioos-siooc-schema/group.json $VOL_CKAN_HOME/venv/src/ckanext-scheming/ckanext/scheming/group.json
 sudo cp src/cioos-siooc-schema/ckan_license.json $VOL_CKAN_HOME/venv/src/ckanext-scheming/ckanext/scheming/ckan_license.json
 sudo cp src/cioos-siooc-schema/*.wkt $VOL_CKAN_HOME/venv/src
 ```
