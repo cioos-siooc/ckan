@@ -80,7 +80,7 @@ jobs:
         cache-from: type=gha
         cache-to: type=gha,mode=max
         tags: |
-          cioos/ckan:$TAG
+          cioos/ckan:${{env.TAG}}
 
     - if: github.event_name != 'pull_request'
       name: Build and push
@@ -92,7 +92,7 @@ jobs:
         cache-to: type=gha,mode=max
         tags: |
           cioos/ckan:latest
-          cioos/ckan:$TAG
+          cioos/ckan:${{env.TAG}}
 
     - if: github.event_name == 'pull_request'
       uses: mshick/add-pr-comment@v1
