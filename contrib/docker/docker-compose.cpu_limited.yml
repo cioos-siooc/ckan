@@ -98,7 +98,7 @@ services:
      container_name: ckan_run_harvester
      image: cioos/ckan:${CKAN_TAG}
      entrypoint: /ckan-run-harvester-entrypoint.sh
-     user: ckan
+     user: root
      command: /bin/bash -c "echo 'ckan_run_harvester started' && cron -f 2>&1 "
      ports: []
      deploy:
