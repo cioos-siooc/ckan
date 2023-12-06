@@ -63,19 +63,39 @@ jobs:
       if: github.event_name == 'release'
       run: echo "TAG=${{ github.event.release.tag_name }}" >> $GITHUB_ENV
 
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
     - name: Login to DockerHub
-      uses: docker/login-action@v2
+      uses: docker/login-action@v3
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
-    - uses: satackey/action-docker-layer-caching@v0.0.11
-      # Ignore the failure of a step and avoid terminating the job.
-      continue-on-error: true
-    - run: docker build -t hakaiinstitute/ckan:$TAG -t hakaiinstitute/ckan:latest .
-    - run: docker push hakaiinstitute/ckan:$TAG
-    - if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
-      run: docker push hakaiinstitute/ckan:latest
-    - if: github.event_name == 'pull_request' || github.event_name == 'repository_dispatch'
+
+    - if: github.event_name == 'pull_request'
+      name: Build and push
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        tags: |
+          hakaiinstitute/ckan:${{env.TAG}}
+
+    - if: github.event_name != 'pull_request'
+      name: Build and push
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        tags: |
+          hakaiinstitute/ckan:latest
+          hakaiinstitute/ckan:${{env.TAG}}
+
+    - if: github.event_name == 'pull_request'
       uses: mshick/add-pr-comment@v1
       with:
         message: |
@@ -91,7 +111,6 @@ jobs:
           sudo docker volume rm docker_ckan_home
           sudo CKAN_TAG=${{ env.TAG }} docker-compose up -d
           ```
-          for full documentation see *TBD*
         repo-token: ${{ secrets.GITHUB_TOKEN }}
         repo-token-user-login: 'github-actions[bot]' # The user.login for temporary GitHub tokens
         allow-repeats: false # This is the default
