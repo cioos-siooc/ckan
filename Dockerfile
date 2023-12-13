@@ -1,54 +1,54 @@
 # See CKAN docs on installation from Docker Compose on usage
 #------------------------------------------------------------------------------#
-FROM debian:buster as prebase
-#------------------------------------------------------------------------------#
-MAINTAINER Open Knowledge
+# FROM debian:buster as prebase
+# #------------------------------------------------------------------------------#
+# MAINTAINER Open Knowledge
 
-# Install required system packages
-RUN apt-get -q -y update \
-    && DEBIAN_FRONTEND=noninteractive apt-get -q -y upgrade \
-    && DEBIAN_FRONTEND=noninteractive apt-get -q -y install \
-    python-dev \
-    python-pip \
-    python-virtualenv \
-    python-wheel \
-    python-lxml \
-    python-owslib \
-    python-gdal \
-    python3 \
-    python3-dev \
-    python3-pip \
-    python3-virtualenv \
-    python3-venv \
-    python3-wheel \
-    python3-owslib \
-    python3-gdal \
-    libpq-dev \
-    libxml2-dev \
-    libxslt-dev \
-    libgeos-dev \
-    libssl-dev \
-    libffi-dev \
-    postgresql-client \
-    build-essential \
-    gdal-bin \
-    libgdal-dev\
-    git-core \
-    vim \
-    wget \
-    python-factory-boy \
-    python-mock \
-    supervisor \
-    cron \
-    wait-for-it \
-    curl \
-    && DEBIAN_FRONTEND=noninteractive apt-get -q clean \
-    && rm -rf /var/lib/apt/lists/*
+# # Install required system packages
+# RUN apt-get -q -y update \
+#     && DEBIAN_FRONTEND=noninteractive apt-get -q -y upgrade \
+#     && DEBIAN_FRONTEND=noninteractive apt-get -q -y install \
+#     python-dev \
+#     python-pip \
+#     python-virtualenv \
+#     python-wheel \
+#     python-lxml \
+#     python-owslib \
+#     python-gdal \
+#     python3 \
+#     python3-dev \
+#     python3-pip \
+#     python3-virtualenv \
+#     python3-venv \
+#     python3-wheel \
+#     python3-owslib \
+#     python3-gdal \
+#     libpq-dev \
+#     libxml2-dev \
+#     libxslt-dev \
+#     libgeos-dev \
+#     libssl-dev \
+#     libffi-dev \
+#     postgresql-client \
+#     build-essential \
+#     gdal-bin \
+#     libgdal-dev\
+#     git-core \
+#     vim \
+#     wget \
+#     python-factory-boy \
+#     python-mock \
+#     supervisor \
+#     cron \
+#     wait-for-it \
+#     curl \
+#     && DEBIAN_FRONTEND=noninteractive apt-get -q clean \
+#     && rm -rf /var/lib/apt/lists/*
 
 # remove curl for prodution image.
 
 #------------------------------------------------------------------------------#
-FROM prebase as base
+FROM ckan/ckan-base:2.9 as base
 #------------------------------------------------------------------------------#
 
 # RUN export CPLUS_INCLUDE_PATH=/usr/include/gdal
@@ -74,18 +74,19 @@ RUN mkdir -p $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH && \
     ln -s $CKAN_VENV/bin/ckan /usr/local/bin/ckan
 
 # Setup CKAN
-ADD ./bin/ $CKAN_VENV/src/ckan/bin/
-ADD ./ckan/ $CKAN_VENV/src/ckan/ckan/
-ADD ./ckanext/ $CKAN_VENV/src/ckan/ckanext/
-ADD ./scripts/ $CKAN_VENV/src/ckan/scripts/
+# ADD ./bin/ $CKAN_VENV/src/ckan/bin/
+# ADD ./ckan/ $CKAN_VENV/src/ckan/ckan/
+# ADD ./ckanext/ $CKAN_VENV/src/ckan/ckanext/
+# ADD ./scripts/ $CKAN_VENV/src/ckan/scripts/
 COPY ./*.py ./*.txt ./*.ini ./*.rst $CKAN_VENV/src/ckan/
 ADD ./contrib/docker/who.ini $CKAN_VENV/src/ckan/ckan/config/who.ini
 
-RUN ckan-pip install pip==22.3.1 && \
-    ckan-pip install --upgrade --no-cache-dir -r $CKAN_VENV/src/ckan/requirement-setuptools.txt && \
-    # ckan-pip install --upgrade --no-cache-dir -r $CKAN_VENV/src/ckan/requirements-py2.txt && \
-    ckan-pip install --upgrade --no-cache-dir -r $CKAN_VENV/src/ckan/requirements.txt && \
-    ckan-pip install -e $CKAN_VENV/src/ckan/ && \
+RUN 
+# ckan-pip install pip==22.3.1 && \
+#     ckan-pip install --upgrade --no-cache-dir -r $CKAN_VENV/src/ckan/requirement-setuptools.txt && \
+#     # ckan-pip install --upgrade --no-cache-dir -r $CKAN_VENV/src/ckan/requirements-py2.txt && \
+#     ckan-pip install --upgrade --no-cache-dir -r $CKAN_VENV/src/ckan/requirements.txt && \
+#     ckan-pip install -e $CKAN_VENV/src/ckan/ && \
     ln -s $CKAN_VENV/src/ckan/ckan/config/who.ini $CKAN_CONFIG/who.ini
 
 # Install needed libraries
