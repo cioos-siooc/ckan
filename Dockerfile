@@ -81,6 +81,7 @@ RUN mkdir -p $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH && \
 COPY ./*.py ./*.txt ./*.ini ./*.rst $CKAN_VENV/src/ckan/
 ADD ./contrib/docker/who.ini $CKAN_VENV/src/ckan/ckan/config/who.ini
 
+RUN ckan-pip install wheel
 RUN 
 # ckan-pip install pip==22.3.1 && \
 #     ckan-pip install --upgrade --no-cache-dir -r $CKAN_VENV/src/ckan/requirement-setuptools.txt && \
