@@ -17,6 +17,7 @@ x-common-ckan-variables: &common-ckan-variables
   AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION}
   AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
   AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+  DEBUG_TB_PROFILER_ENABLED: ${DEBUG_TB_PROFILER_ENABLED}
 
 x-ckan: &ckan_app
   container_name: ckan
@@ -32,19 +33,17 @@ x-ckan: &ckan_app
     <<: *common-ckan-variables
     #- TZ=Canada/Vancouver
     # Debug with pdb (example) - Interact with `docker attach $(docker container ls -qf name=ckan)`
-    #command: 'python -m pdb /usr/lib/ckan/venv/bin/ckan --config /etc/ckan/production.ini run --host 0.0.0.0 --passthrough-errors'
+    #command: 'python -m pdb /usr/lib/ckan/venv/bin/ckan --config /srv/app/ckan.ini run --host 0.0.0.0 --passthrough-errors'
     #tty: true
     #stdin_open: true
   restart: unless-stopped
   volumes:
     - "/etc/localtime:/etc/localtime:ro" # remove and use TZ setting if running on windows
-    - ckan_config:/etc/ckan
-    - ckan_home:/usr/lib/ckan
+    - ckan_home:/srv/app
     - ckan_storage:/var/lib/ckan
-    - ${CKAN_LOG_PATH}:/usr/lib/ckan/venv/src/logs
+    - ${CKAN_LOG_PATH}:/srv/app/logs
 
 volumes:
-  ckan_config:
   ckan_home:
   ckan_storage:
   pg_data:
@@ -58,6 +57,12 @@ services:
       context: ../../
       args:
         - CKAN_SITE_URL=${CKAN_SITE_URL}
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro" # remove and use TZ setting if running on windows
+      - ckan_home:/srv/app
+      - ckan_storage:/var/lib/ckan
+      - ${CKAN_LOG_PATH}:/srv/app/logs
+      - ./ckan-entrypoint.sh:/docker-entrypoint.d/ckan-entrypoint.sh
     depends_on:
       - db
       - solr
@@ -69,8 +74,14 @@ services:
      container_name: ckan_gather_harvester
      entrypoint: /ckan-harvester-entrypoint.sh
      user: ckan
-     command: ckan --config=/etc/ckan/production.ini harvester gather-consumer
+     command: ckan --config=/srv/app/ckan.ini harvester gather-consumer
      ports: []
+     volumes:
+      - "/etc/localtime:/etc/localtime:ro" # remove and use TZ setting if running on windows
+      - ckan_home:/srv/app
+      - ckan_storage:/var/lib/ckan
+      - ${CKAN_LOG_PATH}:/srv/app/logs
+      - ./ckan-harvester-entrypoint.sh:/docker-entrypoint.d/ckan-harvester-entrypoint.sh
      depends_on:
        - ckan
 
@@ -79,8 +90,14 @@ services:
      container_name: ckan_fetch_harvester
      entrypoint: /ckan-harvester-entrypoint.sh
      user: ckan
-     command: ckan --config=/etc/ckan/production.ini harvester fetch-consumer
+     command: ckan --config=/srv/app/ckan.ini harvester fetch-consumer
      ports: []
+     volumes:
+      - "/etc/localtime:/etc/localtime:ro" # remove and use TZ setting if running on windows
+      - ckan_home:/srv/app
+      - ckan_storage:/var/lib/ckan
+      - ${CKAN_LOG_PATH}:/srv/app/logs
+      - ./ckan-harvester-entrypoint.sh:/docker-entrypoint.d/ckan-harvester-entrypoint.sh
      depends_on:
        - ckan
        - ckan_gather_harvester
@@ -92,6 +109,8 @@ services:
      user: root
      command: /bin/bash -c "echo 'ckan_run_harvester started' && cron -f 2>&1 "
      ports: []
+     volumes:
+      - ./ckan-run-harvester-entrypoint.sh:/docker-entrypoint.d/ckan-run-harvester-entrypoint.sh
      depends_on:
        - ckan
        - ckan_gather_harvester

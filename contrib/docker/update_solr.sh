@@ -5,4 +5,4 @@ sudo docker-compose rm -f -s solr
 sudo docker volume rm docker_solr_data
 sudo docker-compose up -d
 sleep 5
-sudo docker exec -it ckan ckan --config=/etc/ckan/production.ini search-index rebuild -r
+sudo docker exec -it ckan ckan --config=/srv/app/ckan.ini search-index rebuild -r

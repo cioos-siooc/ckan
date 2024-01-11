@@ -68,7 +68,7 @@ services:
      image: cioos/ckan:${CKAN_TAG}
      entrypoint: /ckan-harvester-entrypoint.sh
      user: ckan
-     command: ckan --config=/etc/ckan/production.ini harvester gather-consumer
+     command: ckan --config=/srv/app/ckan.ini harvester gather-consumer
      deploy:
        resources:
          limits:
@@ -83,7 +83,7 @@ services:
      image: cioos/ckan:${CKAN_TAG}
      entrypoint: /ckan-harvester-entrypoint.sh
      user: ckan
-     command: ckan --config=/etc/ckan/production.ini harvester fetch-consumer
+     command: ckan --config=/srv/app/ckan.ini harvester fetch-consumer
      ports: []
      deploy:
        resources:
