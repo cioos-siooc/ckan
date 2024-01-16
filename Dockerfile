@@ -1,68 +1,10 @@
-# See CKAN docs on installation from Docker Compose on usage
-#------------------------------------------------------------------------------#
-# FROM debian:buster as prebase
-# #------------------------------------------------------------------------------#
-# MAINTAINER Open Knowledge
-
-# # Install required system packages
-# RUN apt-get -q -y update \
-#     && DEBIAN_FRONTEND=noninteractive apt-get -q -y upgrade \
-#     && DEBIAN_FRONTEND=noninteractive apt-get -q -y install \
-#     python-dev \
-#     python-pip \
-#     python-virtualenv \
-#     python-wheel \
-#     python-lxml \
-#     python-owslib \
-#     python-gdal \
-#     python3 \
-#     python3-dev \
-#     python3-pip \
-#     python3-virtualenv \
-#     python3-venv \
-#     python3-wheel \
-#     python3-owslib \
-#     python3-gdal \
-#     libpq-dev \
-#     libxml2-dev \
-#     libxslt-dev \
-#     libgeos-dev \
-#     libssl-dev \
-#     libffi-dev \
-#     postgresql-client \
-#     build-essential \
-#     gdal-bin \
-#     libgdal-dev\
-#     git-core \
-#     vim \
-#     wget \
-#     python-factory-boy \
-#     python-mock \
-#     supervisor \
-#     cron \
-#     wait-for-it \
-#     curl \
-#     && DEBIAN_FRONTEND=noninteractive apt-get -q clean \
-#     && rm -rf /var/lib/apt/lists/*
-
-# remove curl for prodution image.
-
 #------------------------------------------------------------------------------#
 FROM ckan/ckan-base:2.9 as base
 #------------------------------------------------------------------------------#
 
-# RUN export CPLUS_INCLUDE_PATH=/usr/include/gdal
-# RUN export C_INCLUDE_PATH=/usr/include/gdal
 RUN apk add --no-cache geos geos-dev gdal gdal-dev proj proj-dev proj-util musl-dev py3-gdal
 
-# ENV PROJ_DIR=/usr
-
 # Define environment variables
-# ENV CKAN_HOME /srv/app/src
-# ENV CKAN_VENV $CKAN_HOME/venv
-# ENV CKAN_CONFIG /etc/ckan
-# ENV CKAN_STORAGE_PATH=/var/lib/ckan
-
 ENV APP_DIR=/srv/app
 ENV SRC_DIR=/srv/app/src
 ENV CKAN_INI=${APP_DIR}/ckan.ini
@@ -73,33 +15,18 @@ ENV CKAN_STORAGE_PATH=/var/lib/ckan
 # Build-time variables specified by docker-compose.yml / .env
 ARG CKAN_SITE_URL
 
-# Create ckan user
-#RUN useradd -r -u 900 -m -c "ckan account" -d $CKAN_HOME -s /bin/false ckan
-
 # Setup virtual environment for CKAN
 RUN ln -s SRC_DIR/ckan/bin/ckan /usr/local/bin/ckan
 
 # Setup CKAN
-# ADD ./bin/ $SRC_DIR/ckan/bin/
-# ADD ./ckan/ $SRC_DIR/ckan/ckan/
-# ADD ./ckanext/ $SRC_DIR/ckan/ckanext/
-# ADD ./scripts/ $SRC_DIR/ckan/scripts/
-#COPY ./*.py ./*.txt ./*.ini ./*.rst $SRC_DIR/ckan/
 ADD ./contrib/docker/who.ini $APP_DIR/who.ini
 
 RUN pip3 install wheel
-# RUN ln -s $SRC_DIR/ckan/ckan/config/who.ini $CKAN_CONFIG/who.ini
-# pip3 install pip==22.3.1 && \
-#     pip3 install --upgrade --no-cache-dir -r $SRC_DIR/ckan/requirement-setuptools.txt && \
-#     # pip3 install --upgrade --no-cache-dir -r $SRC_DIR/ckan/requirements-py2.txt && \
-#     pip3 install --upgrade --no-cache-dir -r $SRC_DIR/ckan/requirements.txt && \
-#     pip3 install -e $SRC_DIR/ckan/ && \
-
 
 # Install needed libraries
-RUN pip3 install factory_boy
-RUN pip3 install mock
-RUN pip3 install "urllib3>=1.26.14"
+# RUN pip3 install factory_boy
+# RUN pip3 install mock
+# RUN pip3 install "urllib3>=1.26.14"
 RUN pip3 install gdal==3.4.3 --no-cache-dir
 RUN pip3 install ckanapi
 RUN pip3 install -U requests[security] --no-cache
@@ -109,18 +36,11 @@ RUN pip3 install flask_debugtoolbar
 
 # Copy files to container
 ADD ./contrib/docker/production.ini $CKAN_INI
-# ADD ./contrib/docker/ckan-entrypoint.sh /ckan-entrypoint.sh
-# ADD ./contrib/docker/ckan-harvester-entrypoint.sh /ckan-harvester-entrypoint.sh
-# ADD ./contrib/docker/ckan-run-harvester-entrypoint.sh /ckan-run-harvester-entrypoint.sh
 ADD ./contrib/docker/crontab $SRC_DIR/ckan/contrib/docker/crontab
 ADD ./contrib/docker/wait-for-postgres.sh /wait-for-postgres.sh
 
 # Set file permissions
 RUN chmod +x /wait-for-postgres.sh
-# chmod +x /ckan-entrypoint.sh && \
-#     chmod +x /ckan-harvester-entrypoint.sh && \
-#     chmod +x /ckan-run-harvester-entrypoint.sh && \
-
 
 # Copy extensions into container and Install
 RUN  chown -R ckan:ckan $APP_DIR $CKAN_STORAGE_PATH
@@ -137,10 +57,13 @@ RUN /bin/bash -c "cd $SRC_DIR && pip3 install -r ckanext-spatial/requirements.tx
 # COPY ./contrib/docker/src/ckanext-scheming/requirements.txt $SRC_DIR/ckanext-scheming/requirements.txt
 # RUN /bin/bash -c "cd $SRC_DIR && pip3 install -r ckanext-scheming/requirements.txt"
 
-COPY ./contrib/docker/src/ckanext-cioos_theme/dev-requirements.txt $SRC_DIR/ckanext-cioos_theme/dev-requirements.txt
+COPY ./contrib/docker/src/ckanext-cioos_harvest/requirements.txt $SRC_DIR/ckanext-cioos_harvest/requirements.txt
+RUN /bin/bash -c "cd $SRC_DIR && pip3 install -r ckanext-cioos_harvest/requirements.txt"
+
+# COPY ./contrib/docker/src/ckanext-cioos_theme/dev-requirements.txt $SRC_DIR/ckanext-cioos_theme/dev-requirements.txt
 COPY ./contrib/docker/src/ckanext-cioos_theme/requirements.txt $SRC_DIR/ckanext-cioos_theme/requirements.txt
 RUN /bin/bash -c "cd $SRC_DIR && pip3 install -r ckanext-cioos_theme/requirements.txt"
-RUN /bin/bash -c "cd $SRC_DIR && pip3 install -r ckanext-cioos_theme/dev-requirements.txt"
+# RUN /bin/bash -c "cd $SRC_DIR && pip3 install -r ckanext-cioos_theme/dev-requirements.txt"
 
 #------------------------------------------------------------------------------#
 FROM base as extensions1
@@ -243,9 +166,5 @@ WORKDIR $APP_DIR
 
 USER ckan
 EXPOSE 5000
-
-HEALTHCHECK --interval=60s --timeout=5s --retries=5 CMD curl --fail http://localhost:5000/api/3/action/status_show || exit 1
-
-# CMD ["/srv/app/start_ckan.sh"]
 
 CMD ["bash", "/wait-for-postgres.sh", "db", "ckan", "-c", "/srv/app/ckan.ini", "run", "--host", "0.0.0.0"]
