@@ -57,7 +57,7 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl --fail http://localhost:5000/api/3/action/status_show || exit 1"]
-      start_period: 15s
+      start_period: 60s
       interval: 60s
       timeout: 5s
       retries: 5  
@@ -151,6 +151,9 @@ services:
       - pg_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "ckan"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   solr:
     container_name: solr
@@ -163,7 +166,7 @@ services:
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:8983/solr/ckan/admin/ping?wt=json |  grep -iq '\"status\":\"OK\"' || exit 1"]
       start_period: 15s
-      interval: 10s
+      interval: 60s
       timeout: 5s
       retries: 3
 
@@ -176,6 +179,6 @@ services:
       - redis_data:/data
     healthcheck:
       test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
-      interval: 1s
+      interval: 60s
       timeout: 3s
       retries: 5
