@@ -61,7 +61,7 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl --fail http://localhost:5000/api/3/action/status_show || exit 1"]
-      start_period: 15s
+      start_period: 120s
       interval: 60s
       timeout: 5s
       retries: 5  
@@ -87,7 +87,7 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "ps -o args | grep -q 'harvester gather-consumer'"]
-      start_period: 5s
+      start_period: 120s
       interval: 60s
       timeout: 5s
       retries: 1   
@@ -115,7 +115,7 @@ services:
         condition: service_started
     healthcheck:
       test: ["CMD-SHELL", "ps -o args | grep -q 'harvester fetch-consumer'"]
-      start_period: 5s
+      start_period: 120s
       interval: 60s
       timeout: 5s
       retries: 1  
@@ -141,7 +141,7 @@ services:
         condition: service_started
     healthcheck:
       test: ["CMD-SHELL", "ps -o args | grep -q '^crond -f'"]
-      start_period: 5s
+      start_period: 120s
       interval: 60s
       timeout: 5s
       retries: 1  
@@ -193,7 +193,7 @@ services:
           cpus: '${LIMIT_CPU_SOLR:-1.0}'
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:8983/solr/ckan/admin/ping?wt=json |  grep -iq '\"status\":\"OK\"' || exit 1"]
-      start_period: 15s
+      start_period: 120s
       interval: 10s
       timeout: 5s
       retries: 3
@@ -213,6 +213,7 @@ services:
           cpus: '${LIMIT_CPU_REDIS:-0.25}'
     healthcheck:
       test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
-      interval: 1s
-      timeout: 3s
+      start_period: 120s
+      interval: 10s
+      timeout: 5s
       retries: 5
