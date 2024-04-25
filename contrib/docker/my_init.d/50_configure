@@ -10,7 +10,7 @@
 
 set -eu
 
-CONFIG="${CKAN_CONFIG}/production.ini"
+CONFIG="${APP_DIR}/ckan.ini"
 
 abort () {
   echo "$@" >&2

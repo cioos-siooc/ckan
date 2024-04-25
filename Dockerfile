@@ -1,238 +1,196 @@
-# See CKAN docs on installation from Docker Compose on usage
 #------------------------------------------------------------------------------#
-FROM debian:buster as prebase
-#------------------------------------------------------------------------------#
-MAINTAINER Open Knowledge
-
-# Install required system packages
-RUN apt-get -q -y update \
-    && DEBIAN_FRONTEND=noninteractive apt-get -q -y upgrade \
-    && DEBIAN_FRONTEND=noninteractive apt-get -q -y install \
-    python-dev \
-    python-pip \
-    python-virtualenv \
-    python-wheel \
-    python-lxml \
-    python-owslib \
-    python-gdal \
-    python3 \
-    python3-dev \
-    python3-pip \
-    python3-virtualenv \
-    python3-venv \
-    python3-wheel \
-    python3-owslib \
-    python3-gdal \
-    libpq-dev \
-    libxml2-dev \
-    libxslt-dev \
-    libgeos-dev \
-    libssl-dev \
-    libffi-dev \
-    postgresql-client \
-    build-essential \
-    gdal-bin \
-    libgdal-dev\
-    git-core \
-    vim \
-    wget \
-    python-factory-boy \
-    python-mock \
-    supervisor \
-    cron \
-    wait-for-it \
-    curl \
-    && DEBIAN_FRONTEND=noninteractive apt-get -q clean \
-    && rm -rf /var/lib/apt/lists/*
-
-# remove curl for prodution image.
-
-#------------------------------------------------------------------------------#
-FROM prebase as base
+FROM ckan/ckan-base:2.9 as base
 #------------------------------------------------------------------------------#
 
-# RUN export CPLUS_INCLUDE_PATH=/usr/include/gdal
-# RUN export C_INCLUDE_PATH=/usr/include/gdal
+ARG PROJ_VERSION=9.0.0
+
+RUN --mount=type=cache,target=/root/.cache/pip apk add --no-cache .build-deps libc-dev geos geos-dev gdal gdal-dev \
+    proj proj-util proj-dev gcc g++ libffi-dev musl-dev py3-gdal python3-dev \
+    libstdc++ build-base \
+    # Setup build env for PROJ
+    wget curl unzip make libtool autoconf automake pkgconfig g++ sqlite sqlite-dev \
+    # For PROJ and GDAL
+    linux-headers curl-dev tiff-dev zlib-dev zstd-dev lz4-dev libarchive-dev \
+    libjpeg-turbo-dev libpng-dev libwebp-dev expat-dev postgresql-dev openjpeg-dev \
+    # For cryptography
+    gcc musl-dev python3-dev libffi-dev openssl-dev cargo pkgconfig py3-urllib3 py3-cryptography \
+    && pip install cryptography \
+    # Build PROJ
+    && mkdir proj \
+    && apk add --no-cache cmake \
+    && wget -q https://github.com/OSGeo/PROJ/archive/${PROJ_VERSION}.tar.gz -O - \
+    | tar xz -C proj --strip-components=1 \
+    && cd proj \
+    && cmake . \
+    -DBUILD_SHARED_LIBS=ON \
+    -DCMAKE_BUILD_TYPE=Release \
+    -DCMAKE_INSTALL_PREFIX=/usr \
+    -DENABLE_IPO=ON \
+    -DBUILD_TESTING=OFF \
+    && make -j$(nproc) \
+    && make install \
+    && make install DESTDIR="/build_proj" \
+    && cd .. \
+    && rm -rf proj \
+    && for i in /build_proj/usr/lib/*; do strip -s $i 2>/dev/null || /bin/true; done \
+    && for i in /build_proj/usr/bin/*; do strip -s $i 2>/dev/null || /bin/true; done \
+    && apk del cmake \
+    && pip3 install pyproj==3.6.1 --no-cache-dir \
+    && pip3 install gdal==3.4.3 --no-cache-dir \
+    && pip3 install ckanapi --no-cache-dir \
+    && pip3 install -U requests[security] --no-cache-dir \
+    # for debugging
+    && pip3 install flask_debugtoolbar --no-cache-dir \
+    # clean up
+    && apk del .build-deps
 
 # Define environment variables
-ENV CKAN_HOME /usr/lib/ckan
-ENV CKAN_VENV $CKAN_HOME/venv
-ENV CKAN_CONFIG /etc/ckan
+ENV APP_DIR=/srv/app
+ENV SRC_DIR=/srv/app/src
+ENV CKAN_INI=${APP_DIR}/ckan.ini
+ENV PIP_SRC=${SRC_DIR}
 ENV CKAN_STORAGE_PATH=/var/lib/ckan
+
 
 # Build-time variables specified by docker-compose.yml / .env
 ARG CKAN_SITE_URL
 
-# Create ckan user
-RUN useradd -r -u 900 -m -c "ckan account" -d $CKAN_HOME -s /bin/false ckan
-
 # Setup virtual environment for CKAN
-RUN mkdir -p $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH && \
-    python3 -m venv $CKAN_VENV && \
-    ln -s $CKAN_VENV/bin/pip3 /usr/local/bin/ckan-pip &&\
-    ln -s $CKAN_VENV/bin/paster /usr/local/bin/ckan-paster &&\
-    ln -s $CKAN_VENV/bin/ckan /usr/local/bin/ckan
+RUN ln -s SRC_DIR/ckan/bin/ckan /usr/local/bin/ckan
 
 # Setup CKAN
-ADD ./bin/ $CKAN_VENV/src/ckan/bin/
-ADD ./ckan/ $CKAN_VENV/src/ckan/ckan/
-ADD ./ckanext/ $CKAN_VENV/src/ckan/ckanext/
-ADD ./scripts/ $CKAN_VENV/src/ckan/scripts/
-COPY ./*.py ./*.txt ./*.ini ./*.rst $CKAN_VENV/src/ckan/
-ADD ./contrib/docker/who.ini $CKAN_VENV/src/ckan/ckan/config/who.ini
-
-RUN ckan-pip install pip==22.3.1 && \
-    ckan-pip install --upgrade --no-cache-dir -r $CKAN_VENV/src/ckan/requirement-setuptools.txt && \
-    # ckan-pip install --upgrade --no-cache-dir -r $CKAN_VENV/src/ckan/requirements-py2.txt && \
-    ckan-pip install --upgrade --no-cache-dir -r $CKAN_VENV/src/ckan/requirements.txt && \
-    ckan-pip install -e $CKAN_VENV/src/ckan/ && \
-    ln -s $CKAN_VENV/src/ckan/ckan/config/who.ini $CKAN_CONFIG/who.ini
-
-# Install needed libraries
-RUN ckan-pip install factory_boy
-RUN ckan-pip install mock
-RUN ckan-pip install "urllib3>=1.26.14"
-RUN ckan-pip install GDAL==2.4.0
-RUN ckan-pip install ckanapi
-RUN ckan-pip install -U requests[security] --no-cache
-
-# for debugging
-RUN ckan-pip install flask_debugtoolbar
+ADD ./contrib/docker/who.ini $APP_DIR/who.ini
 
 # Copy files to container
-ADD ./contrib/docker/production.ini $CKAN_CONFIG/production.ini
-ADD ./contrib/docker/ckan-entrypoint.sh /ckan-entrypoint.sh
-ADD ./contrib/docker/ckan-harvester-entrypoint.sh /ckan-harvester-entrypoint.sh
-ADD ./contrib/docker/ckan-run-harvester-entrypoint.sh /ckan-run-harvester-entrypoint.sh
-ADD ./contrib/docker/crontab $CKAN_VENV/src/ckan/contrib/docker/crontab
+ADD ./contrib/docker/production.ini $CKAN_INI
+ADD ./contrib/docker/crontab $SRC_DIR/ckan/contrib/docker/crontab
 ADD ./contrib/docker/wait-for-postgres.sh /wait-for-postgres.sh
 
 # Set file permissions
-RUN chmod +x /ckan-entrypoint.sh && \
-    chmod +x /ckan-harvester-entrypoint.sh && \
-    chmod +x /ckan-run-harvester-entrypoint.sh && \
-    chmod +x /wait-for-postgres.sh
+RUN chmod +x /wait-for-postgres.sh
 
 # Copy extensions into container and Install
-RUN  chown -R ckan:ckan $CKAN_HOME $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH
+RUN  chown -R ckan:ckan $APP_DIR $CKAN_STORAGE_PATH
 
-COPY ./contrib/docker/src/ckanext-dcat/requirements.txt $CKAN_VENV/src/ckanext-dcat/requirements.txt
-RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src && ckan-pip install -r ckanext-dcat/requirements.txt"
+COPY ./contrib/docker/src/ckanext-dcat/requirements.txt $SRC_DIR/ckanext-dcat/requirements.txt
+RUN --mount=type=cache,target=/root/.cache/pip cd $SRC_DIR && pip3 install -r ckanext-dcat/requirements.txt
 
-COPY ./contrib/docker/src/ckanext-harvest/requirements.txt $CKAN_VENV/src/ckanext-harvest/requirements.txt
-RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src && ckan-pip install -r ckanext-harvest/requirements.txt"
+COPY ./contrib/docker/src/ckanext-harvest/requirements.txt $SRC_DIR/ckanext-harvest/requirements.txt
+RUN --mount=type=cache,target=/root/.cache/pip cd $SRC_DIR && pip3 install -r ckanext-harvest/requirements.txt
 
-COPY ./contrib/docker/src/ckanext-spatial/requirements.txt $CKAN_VENV/src/ckanext-spatial/requirements.txt
-RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src && ckan-pip install -r ckanext-spatial/requirements.txt"
+COPY ./contrib/docker/src/ckanext-spatial/requirements.txt $SRC_DIR/ckanext-spatial/requirements.txt
+RUN --mount=type=cache,target=/root/.cache/pip cd $SRC_DIR && pip3 install -r ckanext-spatial/requirements.txt
 
-# COPY ./contrib/docker/src/ckanext-scheming/requirements.txt $CKAN_VENV/src/ckanext-scheming/requirements.txt
-# RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src && ckan-pip install -r ckanext-scheming/requirements.txt"
+COPY ./contrib/docker/src/ckanext-cioos_harvest/requirements.txt $SRC_DIR/ckanext-cioos_harvest/requirements.txt
+RUN --mount=type=cache,target=/root/.cache/pip cd $SRC_DIR && pip3 install -r ckanext-cioos_harvest/requirements.txt
 
-COPY ./contrib/docker/src/ckanext-cioos_theme/dev-requirements.txt $CKAN_VENV/src/ckanext-cioos_theme/dev-requirements.txt
-COPY ./contrib/docker/src/ckanext-cioos_theme/requirements.txt $CKAN_VENV/src/ckanext-cioos_theme/requirements.txt
-RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src && ckan-pip install -r ckanext-cioos_theme/requirements.txt"
-RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src && ckan-pip install -r ckanext-cioos_theme/dev-requirements.txt"
+COPY ./contrib/docker/src/ckanext-cioos_theme/requirements.txt $SRC_DIR/ckanext-cioos_theme/requirements.txt
+RUN --mount=type=cache,target=/root/.cache/pip cd $SRC_DIR && pip3 install -r ckanext-cioos_theme/requirements.txt
+
 
 #------------------------------------------------------------------------------#
 FROM base as extensions1
 #------------------------------------------------------------------------------#
-WORKDIR $CKAN_VENV/src
+WORKDIR $SRC_DIR
 
-COPY ./contrib/docker/src/ckanext-geoview $CKAN_VENV/src/ckanext-geoview
-RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-geoview && python setup.py install && python setup.py develop"
+COPY ./contrib/docker/src/ckanext-geoview $SRC_DIR/ckanext-geoview
+RUN cd $SRC_DIR/ckanext-geoview && python3 setup.py install && python3 setup.py develop
 
-COPY ./contrib/docker/src/ckanext-dcat $CKAN_VENV/src/ckanext-dcat
-RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-dcat && python setup.py install && python setup.py develop"
+COPY ./contrib/docker/src/ckanext-dcat $SRC_DIR/ckanext-dcat
+RUN cd $SRC_DIR/ckanext-dcat && python3 setup.py install && python3 setup.py develop
 
-WORKDIR $CKAN_VENV/src
-RUN /bin/bash -c "rm -R ./ckan"
+# included in base image
+RUN cd $SRC_DIR/ckanext-envvars && python3 setup.py install && python3 setup.py develop
 
-WORKDIR $CKAN_VENV/lib/python3.7/site-packages/
-RUN /bin/bash -c "find . -maxdepth 1 ! -name 'ckanext*' ! -name '..' ! -name '.' ! -name 'easy-install.pth' | xargs rm -R; mv easy-install.pth easy-install-A.pth"
+WORKDIR $SRC_DIR
+RUN rm -R ./ckan
+
+WORKDIR /usr/lib/python3.9/site-packages/
+RUN find . -maxdepth 1 ! -name 'ckanext*' ! -name '..' ! -name '.' ! -name 'easy-install.pth' | xargs rm -R; mv easy-install.pth easy-install-A.pth
 
 #------------------------------------------------------------------------------#
 FROM base as extensions2
 #------------------------------------------------------------------------------#
-WORKDIR $CKAN_VENV/src
+WORKDIR $SRC_DIR
 
-COPY ./contrib/docker/src/ckanext-scheming $CKAN_VENV/src/ckanext-scheming
-RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-scheming && python setup.py install && python setup.py develop"
+COPY ./contrib/docker/src/ckanext-scheming $SRC_DIR/ckanext-scheming
+RUN cd $SRC_DIR/ckanext-scheming && python3 setup.py install && python3 setup.py develop
 
-COPY ./contrib/docker/src/ckanext-fluent $CKAN_VENV/src/ckanext-fluent
-RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-fluent && python setup.py install && python setup.py develop"
+COPY ./contrib/docker/src/ckanext-fluent $SRC_DIR/ckanext-fluent
+RUN cd $SRC_DIR/ckanext-fluent && python3 setup.py install && python3 setup.py develop
 
-COPY ./contrib/docker/src/cioos-siooc-schema/cioos-siooc_schema.json  $CKAN_VENV/src/ckanext-scheming/ckanext/scheming/cioos_siooc_schema.json
-COPY ./contrib/docker/src/cioos-siooc-schema/organization.json $CKAN_VENV/src/ckanext-scheming/ckanext/scheming/
-COPY ./contrib/docker/src/cioos-siooc-schema/ckan_license.json $CKAN_VENV/src/ckanext-scheming/ckanext/scheming/
-COPY ./contrib/docker/src/cioos-siooc-schema/group.json $CKAN_VENV/src/ckanext-scheming/ckanext/scheming/
+COPY ./contrib/docker/src/cioos-siooc-schema/cioos-siooc_schema.json  $SRC_DIR/ckanext-scheming/ckanext/scheming/cioos_siooc_schema.json
+COPY ./contrib/docker/src/cioos-siooc-schema/organization.json $SRC_DIR/ckanext-scheming/ckanext/scheming/
+COPY ./contrib/docker/src/cioos-siooc-schema/ckan_license.json $SRC_DIR/ckanext-scheming/ckanext/scheming/
+COPY ./contrib/docker/src/cioos-siooc-schema/group.json $SRC_DIR/ckanext-scheming/ckanext/scheming/
 
-WORKDIR $CKAN_VENV/src
-RUN /bin/bash -c "rm -R ./ckan"
+WORKDIR $SRC_DIR
+RUN rm -R ./ckan
 
-WORKDIR $CKAN_VENV/lib/python3.7/site-packages/
-RUN /bin/bash -c "find . -maxdepth 1 ! -name 'ckanext*' ! -name '..' ! -name '.' ! -name 'easy-install.pth' | xargs rm -R; mv easy-install.pth easy-install-B.pth"
+WORKDIR /usr/lib/python3.9/site-packages/
+RUN find . -maxdepth 1 ! -name 'ckanext*' ! -name '..' ! -name '.' ! -name 'easy-install.pth' | xargs rm -R; mv easy-install.pth easy-install-B.pth
 
 #------------------------------------------------------------------------------#
 FROM base as harvest_extensions
 #------------------------------------------------------------------------------#
-WORKDIR $CKAN_VENV/src
+WORKDIR $SRC_DIR
 
-COPY ./contrib/docker/src/ckanext-harvest $CKAN_VENV/src/ckanext-harvest
-RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-harvest && python setup.py install && python setup.py develop"
+COPY ./contrib/docker/src/ckanext-harvest $SRC_DIR/ckanext-harvest
+RUN cd $SRC_DIR/ckanext-harvest && python3 setup.py install && python3 setup.py develop
 
-COPY ./contrib/docker/src/ckanext-spatial $CKAN_VENV/src/ckanext-spatial
-RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-spatial && python setup.py install && python setup.py develop"
+COPY ./contrib/docker/src/ckanext-spatial $SRC_DIR/ckanext-spatial
+RUN cd $SRC_DIR/ckanext-spatial && python3 setup.py install && python3 setup.py develop
 
-WORKDIR $CKAN_VENV/src
-RUN /bin/bash -c "rm -R ./ckan"
+WORKDIR $SRC_DIR
+RUN rm -R ./ckan
 
-WORKDIR $CKAN_VENV/lib/python3.7/site-packages/
-RUN /bin/bash -c "find . -maxdepth 1 ! -name 'ckanext*' ! -name '..' ! -name '.' ! -name 'easy-install.pth' | xargs rm -R; mv easy-install.pth easy-install-C.pth"
+WORKDIR /usr/lib/python3.9/site-packages/
+RUN find . -maxdepth 1 ! -name 'ckanext*' ! -name '..' ! -name '.' ! -name 'easy-install.pth' | xargs rm -R; mv easy-install.pth easy-install-C.pth
 
 #------------------------------------------------------------------------------#
 FROM base as cioos_extensions
 #------------------------------------------------------------------------------#
-WORKDIR $CKAN_VENV/src
-COPY ./contrib/docker/src/ckanext-cioos_harvest $CKAN_VENV/src/ckanext-cioos_harvest
-RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-cioos_harvest && python setup.py install && python setup.py develop"
+WORKDIR $SRC_DIR
+COPY ./contrib/docker/src/ckanext-cioos_harvest $SRC_DIR/ckanext-cioos_harvest
+RUN cd $SRC_DIR/ckanext-cioos_harvest && python3 setup.py install && python3 setup.py develop
 
-COPY ./contrib/docker/src/ckanext-cioos_theme $CKAN_VENV/src/ckanext-cioos_theme
-RUN /bin/bash -c "source $CKAN_VENV/bin/activate && cd $CKAN_VENV/src/ckanext-cioos_theme && python setup.py compile_catalog -f && python setup.py install && python setup.py develop"
+COPY ./contrib/docker/src/ckanext-cioos_theme $SRC_DIR/ckanext-cioos_theme
+RUN cd $SRC_DIR/ckanext-cioos_theme  && python3 setup.py --help-commands  && python3 setup.py compile_catalog --locale fr && python3 setup.py install && python3 setup.py develop
 
-WORKDIR $CKAN_VENV/src
-RUN /bin/bash -c "rm -R ./ckan"
+WORKDIR $SRC_DIR
+RUN rm -R ./ckan
 
-WORKDIR $CKAN_VENV/lib/python3.7/site-packages/
-RUN /bin/bash -c "find . -maxdepth 1 ! -name 'ckanext*' ! -name '..' ! -name '.' ! -name 'easy-install.pth' | xargs rm -R; mv easy-install.pth easy-install-D.pth"
+WORKDIR /usr/lib/python3.9/site-packages/
+RUN find . -maxdepth 1 ! -name 'ckanext*' ! -name '..' ! -name '.' ! -name 'easy-install.pth' | xargs rm -R; mv easy-install.pth easy-install-D.pth
 
 #------------------------------------------------------------------------------#
 FROM base
 #------------------------------------------------------------------------------#
-COPY --from=extensions1 $CKAN_VENV/src/ $CKAN_VENV/src/
-COPY --from=extensions1 $CKAN_VENV/lib/python3.7/site-packages/ $CKAN_VENV/lib/python3.7/site-packages/
+COPY --from=extensions1 $SRC_DIR/ $SRC_DIR/
+COPY --from=extensions1 /usr/lib/python3.9/site-packages/ /usr/lib/python3.9/site-packages/
 
-COPY --from=extensions2 $CKAN_VENV/src/ $CKAN_VENV/src/
-COPY --from=extensions2 $CKAN_VENV/lib/python3.7/site-packages/ $CKAN_VENV/lib/python3.7/site-packages/
+COPY --from=extensions2 $SRC_DIR/ $SRC_DIR/
+COPY --from=extensions2 /usr/lib/python3.9/site-packages/ /usr/lib/python3.9/site-packages/
 
-COPY --from=harvest_extensions $CKAN_VENV/src/ $CKAN_VENV/src/
-COPY --from=harvest_extensions $CKAN_VENV/lib/python3.7/site-packages/ $CKAN_VENV/lib/python3.7/site-packages/
+COPY --from=harvest_extensions $SRC_DIR/ $SRC_DIR/
+COPY --from=harvest_extensions /usr/lib/python3.9/site-packages/ /usr/lib/python3.9/site-packages/
 
-COPY --from=cioos_extensions $CKAN_VENV/src/ $CKAN_VENV/src/
-COPY --from=cioos_extensions $CKAN_VENV/lib/python3.7/site-packages/ $CKAN_VENV/lib/python3.7/site-packages/
+COPY --from=cioos_extensions $SRC_DIR/ $SRC_DIR/
+COPY --from=cioos_extensions /usr/lib/python3.9/site-packages/ /usr/lib/python3.9/site-packages/
 
-RUN /bin/bash -c "sort -u $CKAN_VENV/lib/python3.7/site-packages/easy-install-[ABCD].pth > $CKAN_VENV/lib/python3.7/site-packages/easy-install.pth"
+RUN sort -u /usr/lib/python3.9/site-packages/easy-install-[ABCD].pth > /usr/lib/python3.9/site-packages/easy-install.pth
 
-RUN mkdir -p $CKAN_VENV/src/logs
-RUN touch "$CKAN_VENV/src/logs/ckan_access.log"
-RUN touch "$CKAN_VENV/src/logs/ckan_default.log"
+RUN mkdir -p $APP_DIR/logs
+RUN touch "$APP_DIR/logs/ckan_access.log"
+RUN touch "$APP_DIR/logs/ckan_default.log"
 
-RUN chown -R 900:900 $CKAN_HOME $CKAN_VENV $CKAN_CONFIG $CKAN_STORAGE_PATH
+RUN chown -R 92:92 $APP_DIR $CKAN_STORAGE_PATH
 
-WORKDIR $CKAN_VENV/src
+WORKDIR $APP_DIR
 
-ENTRYPOINT ["/ckan-entrypoint.sh"]
+# ENTRYPOINT ["/ckan-entrypoint.sh"]
 
 USER ckan
 EXPOSE 5000
 
-CMD ["bash", "/wait-for-postgres.sh", "db", "ckan", "-c", "/etc/ckan/production.ini", "run", "--host", "0.0.0.0"]
+CMD ["bash", "/wait-for-postgres.sh", "db", "ckan", "-c", "/srv/app/ckan.ini", "run", "--host", "0.0.0.0"]
