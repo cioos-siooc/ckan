@@ -193,4 +193,5 @@ WORKDIR $APP_DIR
 USER ckan
 EXPOSE 5000
 
-CMD ["bash", "/wait-for-postgres.sh", "db", "ckan", "-c", "/srv/app/ckan.ini", "run", "--host", "0.0.0.0"]
+#CMD ["bash", "/wait-for-postgres.sh", "db", "ckan", "-c", "/srv/app/ckan.ini", "run", "--host", "0.0.0.0"]
+CMD ["bash", "/wait-for-postgres.sh", "db", "/srv/app/start_ckan.sh"]
