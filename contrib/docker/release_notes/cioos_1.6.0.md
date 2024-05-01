@@ -1,7 +1,22 @@
-add `ckan.cache_expires = 604800` and `ckan.cache_enabled = True` to ckan.ini  file
+copy ckan.ini to new location
+```
+export VOL_CKAN_HOME=`sudo docker volume inspect docker_ckan_home | jq -r -c '.[] | .Mountpoint'`
+export VOL_CKAN_CONFIG=`sudo docker volume inspect docker_ckan_config | jq -r -c '.[] | .Mountpoint'`
+sudo cp $VOL_CKAN_CONFIG/production.ini $VOL_CKAN_HOME/ckan.ini
+```
+run commands in env.template to update secrets in .env
 
-ckan use is now 92 rather then 900. you will need to chanke log folders to be owned by user 92 so it will work with alpine image
+<!-- add `ckan.cache_expires = 604800` and `ckan.cache_enabled = True` to ckan.ini  file -->
+
+ckan use is now 92 rather then 900. you will need to change log folders to be owned by user 92 so it will work with alpine image
 eg `sudo chown -R 92:92 /var/log/ckan/`
+
+pull down new image and restart ckan
+```
+sudo docker-compose pull ckan
+./clean_reload_ckan.sh
+sudo docker-compose up -d ckan
+```
 
 may need to change permission on some internal files after webassets get built
 eg
