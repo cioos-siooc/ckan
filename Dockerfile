@@ -5,7 +5,7 @@ FROM ckan/ckan-base:2.9 as base
 ARG PROJ_VERSION=9.0.0
 
 RUN --mount=type=cache,target=/root/.cache/pip apk add --no-cache .build-deps libc-dev geos geos-dev gdal gdal-dev \
-    proj proj-util proj-dev gcc g++ libffi-dev musl-dev py3-gdal python3-dev \
+    proj proj-util proj-dev gcc g++ libffi-dev musl-dev py3-gdal python3-dev\
     libstdc++ build-base \
     # Setup build env for PROJ
     wget curl unzip make libtool autoconf automake pkgconfig g++ sqlite sqlite-dev \
@@ -40,8 +40,7 @@ RUN --mount=type=cache,target=/root/.cache/pip apk add --no-cache .build-deps li
     && pip3 install ckanapi --no-cache-dir \
     && pip3 install -U requests[security] --no-cache-dir \
     # for debugging
-    && pip3 install 'flask<=2.3.3' \
-    && pip3 install flask_debugtoolbar --no-cache-dir \
+    && pip3 install 'flask_debugtoolbar==0.14.1' --no-cache-dir \
     # clean up
     && apk del .build-deps
 
