@@ -51,10 +51,6 @@ ENV CKAN_INI=${APP_DIR}/ckan.ini
 ENV PIP_SRC=${SRC_DIR}
 ENV CKAN_STORAGE_PATH=/var/lib/ckan
 
-
-# Build-time variables specified by docker-compose.yml / .env
-ARG CKAN_SITE_URL
-
 # Setup virtual environment for CKAN
 RUN ln -s SRC_DIR/ckan/bin/ckan /usr/local/bin/ckan
 

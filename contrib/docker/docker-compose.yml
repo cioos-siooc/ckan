@@ -40,8 +40,6 @@ services:
     <<: *ckan_app
     build:
       context: ../../
-      args:
-        - CKAN_SITE_URL=${CKAN_SITE_URL}
     volumes:
       - "/etc/localtime:/etc/localtime:ro" # remove and use TZ setting if running on windows
       - ckan_home:/srv/app
@@ -130,12 +128,12 @@ services:
        ckan_fetch_harvester:
           condition: service_started
 
-  datapusher:
-    container_name: datapusher
-    image: clementmouchet/datapusher
-    restart: unless-stopped
-    ports:
-      - "8800:8800"
+  # datapusher:
+  #   container_name: datapusher
+  #   image: clementmouchet/datapusher
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8800:8800"
 
   db:
     container_name: db
