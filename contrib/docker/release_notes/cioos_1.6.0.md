@@ -31,3 +31,9 @@ eg
 ```
 COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose build ckan
 ```
+
+
+update robots.txt with your sitemap details
+```
+sudo docker exec -u root -it ckan  /bin/bash -c 'sed -i "s@Sitemap: /sitemap/sitemap.xml@Sitemap: $CKAN_SITE_URL/sitemap/sitemap.xml@" src/ckanext-cioos_theme/ckanext/cioos_theme/public/robots.txt'
+```
