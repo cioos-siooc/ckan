@@ -1,19 +1,31 @@
-copy ckan.ini to new location
+copy ckan.ini to new location and backup
 ```
 export VOL_CKAN_HOME=`sudo docker volume inspect docker_ckan_home | jq -r -c '.[] | .Mountpoint'`
 export VOL_CKAN_CONFIG=`sudo docker volume inspect docker_ckan_config | jq -r -c '.[] | .Mountpoint'`
+
 sudo cp $VOL_CKAN_CONFIG/production.ini $VOL_CKAN_HOME/ckan.ini
+sudo cp $VOL_CKAN_CONFIG/production.ini  ./ckan.ini
 ```
-run commands in env.template to update secrets in .env
+
+run commands in env.template to update secrets in .env. Manually review .env file to ensure it has the correct settings
 
 <!-- add `ckan.cache_expires = 604800` and `ckan.cache_enabled = True` to ckan.ini  file -->
+
+pull down new ckan image
+```
+sudo docker-compose pull ckan
+```
+
+You might need to upgrade docker-compose to v2
+https://www.digitalocean.com/community/tutorials/how-to-install-and-use-docker-compose-on-centos-7
+https://github.com/docker/compose/releases/tag/v2.6.1
+
 
 ckan use is now 92 rather then 900. you will need to change log folders to be owned by user 92 so it will work with alpine image
 eg `sudo chown -R 92:92 /var/log/ckan/`
 
-pull down new image and restart ckan
+recreate ckan container
 ```
-sudo docker-compose pull ckan
 ./clean_reload_ckan.sh
 sudo docker-compose up -d ckan
 ```
