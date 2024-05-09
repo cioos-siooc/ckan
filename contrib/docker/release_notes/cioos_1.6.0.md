@@ -22,7 +22,9 @@ https://github.com/docker/compose/releases/tag/v2.6.1
 
 
 ckan use is now 92 rather then 900. you will need to change log folders to be owned by user 92 so it will work with alpine image
-eg `sudo chown -R 92:92 /var/log/ckan/`
+```
+sudo chown -R 92:92 /var/log/ckan/
+```
 
 recreate ckan container
 ```
@@ -38,13 +40,14 @@ export VOL_CKAN_STORAGE=`sudo docker volume inspect docker_ckan_storage | jq -r 
 sudo chown -R 92:92 $VOL_CKAN_HOME $VOL_CKAN_STORAGE
 ```
 
+### Note if building from source
 you can now use a cache for pip packages. if using docker-compose < 2 you will need to add enviroment variables to enable buildkit
 eg
 ```
 COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose build ckan
 ```
 
-
+### Once everything is running
 update robots.txt with your sitemap details
 ```
 sudo docker exec -u root -it ckan  /bin/bash -c 'sed -i "s@Sitemap: /sitemap/sitemap.xml@Sitemap: $CKAN_SITE_URL/sitemap/sitemap.xml@" src/ckanext-cioos_theme/ckanext/cioos_theme/public/robots.txt'
