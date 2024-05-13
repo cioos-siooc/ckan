@@ -1,22 +1,4 @@
-# docker-compose build && docker-compose up -d
-# If "docker-compose logs ckan" shows DB not ready, run "docker-compose restart ckan" a few times.
-
 version: "3.4"
-
-x-common-ckan-variables: &common-ckan-variables
-  CKAN_SQLALCHEMY_URL: postgresql://ckan:${POSTGRES_PASSWORD}@db/ckan
-  CKAN_DATASTORE_WRITE_URL: postgresql://ckan:${POSTGRES_PASSWORD}@db/datastore
-  CKAN_DATASTORE_READ_URL: postgresql://datastore_ro:${DATASTORE_READONLY_PASSWORD}@db/datastore
-  CKAN_SOLR_URL: http://solr:8983/solr/ckan
-  CKAN_REDIS_URL: redis://redis:6379/1
-  CKAN_DATAPUSHER_URL: http://datapusher:8800
-  CKAN_SITE_URL: ${CKAN_SITE_URL}
-  CKAN_MAX_UPLOAD_SIZE_MB: ${CKAN_MAX_UPLOAD_SIZE_MB}
-  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-  DS_RO_PASS: ${DATASTORE_READONLY_PASSWORD}
-  AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION}
-  AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
-  AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
 
 x-ckan: &ckan_app
   container_name: ckan
@@ -27,24 +9,26 @@ x-ckan: &ckan_app
     - redis
   ports:
     - "0.0.0.0:${CKAN_PORT}:5000"
+  env_file:
+      - ./.env
   environment:
     # Defaults work with linked containers, change to use own Postgres, SolR, Redis or Datapusher
-    <<: *common-ckan-variables
-    #- TZ=Canada/Vancouver
+    CKAN_SQLALCHEMY_URL: postgresql://ckan:${POSTGRES_PASSWORD}@db/ckan
+    CKAN_DATASTORE_WRITE_URL: postgresql://ckan:${POSTGRES_PASSWORD}@db/datastore
+    CKAN_DATASTORE_READ_URL: postgresql://datastore_ro:${DATASTORE_READONLY_PASSWORD}@db/datastore
+    DS_RO_PASS: ${DATASTORE_READONLY_PASSWORD}
     # Debug with pdb (example) - Interact with `docker attach $(docker container ls -qf name=ckan)`
-    #command: 'python -m pdb /usr/lib/ckan/venv/bin/ckan --config /etc/ckan/production.ini run --host 0.0.0.0 --passthrough-errors'
+    #command: 'python -m pdb /usr/lib/ckan/venv/bin/ckan --config /srv/app/ckan.ini run --host 0.0.0.0 --passthrough-errors'
     #tty: true
     #stdin_open: true
   restart: unless-stopped
   volumes:
     - "/etc/localtime:/etc/localtime:ro" # remove and use TZ setting if running on windows
-    - ckan_config:/etc/ckan
-    - ckan_home:/usr/lib/ckan
+    - ckan_home:/srv/app
     - ckan_storage:/var/lib/ckan
-    - ${CKAN_LOG_PATH}:/usr/lib/ckan/venv/src/logs
+    - ${CKAN_LOG_PATH}:/srv/app/logs
 
 volumes:
-  ckan_config:
   ckan_home:
   ckan_storage:
   pg_data:
@@ -56,53 +40,100 @@ services:
     <<: *ckan_app
     build:
       context: ../../
-      args:
-        - CKAN_SITE_URL=${CKAN_SITE_URL}
+    volumes:
+      - "/etc/localtime:/etc/localtime:ro" # remove and use TZ setting if running on windows
+      - ckan_home:/srv/app
+      - ckan_storage:/var/lib/ckan
+      - ${CKAN_LOG_PATH}:/srv/app/logs
+      - ./ckan-entrypoint.sh:/docker-entrypoint.d/ckan-entrypoint.sh
     depends_on:
-      - db
-      - solr
-      - redis
-    
+      db:
+        condition: service_healthy
+      solr:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail http://localhost:5000/api/3/action/status_show || exit 1"]
+      start_period: 60s
+      interval: 60s
+      timeout: 5s
+      retries: 5  
 
   ckan_gather_harvester:
      <<: *ckan_app
      container_name: ckan_gather_harvester
-     entrypoint: /ckan-harvester-entrypoint.sh
      user: ckan
-     command: ckan --config=/etc/ckan/production.ini harvester gather-consumer
+     command: ckan --config=/srv/app/ckan.ini harvester gather-consumer
      ports: []
+     volumes:
+      - "/etc/localtime:/etc/localtime:ro" # remove and use TZ setting if running on windows
+      - ckan_home:/srv/app
+      - ckan_storage:/var/lib/ckan
+      - ${CKAN_LOG_PATH}:/srv/app/logs
+      - ./ckan-harvester-entrypoint.sh:/docker-entrypoint.d/ckan-harvester-entrypoint.sh
+     healthcheck:
+      test: ["CMD-SHELL", "ps -o args | grep -q 'harvester gather-consumer'"]
+      start_period: 5s
+      interval: 60s
+      timeout: 5s
+      retries: 1        
      depends_on:
-       - ckan
+       ckan:
+         condition: service_healthy
 
   ckan_fetch_harvester:
      <<: *ckan_app
      container_name: ckan_fetch_harvester
-     entrypoint: /ckan-harvester-entrypoint.sh
      user: ckan
-     command: ckan --config=/etc/ckan/production.ini harvester fetch-consumer
+     command: ckan --config=/srv/app/ckan.ini harvester fetch-consumer
      ports: []
+     volumes:
+      - "/etc/localtime:/etc/localtime:ro" # remove and use TZ setting if running on windows
+      - ckan_home:/srv/app
+      - ckan_storage:/var/lib/ckan
+      - ${CKAN_LOG_PATH}:/srv/app/logs
+      - ./ckan-harvester-entrypoint.sh:/docker-entrypoint.d/ckan-harvester-entrypoint.sh
+     healthcheck:
+      test: ["CMD-SHELL", "ps -o args | grep -q 'harvester fetch-consumer'"]
+      start_period: 5s
+      interval: 60s
+      timeout: 5s
+      retries: 1        
      depends_on:
-       - ckan
-       - ckan_gather_harvester
+       ckan:
+         condition: service_healthy
+       ckan_gather_harvester:
+         condition: service_started
 
   ckan_run_harvester:
      <<: *ckan_app
      container_name: ckan_run_harvester
-     entrypoint: /ckan-run-harvester-entrypoint.sh
      user: root
-     command: /bin/bash -c "echo 'ckan_run_harvester started' && cron -f 2>&1 "
+     command: /bin/bash -c "echo 'ckan_run_harvester started' && crond -f 2>&1 "
      ports: []
+     volumes:
+      - ./ckan-run-harvester-entrypoint.sh:/docker-entrypoint.d/ckan-run-harvester-entrypoint.sh
+     healthcheck:
+      test: ["CMD-SHELL", "ps -o args | grep -q '^crond -f'"]
+      start_period: 5s
+      interval: 60s
+      timeout: 5s
+      retries: 1  
      depends_on:
-       - ckan
-       - ckan_gather_harvester
-       - ckan_fetch_harvester
+       ckan:
+          condition: service_healthy
+       ckan_gather_harvester:
+          condition: service_started
+       ckan_fetch_harvester:
+          condition: service_started
 
-  datapusher:
-    container_name: datapusher
-    image: clementmouchet/datapusher
-    restart: unless-stopped
-    ports:
-      - "8800:8800"
+  # datapusher:
+  #   container_name: datapusher
+  #   image: clementmouchet/datapusher
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8800:8800"
 
   db:
     container_name: db
@@ -118,15 +149,27 @@ services:
       - pg_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "ckan"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   solr:
     container_name: solr
     image: cioos/solr:latest
+    build:
+      context: ../../
+      dockerfile: contrib/docker/solr/Dockerfile
     restart: unless-stopped
     ports:
       - "8983:8983"
     volumes:
       - solr_data:/var/solr
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sf http://localhost:8983/solr/ckan/admin/ping?wt=json |  grep -iq '\"status\":\"OK\"' || exit 1"]
+      start_period: 15s
+      interval: 60s
+      timeout: 5s
+      retries: 3
 
   # redis is used by the datapusher and the spatial fetch and gather harvesters
   redis:
@@ -135,3 +178,8 @@ services:
     restart: unless-stopped
     volumes:
       - redis_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
+      interval: 60s
+      timeout: 3s
+      retries: 5

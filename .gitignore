@@ -79,3 +79,7 @@ ckan/i18n/zh_Hant_TW/LC_MESSAGES/ckan.po
 ckan/i18n/zh_Hant_TW/LC_MESSAGES/ckan.mo
 
 *.dump
+
+contrib/docker/ckan_admin_config.sql
+
+contrib/docker/ckan.dataset..profile

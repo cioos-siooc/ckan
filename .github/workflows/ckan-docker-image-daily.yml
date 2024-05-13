@@ -1,4 +1,4 @@
-name: CKAN Docker Image
+name: CKAN Docker Prod Image
 
 on:
   workflow_dispatch:

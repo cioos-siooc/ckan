@@ -40,4 +40,6 @@ set_environment () {
 }
 set_environment
 
+printenv | grep -v "no_proxy" >> /etc/environment
+
 exec "$@"

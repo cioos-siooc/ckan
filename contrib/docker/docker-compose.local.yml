@@ -67,7 +67,7 @@ services:
     container_name: ckan_gather_harvester
     entrypoint: /ckan-harvester-entrypoint.sh
     user: ckan
-    command: ckan --config=/etc/ckan/production.ini harvester gather-consumer
+    command: ckan --config=/srv/app/ckan.ini harvester gather-consumer
     ports: []
     # ports:
     #  - "5678:5678" # used by the debugger during development. NOT for production
@@ -82,7 +82,7 @@ services:
     container_name: ckan_fetch_harvester
     entrypoint: /ckan-harvester-entrypoint.sh
     user: ckan
-    command: ckan --config=/etc/ckan/production.ini harvester fetch-consumer
+    command: ckan --config=/srv/app/ckan.ini harvester fetch-consumer
     ports: []
     depends_on:
       - ckan
@@ -92,7 +92,7 @@ services:
     <<: *ckan_app
     container_name: ckan_run_harvester
     entrypoint: /ckan-run-harvester-entrypoint.sh
-    user: ckan
+    user: root
     command: /bin/bash -c "echo 'ckan_run_harvester started' && cron -f 2>&1 "
     ports: []
     depends_on:

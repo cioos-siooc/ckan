@@ -11,7 +11,7 @@ set -e
 # URL for datapusher (required unless linked to a container called 'datapusher')
 : ${CKAN_DATAPUSHER_URL:=}
 
-CONFIG="${CKAN_CONFIG}/production.ini"
+CONFIG="${APP_DIR}/ckan.ini"
 
 abort () {
   echo "$@" >&2
@@ -71,17 +71,13 @@ if [ -z "$CKAN_DATAPUSHER_URL" ]; then
 fi
 
 set_environment
-${CKAN_VENV}/bin/ckan --config "$CONFIG" db init
-# ckan-paster --plugin=ckan db init -c "${CKAN_CONFIG}/production.ini"
-# ckan-paster --plugin=ckanext-harvest harvester initdb -c "${CKAN_CONFIG}/production.ini"
-# ckan-paster --plugin=ckanext-spatial spatial initdb -c "${CKAN_CONFIG}/production.ini"
-# ckan-paster --plugin=ckan datastore set-permissions -c /etc/ckan/production.ini | psql postgresql://ckan:$POSTGRES_PASSWORD@db
+ckan --config "$CONFIG" db init
 
-chown -R ckan:ckan ${CKAN_VENV}/src/ckan/ckan/public/base/i18n
+chown -R ckan:ckan $SRC_DIR/ckan/ckan/public/base/i18n
 
 # must touch log files on first startup if mouinting log volume as the files in
 # the container are masked by the mounted volume
-touch ${CKAN_VENV}/src/logs/ckan_access.log
-touch ${CKAN_VENV}/src/logs/ckan_default.log
+touch $APP_DIR/logs/ckan_access.log
+touch $APP_DIR/logs/ckan_default.log
 
 exec "$@"
