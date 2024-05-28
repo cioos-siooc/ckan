@@ -11,7 +11,6 @@
   - [Create config files](#create-config-files)
     - [Installing CKAN as the root website](#installing-ckan-as-the-root-website)
     - [Installing CKAN off the root of a website](#installing-ckan-off-the-root-of-a-website)
-    - [Configuring pyCSW](#configuring-pycsw)
   - [Build CKAN](#build-ckan)
     - [Create CKAN admin user](#create-ckan-admin-user)
   - [Configure admin settings](#configure-admin-settings)
@@ -28,10 +27,6 @@
     - [19115-3 WAF (ERDDAP)](#19115-3-waf-erddap)
     - [CKAN](#ckan)
     - [Reindex Harvesters](#reindex-harvesters)
-  - [Finish setting up pyCSW](#finish-setting-up-pycsw)
-    - [Test GetCapabilities](#test-getcapabilities)
-    - [Useful pyCSW commands](#useful-pycsw-commands)
-    - [Errors while pyCSW loading](#errors-while-pycsw-loading)
   - [Update SOLR schema](#update-solr-schema)
   - [Update CKAN](#update-ckan)
   - [Update CKAN extensions](#update-ckan-extensions)
@@ -218,18 +213,6 @@ cp production_non_root_url.ini production.ini
 cp who_non_root_url.ini who.ini
 ```
 
-### Configuring pyCSW
-
-Copy [pyCSW](https://pycsw.org/) config template file and update the database password.
-
-The database password is the same password entered in your **.env** file
-
-```bash
-cd ~/ckan/contrib/docker/pycsw
-cp pycsw.cfg.template pycsw.cfg
-nano pycsw.cfg
-```
-
 ## Build CKAN
 
 Change to ckan docker config folder
@@ -341,12 +324,6 @@ Add the following to your sites configs to enable proxy:
     SetOutputFilter DEFLATE
     SetEnvIfNoCase Request_URI "\.(?:gif|jpe?g|png)$" no-gzip
   </location>
-
-  # pycsw
-  <location /ckan/csw>
-    ProxyPass http://localhost:8000/pycsw/csw.js
-    ProxyPassReverse http://localhost:8000/pycsw/csw.js
-  </location>
 ```
 
 or
@@ -361,12 +338,6 @@ or
     # enable deflate
     SetOutputFilter DEFLATE
     SetEnvIfNoCase Request_URI "\.(?:gif|jpe?g|png)$" no-gzip
-  </location>
-
-  # pycsw
-  <location /csw>
-    ProxyPass http://localhost:8000/pycsw/csw.js
-    ProxyPassReverse http://localhost:8000/pycsw/csw.js
   </location>
 ```
 
@@ -743,7 +714,6 @@ docker cp src/ckanext-googleanalyticsbasic/ ckan:/usr/lib/ckan/venv/src/
 docker cp src/ckanext-cioos_harvest/ ckan:/usr/lib/ckan/venv/src/
 docker cp src/ckanext-harvest/ ckan:/usr/lib/ckan/venv/src/
 docker cp src/ckanext-spatial/ ckan:/usr/lib/ckan/venv/src/
-docker cp src/pycsw/ ckan:/usr/lib/ckan/venv/src/
 docker cp src/ckanext-scheming/ ckan:/usr/lib/ckan/venv/src/
 docker cp src/ckanext-fluent/ ckan:/usr/lib/ckan/venv/src/
 docker cp src/ckanext-dcat/ ckan:/usr/lib/ckan/venv/src/
