@@ -1,6 +1,6 @@
 # CIOOS Fork of CKAN/CKAN
 
-This repo was originally forked from `https://github.com/ckan/ckan` and has undergone significant modification to make it docker compatible. It now more closely resembles `https://github.com/ckan/ckan-docker` and has a similer intention, that of providing an easy ckan install encapsulated in docker containers.
+This repo was originally forked from `https://github.com/ckan/ckan` and has undergone significant modification to make it docker compatible. It now more closely resembles `https://github.com/ckan/ckan-docker` and has a similar intention, that of providing an easy ckan install encapsulated in docker containers.
 
 This repo builds a cioos ckan docker container along with associated solr, postgres, redis containers. It differs from other ckan docker builds such as `https://github.com/ckan/ckan-docker-base` in that it does not user supervisor to run the harvesters. instead 3 containers are spun up, ckan_gather_harvester, ckan_fetch_harvester, and ckan_run_harvester. In this way the harvesters are independent of the ckan main app.
 
@@ -12,12 +12,13 @@ CKAN docker images built in this repo are based on the `ckan/ckan-base:2.9` dock
 The Redis, Postgres, and Solr containers use prebuilt images. Some configuration of the Solr container is required however. Solr schema config can be found in `/ckan/config/solr`. The CKAN, Solr and Postgres images are built by github actions and pushed to docker hub. Postgres init scripts are found in `/contrib/docker/postgres/docker-entrypoint-initdb.d`. See the docker-compose.yml in `/contrib/docker/` for more infomation.
 
 ## How to Build
-Building of produciton and dev images can be done in various ways
+Building of production and dev images can be done in various ways
 
 ### Local build
-```
+
+```bash
 cd ~/ckan/contrib/docker/
-sudo docker-compose -f docker-compose.yml build ckan
+sudo docker compose -f docker-compose.yml build ckan
 ```
 
 ### GitHub actions
@@ -34,26 +35,30 @@ If updating to a newer major version you will need to modify the Dockerfile to u
 
 ## How to install
 Clone this github repo to your server
-```
+
+```bash
 git clone https://github.com/cioos-siooc/ckan.git
 ```
 
-Generate enviroemnt file
-```
+Generate environment file
+
+```bash
 cd ckan/contrib/docker
+cp production_root_url.ini ckan.ini
 cp .env.template .env
 nano .env
 ```
 
 Pull CKAN, solr, redis, and postgres images
-```
-sudo docker-compose pull
+
+```bash
+sudo docker compose pull
 ```
 
 Start containers
-```
-sudo docker-compose up -d
+
+```bash
+sudo docker compose up -d
 ```
 
 Depending on your setup you will likely want to proxy the containers behind nginx or apache. More details regarding install, upgrading, debugging can be found in the /docs folder
-

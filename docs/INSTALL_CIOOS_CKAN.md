@@ -3,7 +3,7 @@
 - [Setup CKAN](#setup-ckan)
   - [Linux](#linux)
     - [Install Docker](#install-docker)
-    - [Install docker-compose](#install-docker-compose)
+    - [Install docker compose](#install-docker compose)
   - [Windows](#windows)
     - [Docker Desktop + WSL Integration](#docker-desktop--wsl-integration)
     - [Windows Terminal](#windows-terminal)
@@ -58,7 +58,7 @@
 
 ## Linux
 
-These instructions are for CentOS 7.  They have been modified from the original ['Installing CKAN with Docker Compose'](https://docs.ckan.org/en/2.8/maintaining/installing/install-from-docker-compose.html) instructions.
+These instructions are for CentOS 7.  They have been modified from the original ['Installing CKAN with Docker Compose'](https://docs.ckan.org/en/2.8/maintaining/installing/install-from-docker compose.html) instructions.
 
 ### Install Docker
 
@@ -67,28 +67,39 @@ sudo apt-get update
 sudo apt-get install docker
 ```
 
-#### Install latest docker-compose
+#### Install latest Docker Compose plugin
+
+https://docs.docker.com/compose/install/
+
 
 ```bash
-sudo curl -L "https://github.com/docker/compose/releases/download/1.22.0/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
-sudo chmod +x /usr/local/bin/docker-compose
-docker-compose --version
+sudo apt-get update
+sudo apt-get install docker compose-plugin
+docker compose version
 ```
 
 #### Install Apache
 
-If proxying docker behind Apache (recommended) you will need to have that installed as well. nginx will also work but is not covered in this guide.
+If proxying docker behind Apache (recommended) you will need to have that installed as well. [nginx](https://nginx.org/en/docs/install.html) will also work but is not covered in this guide.
 
-```
+**Debian-based OS**
+```bash
 sudo apt-get update
-sudo apt-get install docker-compose
+sudo apt install apache2
+```
+
+**RHEL-based OS**
+```bash
+sudo yum update
+sudo yum install httpd
 ```
 
 #### Add Apache modules
 
 We will use apache to proxy our docker containers so will need a few modules to make that work
 
-```
+**Debian-based OS**
+```bash
 sudo a2enmod ssl
 sudo a2enmod proxy
 sudo a2enmod proxy_http
@@ -97,7 +108,7 @@ sudo service apache2 restart
 
 #### Add noindex robot tags to headers
 
-You may want to prevent search engins from indexing some your ckan pages. The
+You may want to prevent search engines from indexing some your ckan pages. The
 following mod_header rules have the same affect as the robots.txt file in the
 theme repo. I add them to the location field
 
@@ -165,7 +176,7 @@ Open Docker Desktop, Open Settings and enable WSL Integration under the Resource
 
 The rest of the instructions assume you are using a terminal in a Linux environment.  WSL will already provide you with one by opening one of your installed Linux distros, [Windows Terminal](https://aka.ms/terminal) is also excellent for this purpose.
 
-## Download CKAN git repo and submodules
+## Download CKAN git repo
 
 > **NOTE:** The following instructions assume you are installing CKAN in your home directory (~)
 
@@ -175,57 +186,29 @@ cd ckan
 git checkout cioos
 ```
 
-add submodules
-
-```
-cd ~/ckan
-git submodule init
-git submodule update
-```
-
-## Create config files
+## Create environment and config files
 
 Create environment file and populate with appropriate values
 
+Copy the production_root_url.ini to ckan.ini, this is the configuration file that will be populated by the .env file above.
+
 ```bash
-cd ~/ckan/contrib/docker/
+cd ckan/contrib/docker/
+cp production_root_url.ini ckan.ini
 cp .env.template .env
 nano .env
 ```
 
-### Installing CKAN as the root website
-
-If your CKAN installation will run at the root of your domain, for example <http://yourdomain.com/>
+Pull CKAN, solr, redis, and postgres images
 
 ```bash
-cd ~/ckan/contrib/docker/
-cp production_root_url.ini production.ini
-cp who_root_url.ini who.ini
+sudo docker compose pull
 ```
 
-### Installing CKAN off the root of a website
-*Note*: This section is kept for reference but is no longer supported
-
-Use this setup if your site will run at <http://yourdomain.com/ckan>
+Start containers
 
 ```bash
-cd ~/ckan/contrib/docker/
-cp production_non_root_url.ini production.ini
-cp who_non_root_url.ini who.ini
-```
-
-## Build CKAN
-
-Change to ckan docker config folder
-
-```bash
-  cd ~/ckan/contrib/docker
-```
-
-Build containers, this takes a while
-
-```bash
-  sudo docker-compose up -d --build
+sudo docker compose up -d
 ```
 
 If you don't see any error messages, check <http://localhost:5000> to see if the installation worked.
@@ -243,7 +226,7 @@ CKAN doesn't start with an admin user so it must be created via command line.  T
 You'll be asked to supply an email address and a password (8 characters in length minimum) and then to confirm the password.
 
 ```bash
-sudo docker exec -it ckan ckan --config /etc/ckan/production.ini sysadmin add admin
+sudo docker exec -it ckan ckan --config ./ckan.ini sysadmin add admin
 ```
 
 ### Update shared secrets and app uuid
@@ -257,7 +240,7 @@ sudo docker exec -it ckan ckan generate config ./temp.ini
 sudo grep 'beaker.session.secret' $VOL_CKAN_HOME/venv/src/production.ini
 sudo grep 'app_instance_uuid' $VOL_CKAN_HOME/venv/src/production.ini
 ```
-then update the corosponing lines in production.ini
+then update the corresponding lines in production.ini
 
 ```bash
 sudo nano $VOL_CKAN_HOME/venv/src/production.ini
@@ -269,9 +252,8 @@ in the admin page of ckan set style to default and homepage to CIOOS to get the 
 
 To access the admin section you can click on the hammer icon in the footer of the page or go to one of the following URLs:
 
-- ROOT Install: <http://localhost:5000/ckan-admin/config>
+<http://localhost:5000/ckan-admin/config>
 
-- Non-Root Install: <http://localhost:5000/ckan/ckan-admin/config>
 
 ## Setup Apache proxy
 
@@ -279,7 +261,7 @@ CKAN by default will install to <http://localhost:5000/>
 
 This is fine for testing and development purposes but should not be used in a production environment.
 
-You can use Apache to forward requests from <http://yourdomain.com> or <http://yourdomain.com/ckan> to <http://localhost:5000>
+You can use Apache to forward requests from <http://yourdomain.com> to <http://localhost:5000>
 
 ### Install Apache
 
@@ -315,22 +297,6 @@ Add the following to your sites configs to enable proxy:
 > **NOTE:** The following settings assume you've enabled compression from the previous step, if you have not remove the lines under **# enable deflate**
 
 ```apache
-  # Non-Root Install
-  # CKAN
-  <location /ckan>
-    ProxyPass http://localhost:5000/
-    ProxyPassReverse http://localhost:5000/
-
-    # enable deflate
-    SetOutputFilter DEFLATE
-    SetEnvIfNoCase Request_URI "\.(?:gif|jpe?g|png)$" no-gzip
-  </location>
-```
-
-or
-
-```apache
-  # Root Install
   # CKAN
   <location />
     ProxyPass http://localhost:5000/
@@ -533,7 +499,7 @@ It may become necessary to reindex harvesters, especially if they no longer repo
 ```bash
 sudo docker exec -it ckan ckan --config=/etc/ckan/production.ini harvester reindex
 cd ~/ckan/contrib/docker
-sudo docker-compose restart ckan_fetch_harvester
+sudo docker compose restart ckan_fetch_harvester
 ```
 
 ## Export Logs from CKAN
@@ -557,12 +523,12 @@ tar -cf - ckan-entrypoint.sh --mode u=rwx,g=rx,o=rx --owner root --group root | 
 
 Then restart CKAN
 ```bash
-sudo docker-compose restart ckan
+sudo docker compose restart ckan
 ```
 
 If ckan does not start becouse of failed permissions you can reset the container by forcing it to recreate.
 ```bash
-sudo docker-compose up -d --force-recreate ckan
+sudo docker compose up -d --force-recreate ckan
 ```
 
 ## Setup fail2ban on host
@@ -577,9 +543,9 @@ With the switch to solr 8 we are using managed schemas and you can not update th
 build or pull
 ```bash
 cd ~/ckan/contrib/docker
-sudo docker-compose pull solr
+sudo docker compose pull solr
 or 
-sudo docker-compose build solr
+sudo docker compose build solr
 ```
 
 recreate container with new schema using shell script
@@ -597,10 +563,8 @@ enable volume environment variables to make accessing the volumes easier
 
 ```bash
 export VOL_CKAN_HOME=`sudo docker volume inspect docker_ckan_home | jq -r -c '.[] | .Mountpoint'`
-export VOL_CKAN_CONFIG=`sudo docker volume inspect docker_ckan_config | jq -r -c '.[] | .Mountpoint'`
 export VOL_CKAN_STORAGE=`sudo docker volume inspect docker_ckan_storage | jq -r -c '.[] | .Mountpoint'`
 echo $VOL_CKAN_HOME
-echo $VOL_CKAN_CONFIG
 echo $VOL_CKAN_STORAGE
 ```
 
@@ -620,8 +584,7 @@ sudo cp -r ./ckan/ $VOL_CKAN_HOME/venv/src/ckan/ckan/
 sudo cp -r ./ckanext/ $VOL_CKAN_HOME/venv/src/ckan/ckanext/
 sudo cp -r ./scripts/ $VOL_CKAN_HOME/venv/src/ckan/scripts/
 sudo cp -r ./*.py ./*.txt ./*.ini ./*.rst $VOL_CKAN_HOME/venv/src/ckan/
-sudo cp -r ./contrib/docker/production.ini $VOL_CKAN_CONFIG/production.ini
-sudo cp -r ./contrib/docker/who.ini $VOL_CKAN_HOME/venv/src/ckan/ckan/config/who.ini
+sudo cp -r ./contrib/docker/ckan.ini $VOL_CKAN_HOME/ckan.ini
 sudo docker cp ./contrib/docker/ckan-entrypoint.sh ckan:/ckan-entrypoint.sh
 sudo docker cp ./contrib/docker/ckan-harvester-entrypoint.sh ckan_gather_harvester:/ckan-harvester-entrypoint.sh
 sudo docker cp ./contrib/docker/ckan-harvester-entrypoint.sh ckan_fetch_harvester:/ckan-harvester-entrypoint.sh
@@ -640,7 +603,7 @@ restart the ckan container
 
 ```bash
 cd ~/ckan/contrib/docker
-sudo docker-compose restart ckan
+sudo docker compose restart ckan
 ```
 
 ## Update CKAN extensions
@@ -715,8 +678,8 @@ restart the container affected by the change. If changing html files you may not
 
 ```bash
 cd ~/ckan/contrib/docker
-sudo docker-compose restart ckan
-sudo docker-compose restart ckan_run_harvester ckan_fetch_harvester ckan_gather_harvester
+sudo docker compose restart ckan
+sudo docker compose restart ckan_run_harvester ckan_fetch_harvester ckan_gather_harvester
 ```
 
 ## Other helpful commands
@@ -790,11 +753,11 @@ sudo cp -r src/ckanext-cioos_theme/ $VOL_CKAN_HOME/venv/src/
 
 ### Add DHCP entries to docker container
 
-Edit **docker-compose.xml**
+Edit **docker compose.xml**
 
 ```bash
 cd ~/ckan/contrib/docker
-nano docker-compose.yml
+nano docker compose.yml
 ```
 
 Add extra hosts entrie to any services.
@@ -832,15 +795,15 @@ The default setting for this variable is '**latest**'. To change to a different 
 For example: to use the **PR37** tag of the cioos ckan image you would use the following command
 
 ```bash
-export CKAN_TAG=PR37; docker-compose up -d
+export CKAN_TAG=PR37; docker compose up -d
 or
-sudo CKAN_TAG=PR37 docker-compose up -d
+sudo CKAN_TAG=PR37 docker compose up -d
 ```
 
 If changing in **.env** file then you can start the containers normally
 
 ```bash
-sudo docker-compose up -d
+sudo docker compose up -d
 ```
 
 ### Reindex if project was already installed / running
@@ -950,8 +913,8 @@ background:rgb(185, 214, 242);
 edit the **production.ini** file currently in the volume.
 
 ```bash
-export VOL_CKAN_CONFIG=`sudo docker volume inspect docker_ckan_config | jq -r -c '.[] | .Mountpoint'`
-sudo nano $VOL_CKAN_CONFIG/production.ini
+export VOL_CKAN_HOME=`sudo docker volume inspect docker_ckan_config | jq -r -c '.[] | .Mountpoint'`
+sudo nano $VOL_CKAN_HOME/production.ini
 ```
 
 uncomment the google analytics id config and update to your id and replace
@@ -973,49 +936,41 @@ googleanalytics.ids = [your Tracking IDs here seperated by spaces]
 Try manually pulling the images first e.g.:
 
 ```bash
-sudo docker pull --disable-content-trust clementmouchet/datapusher
 sudo docker pull --disable-content-trust redis:latest
 ```
 
 Sometimes the containers start in the wrong order.
 
-This often results in strange sql errors in the db logs.  If this happens you can manually start the containers by first building then using **docker-compose up**
+This often results in strange sql errors in the db logs.  If this happens you can manually start the containers by first building then using **docker compose up**
 
 ```bash
-sudo docker-compose build
-sudo docker-compose up -d db
-sudo docker-compose up -d solr redis
-sudo docker-compose up -d ckan
-sudo docker-compose up -d datapusher
-sudo docker-compose up -d ckan_gather_harvester ckan_fetch_harvester ckan_run_harvester
+sudo docker compose build
+sudo docker compose up -d db
+sudo docker compose up -d solr redis
+sudo docker compose up -d ckan
+sudo docker compose up -d datapusher
+sudo docker compose up -d ckan_gather_harvester ckan_fetch_harvester ckan_run_harvester
 ```
 
-### Changes to production.ini
+### Changes to CKAN configuration
 
-If you need to change the **production.ini** in the repo and rebuild then you may need to delete the volume first.
-
-> **IMPORTANT:** Volume does not update during dockerfile run if it already exists.
+Bring down the docker containers, update the .env file and then bring CKAN back up.  Changes to the .env file will not be reflected by simply restarting the container, they must be destroyed and recreated for changes to be recognized.
 
 ```bash
-sudo docker-compose down
-sudo docker volume rm docker_ckan_config
+cd ckan/contrib/docker
+sudo docker compose down
 ```
 
-#### Linux
-
-update ckan/contrib/docker/production.ini
+Update ckan/contrib/docker/.env
 
 ```bash
-export VOL_CKAN_CONFIG=`sudo docker volume inspect docker_ckan_config | jq -r -c '.[] | .Mountpoint'`
-sudo nano $VOL_CKAN_CONFIG/production.ini
+nano .env
 ```
 
-#### Windows
-
-edit the production.ini file and copy it to the volume
+Bring CKAN back up
 
 ```bash
-docker cp production.ini ckan:/etc/ckan/
+sudo docker compose up -d
 ```
 
 ### Is CKAN running?
@@ -1024,7 +979,7 @@ Check container is running and view logs
 
 ```bash
 sudo docker ps | grep ckan
-sudo docker-compose logs -f ckan
+sudo docker compose logs -f ckan
 ```
 
 If container isn’t running its probably because the db didn’t build in time.
@@ -1032,7 +987,7 @@ If container isn’t running its probably because the db didn’t build in time.
 Restart the CKAN container
 
 ```bash
-sudo docker-compose restart ckan
+sudo docker compose restart ckan
 ```
 
 ### Connect to container as root to debug
@@ -1091,7 +1046,7 @@ If you edit a harvester config and then reharvest the existing harvester will co
 
 ```bash
 sudo docker exec -it ckan ckan --config=/etc/ckan/production.ini harvester reindex
-sudo docker-compose restart ckan_run_harvester ckan_fetch_harvester ckan_gather_harvester
+sudo docker compose restart ckan_run_harvester ckan_fetch_harvester ckan_gather_harvester
 ```
 
 ### 500 Internal Server Error - when creating organizations or updating admin config settings
@@ -1116,7 +1071,7 @@ for a solution.
 
 To diagnose issue turn on debugging in the production.ini file ad restart ckan. The problem is likely caused by file permissions or a missing upload directory. Change file permissions using chown or create folder as as needed. Exact paths will be reported in ckan error log.
 
-- view ckan error log: `docker-compose logs -f --tail 100 ckan`
+- view ckan error log: `docker compose logs -f --tail 100 ckan`
 - create upload folder: `sudo mkdir $VOL_CKAN_STIRAGE/storage/upload`
 - change file permissions: `sudo chown 900:900 -R $VOL_CKAN_HOME $VOL_CKAN_STORAGE`
 
@@ -1128,9 +1083,9 @@ You have re-build ckan after upgrading to a version that uses glad and ogr but h
 
 ```bash
 cd ~/ckan/contrib/docker
-sudo docker-compose down
+sudo docker compose down
 sudo docker volume rm docker_ckan_home
-sudo docker-compose up -d
+sudo docker compose up -d
 ```
 
 You may get a file permissions error after the new volume is created. reset permissions to resolve
@@ -1138,7 +1093,7 @@ You may get a file permissions error after the new volume is created. reset perm
 ```bash
 cd ~/ckan/contrib/docker
 sudo chown 900:900 -R $VOL_CKAN_HOME/venv/src/ $VOL_CKAN_STORAGE
-sudo docker-compose up -d
+sudo docker compose up -d
 ```
 
 ### reseting the config
