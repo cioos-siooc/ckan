@@ -25,7 +25,7 @@ sudo docker compose -f docker-compose.yml build ckan
 To build images from github actions we first start a pull request to `cioos` or `cioos-dev` branches. Once the PR is approved and merged, a new dev or production image will be built by the github actions. The images will be pushed to docker hub and available for download at `https://hub.docker.com/orgs/cioos/repositories`
 
 ## How to update
-If updating a submodule simple make changes to the sub repo and generate a PR or push changes as per the usual 
+If updating a submodule simply make changes to the sub repo and generate a PR or push changes as per the usual 
 development workflow for that repo. Once changes are pushed to GitHub you can update the submodule in this repo and 
 push changes. Any push to the 'cioos' or 'cioos-dev' branches will generate a new image
 
@@ -40,7 +40,9 @@ Clone this github repo to your server
 git clone https://github.com/cioos-siooc/ckan.git
 ```
 
-Generate environment file
+### Generate environment file
+
+The environment file covers many settings and options for CKAN, some of which will need to be changed to suit your install.
 
 ```bash
 cd ckan/contrib/docker
@@ -49,16 +51,28 @@ cp .env.template .env
 nano .env
 ```
 
-Pull CKAN, solr, redis, and postgres images
+### Pull CKAN, solr, redis, and postgres images
 
 ```bash
 sudo docker compose pull
 ```
 
-Start containers
+### Permissions for logging
+
+By default, ckan logs are stored on the host machine in `/var/log/ckan`, this value is defined in the `.env` file under the `CKAN_LOG_PATH` setting.
+
+Wherever you decide to store the logs, the user account that is running in the container must be able to write to that directory.  In order to do this you will need to change the owner of the logging directory to `92:92`, which is user and group ids of the `www-data` account in the CKAN container.
+
+**NOTE:** This is only necessary when initially installing CKAN, this action shouldn't need to be repeated so long as the log directory remains.
+
+```bash
+sudo chown -R 92:92 /var/log/ckan/
+```
+
+### Start containers
 
 ```bash
 sudo docker compose up -d
 ```
 
-Depending on your setup you will likely want to proxy the containers behind nginx or apache. More details regarding install, upgrading, debugging can be found in the /docs folder
+Depending on your setup you will likely want to proxy the containers behind nginx or apache. More details regarding install, upgrading, debugging can be found in the [/docs](./docs/) folder

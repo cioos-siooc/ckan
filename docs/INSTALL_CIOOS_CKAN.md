@@ -188,7 +188,7 @@ git checkout cioos
 
 ## Create environment and config files
 
-Create environment file and populate with appropriate values
+### Create environment file and populate with appropriate values
 
 Copy the production_root_url.ini to ckan.ini, this is the configuration file that will be populated by the .env file above.
 
@@ -199,13 +199,25 @@ cp .env.template .env
 nano .env
 ```
 
-Pull CKAN, solr, redis, and postgres images
+### Pull CKAN, solr, redis, and postgres images
 
 ```bash
 sudo docker compose pull
 ```
 
-Start containers
+### Permissions for logging
+
+By default, ckan logs are stored on the host machine in `/var/log/ckan`, this value is defined in the `.env` file under the `CKAN_LOG_PATH` setting.
+
+Wherever you decide to store the logs, the user account that is running in the container must be able to write to that directory.  In order to do this you will need to change the owner of the logging directory to `92:92`, which is user and group ids of the `www-data` account in the CKAN container.
+
+**NOTE:** This is only necessary when initially installing CKAN, this action shouldn't need to be repeated so long as the log directory remains.
+
+```bash
+sudo chown -R 92:92 /var/log/ckan/
+```
+
+### Start containers
 
 ```bash
 sudo docker compose up -d
