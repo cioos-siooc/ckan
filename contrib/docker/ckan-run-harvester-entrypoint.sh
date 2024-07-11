@@ -17,7 +17,7 @@ abort () {
 }
 
 # setup crontab jobs
-cat ./ckan/contrib/docker/crontab | crontab -
+cat /srv/app/src/ckan/contrib/docker/crontab | crontab -
 
 set_environment () {
   export CKAN_SITE_ID=${CKAN_SITE_ID}
