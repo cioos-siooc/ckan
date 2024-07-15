@@ -113,6 +113,7 @@ services:
      command: /bin/bash -c "echo 'ckan_run_harvester started' && crond -f 2>&1 "
      ports: []
      volumes:
+      - ckan_home:/srv/app
       - ./ckan-run-harvester-entrypoint.sh:/docker-entrypoint.d/ckan-run-harvester-entrypoint.sh
      healthcheck:
       test: ["CMD-SHELL", "ps -o args | grep -q '^crond -f'"]
