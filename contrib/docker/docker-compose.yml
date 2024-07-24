@@ -112,8 +112,11 @@ services:
      user: root
      command: /bin/bash -c "echo 'ckan_run_harvester started' && crond -f 2>&1 "
      ports: []
+     entrypoint: /docker-entrypoint.d/ckan-run-harvester-entrypoint.sh
      volumes:
+      - ckan_home:/srv/app
       - ./ckan-run-harvester-entrypoint.sh:/docker-entrypoint.d/ckan-run-harvester-entrypoint.sh
+      - ./crontab:/etc/crontabs/root
      healthcheck:
       test: ["CMD-SHELL", "ps -o args | grep -q '^crond -f'"]
       start_period: 5s
