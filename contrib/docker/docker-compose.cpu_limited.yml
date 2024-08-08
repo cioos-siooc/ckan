@@ -130,7 +130,6 @@ services:
     volumes:
       - ckan_home:/srv/app
       - ./ckan-run-harvester-entrypoint.sh:/docker-entrypoint.d/ckan-run-harvester-entrypoint.sh
-      - ./crontab:/etc/crontabs/root
     deploy:
       resources:
         limits:
