@@ -10,7 +10,7 @@ x-ckan: &ckan_app
   ports:
     - "0.0.0.0:${CKAN_PORT}:5000"
   env_file:
-      - .env
+      - ./.env
   environment:
     # Defaults work with linked containers, change to use own Postgres, SolR, Redis or Datapusher
     CKAN_SQLALCHEMY_URL: postgresql://ckan:${POSTGRES_PASSWORD}@db/ckan
@@ -61,7 +61,7 @@ services:
         condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl --fail http://localhost:5000/api/3/action/status_show || exit 1"]
-      start_period: 120s
+      start_period: 60s
       interval: 60s
       timeout: 5s
       retries: 5  
@@ -82,15 +82,15 @@ services:
       resources:
         limits:
           cpus: '${LIMIT_CPU_CKAN_GATHER_HARVESTER:-0.25}'    
-    depends_on:
-      ckan:
-        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "ps -o args | grep -q 'harvester gather-consumer'"]
-      start_period: 120s
+      start_period: 5s
       interval: 60s
       timeout: 5s
-      retries: 1   
+      retries: 1
+    depends_on:
+       ckan:
+         condition: service_healthy   
 
   ckan_fetch_harvester:
     <<: *ckan_app
@@ -108,17 +108,17 @@ services:
       resources:
         limits:
           cpus: '${LIMIT_CPU_CKAN_FETCH_HARVESTER:-0.5}'      
+    healthcheck:
+      test: ["CMD-SHELL", "ps -o args | grep -q 'harvester fetch-consumer'"]
+      start_period: 5s
+      interval: 60s
+      timeout: 5s
+      retries: 1  
     depends_on:
       ckan:
         condition: service_healthy
       ckan_gather_harvester:
         condition: service_started
-    healthcheck:
-      test: ["CMD-SHELL", "ps -o args | grep -q 'harvester fetch-consumer'"]
-      start_period: 120s
-      interval: 60s
-      timeout: 5s
-      retries: 1  
 
   ckan_run_harvester:
     <<: *ckan_app
@@ -128,11 +128,19 @@ services:
     ports: []
     entrypoint: /docker-entrypoint.d/ckan-run-harvester-entrypoint.sh
     volumes:
-    - ./ckan-run-harvester-entrypoint.sh:/docker-entrypoint.d/ckan-run-harvester-entrypoint.sh
+      - ckan_home:/srv/app
+      - ./ckan-run-harvester-entrypoint.sh:/docker-entrypoint.d/ckan-run-harvester-entrypoint.sh
+      - ./crontab:/etc/crontabs/root
     deploy:
       resources:
         limits:
           cpus: '${LIMIT_CPU_CKAN_RUN_HARVESTER:-0.25}'
+    healthcheck:
+      test: ["CMD-SHELL", "ps -o args | grep -q '^crond -f'"]
+      start_period: 5s
+      interval: 60s
+      timeout: 5s
+      retries: 1 
     depends_on:
       ckan:
         condition: service_healthy
@@ -140,33 +148,26 @@ services:
         condition: service_started
       ckan_fetch_harvester:
         condition: service_started
-    healthcheck:
-      test: ["CMD-SHELL", "ps -o args | grep -q '^crond -f'"]
-      start_period: 120s
-      interval: 60s
-      timeout: 5s
-      retries: 1  
 
-  datapusher:
-    container_name: datapusher
-    image: clementmouchet/datapusher
-    restart: unless-stopped
-    ports:
-      - "8800:8800"
-    deploy:
-      resources:
-        limits:
-          cpus: '${LIMIT_CPU_DATAPUSHER:-0.25}'
+  # datapusher:
+  #   container_name: datapusher
+  #   image: clementmouchet/datapusher
+  #   restart: unless-stopped
+  #   ports:
+  #     - "8800:8800"
+  #   deploy:
+  #     resources:
+  #       limits:
+  #         cpus: '${LIMIT_CPU_DATAPUSHER:-0.25}'
 
   db:
     container_name: db
     image: cioos/postgresql:latest
-    env_file:
-      - .env
     ports:
        - "5432:5432"
     environment:
       - DS_RO_PASS=${DATASTORE_READONLY_PASSWORD}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
       - PGDATA=/var/lib/postgresql/data
     volumes:
       - "/etc/localtime:/etc/localtime:ro" # remove and use TZ setting if running on windows
@@ -177,13 +178,17 @@ services:
           cpus: '${LIMIT_CPU_DB:-0.5}'
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "ckan"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   solr:
     container_name: solr
     image: cioos/solr:latest
+    build:
+      context: ../../
+      dockerfile: contrib/docker/solr/Dockerfile
     restart: unless-stopped
-    env_file:
-      - .env
     ports:
       - "8983:8983"
     volumes:
@@ -194,8 +199,8 @@ services:
           cpus: '${LIMIT_CPU_SOLR:-1.0}'
     healthcheck:
       test: ["CMD-SHELL", "curl -sf http://localhost:8983/solr/ckan/admin/ping?wt=json |  grep -iq '\"status\":\"OK\"' || exit 1"]
-      start_period: 120s
-      interval: 10s
+      start_period: 15s
+      interval: 60s
       timeout: 5s
       retries: 3
 
@@ -204,8 +209,6 @@ services:
     container_name: redis
     image: redis:latest
     restart: unless-stopped
-    env_file:
-      - .env
     volumes:
       - redis_data:/data
     deploy:
@@ -214,7 +217,6 @@ services:
           cpus: '${LIMIT_CPU_REDIS:-0.25}'
     healthcheck:
       test: ["CMD-SHELL", "redis-cli ping | grep PONG"]
-      start_period: 120s
-      interval: 10s
-      timeout: 5s
+      interval: 60s
+      timeout: 3s
       retries: 5
