@@ -47,7 +47,7 @@ git submodule update --init --recursive
 
 Generate environment file
 ```
-cd ckan/contrib/docker
+cd contrib/docker
 cp .env.template .env
 nano .env
 ```
