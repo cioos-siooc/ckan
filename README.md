@@ -33,18 +33,33 @@ A new image build will automatically use the latest ckan 2.9 base image so to up
 If updating to a newer major version you will need to modify the Dockerfile to use a new major version and do significant testing.
 
 ## How to install
-Clone this github repo to your server
+
+### Clone project
+
+Clone this github repo to your server and the submodules
 ```
 git clone https://github.com/cioos-siooc/ckan.git
+cd ckan
+git submodule update --init --recursive
 ```
 
-Generate enviroemnt file
+### Configuration
+
+Generate environment file
 ```
 cd ckan/contrib/docker
 cp .env.template .env
 nano .env
 ```
 
+Set who.ini and production.ini configuration files
+
+```
+cp production_root_url.ini production.ini
+cp who_root_url.ini who.ini
+```
+
+### Initialize
 Pull CKAN, solr, redis, and postgres images
 ```
 sudo docker-compose pull
