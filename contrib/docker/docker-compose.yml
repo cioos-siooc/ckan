@@ -3,6 +3,7 @@ version: "3.4"
 x-ckan: &ckan_app
   container_name: ckan
   image: cioos/ckan:${CKAN_TAG}
+  platform: linux/x86_64
   links:
     - db
     - solr
