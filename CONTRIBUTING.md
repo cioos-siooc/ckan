@@ -27,7 +27,7 @@ This repository specifically handles the easy installation of a CIOOS-SIOOC CKAN
 
 |Submodule|cioos/siooc Repository?|Description|Repository|
 |---------|-----------------|-----------|:--------:|
-|ckanext-cioos_theme|✅|Themes CKAN for CIOOS-SIOOC to customize displayed metadata fields and support searching by EOV.|[link](https://github.com/cioos-siooc/ckanext-cioos_theme.git)|
+|ckanext-cioos_theme|✅|Themes CKAN for CIOOS-SIOOC to customize displayed metadata fields and support searching by EOV. Also includes region specific customization and theming.|[link](https://github.com/cioos-siooc/ckanext-cioos_theme.git)|
 |ckanext-harvest|✅|Enables harvesting from a variety of sources. Our fork enables deletion of remote datasets that no longer exist, and the ability to filter datasets to include or exclude.|[link](https://github.com/cioos-siooc/ckanext-harvest.git)|
 |ckanext-spatial|✅|Allows the import of geospatial metadata into CKAN. Our fork handles the ability to parse of ISO 19115 xml metadata, and implements some CIOOS-SIOOC specific requirements, such as EOVs & ECVs, geospatial information.|[link](https://github.com/cioos-siooc/ckanext-spatial.git)|
 |ckanext-scheming|✅|Defines the schema for the datasets. Much of this is handled through the `cioos-siooc-schema` repository, but this repository includes some customization of the original `ckanext-scheming` extension, such as placeholders and specific validation as determined by CIOOS-SIOOC|[link](https://github.com/cioos-siooc/ckanext-scheming.git)|
