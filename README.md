@@ -9,7 +9,7 @@ Detailed documentation can be found in `/docs`. Release notes for cioos ckan ver
 ## Details
 CKAN docker images built in this repo are based on the `ckan/ckan-base:2.9` docker image. The CKAN extensions are included in this repo as submodules and can be found at `/contrib/docker/src`.
 
-The Redis, Postgres, and Solr containers use prebuilt images. Some configuration of the Solr container is required however. Solr schema config can be found in `/ckan/config/solr`. The CKAN, Solr and Postgres images are built by github actions and pushed to docker hub. Postgres init scripts are found in `/contrib/docker/postgres/docker-entrypoint-initdb.d`. See the docker-compose.yml in `/contrib/docker/` for more infomation.
+The Redis, Postgres, and Solr containers use prebuilt images. Some configuration of the Solr container is required however. Solr schema config can be found in `/ckan/config/solr`. The CKAN, Solr and Postgres images are built by github actions and pushed to docker hub. Postgres init scripts are found in `/contrib/docker/postgres/docker-entrypoint-initdb.d`. See the docker-compose.yml in `/contrib/docker/` for more information.
 
 ## How to Build
 Building of production and dev images can be done in various ways

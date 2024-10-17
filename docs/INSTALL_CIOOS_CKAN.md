@@ -3,30 +3,38 @@
 - [Setup CKAN](#setup-ckan)
   - [Linux](#linux)
     - [Install Docker](#install-docker)
-    - [Install docker compose](#install-docker compose)
+      - [Install latest Docker Compose plugin](#install-latest-docker-compose-plugin)
+      - [Install Apache](#install-apache)
+      - [Add Apache modules](#add-apache-modules)
+      - [Add noindex robot tags to headers](#add-noindex-robot-tags-to-headers)
   - [Windows](#windows)
     - [Docker Desktop + WSL Integration](#docker-desktop--wsl-integration)
     - [Windows Terminal](#windows-terminal)
-  - [Download CKAN git repo and submodules](#download-ckan-git-repo-and-submodules)
-  - [Create config files](#create-config-files)
-    - [Installing CKAN as the root website](#installing-ckan-as-the-root-website)
-    - [Installing CKAN off the root of a website](#installing-ckan-off-the-root-of-a-website)
-  - [Build CKAN](#build-ckan)
+  - [Download CKAN git repo](#download-ckan-git-repo)
+  - [Create environment and config files](#create-environment-and-config-files)
+    - [Create environment file and populate with appropriate values](#create-environment-file-and-populate-with-appropriate-values)
+    - [Pull CKAN, solr, redis, and postgres images](#pull-ckan-solr-redis-and-postgres-images)
+    - [Permissions for logging](#permissions-for-logging)
+    - [Start containers](#start-containers)
     - [Create CKAN admin user](#create-ckan-admin-user)
+      - [Creating other users](#creating-other-users)
+    - [Update shared secrets and app uuid](#update-shared-secrets-and-app-uuid)
   - [Configure admin settings](#configure-admin-settings)
   - [Setup Apache proxy](#setup-apache-proxy)
-    - [Install Apache](#install-apache)
+    - [Install Apache](#install-apache-1)
     - [Enable Compression in Apache](#enable-compression-in-apache)
     - [Configure Proxy Settings](#configure-proxy-settings)
     - [Redirect HTTP to HTTPS](#redirect-http-to-https)
     - [Mitigate SELinux Problems](#mitigate-selinux-problems)
     - [Restart Apache](#restart-apache)
+    - [Enable sitemap generation](#enable-sitemap-generation)
   - [Setup Harvesters](#setup-harvesters)
     - [CSW (geonetwork)](#csw-geonetwork)
     - [WAF (ERDDAP)](#waf-erddap)
     - [19115-3 WAF (ERDDAP)](#19115-3-waf-erddap)
     - [CKAN](#ckan)
     - [Reindex Harvesters](#reindex-harvesters)
+  - [Export Logs from CKAN](#export-logs-from-ckan)
   - [Update SOLR schema](#update-solr-schema)
   - [Update CKAN](#update-ckan)
   - [Update CKAN extensions](#update-ckan-extensions)
@@ -37,14 +45,13 @@
     - [Get public IP of server](#get-public-ip-of-server)
     - [Update language translation files](#update-language-translation-files)
     - [Add DHCP entries to docker container](#add-dhcp-entries-to-docker-container)
+    - [build project using docker hub images](#build-project-using-docker-hub-images)
     - [Reindex if project was already installed / running](#reindex-if-project-was-already-installed--running)
+    - [change selinux permissions on web folders](#change-selinux-permissions-on-web-folders)
   - [Customize interface](#customize-interface)
-  - [Enable Google Analytics](#enable-google-analytics)
   - [Troubleshooting](#troubleshooting)
     - [Issues building/starting CKAN](#issues-buildingstarting-ckan)
-    - [Changes to production.ini](#changes-to-productionini)
-      - [Linux](#linux-1)
-      - [Windows](#windows-1)
+    - [Changes to CKAN configuration](#changes-to-ckan-configuration)
     - [Is CKAN running?](#is-ckan-running)
     - [Connect to container as root to debug](#connect-to-container-as-root-to-debug)
     - [No records are showing up](#no-records-are-showing-up)
@@ -55,6 +62,10 @@
     - [Build fails with 'Temporary failure resolving...' errors](#build-fails-with-temporary-failure-resolving-errors)
     - [Saving the admin config via the gui causes an internal server errors](#saving-the-admin-config-via-the-gui-causes-an-internal-server-errors)
     - [Error when Starting CKAN: "from osgeo import ogr ImportError: No module named osgeo"](#error-when-starting-ckan-from-osgeo-import-ogr-importerror-no-module-named-osgeo)
+    - [Resetting the configuration](#resetting-the-configuration)
+      - [Generating an Authorization token](#generating-an-authorization-token)
+      - [Updating config settings using the CKAN API](#updating-config-settings-using-the-ckan-api)
+    - [Clearing a harvester crashes the site](#clearing-a-harvester-crashes-the-site)
 
 ## Linux
 
@@ -238,24 +249,33 @@ CKAN doesn't start with an admin user so it must be created via command line.  T
 You'll be asked to supply an email address and a password (8 characters in length minimum) and then to confirm the password.
 
 ```bash
-sudo docker exec -it ckan ckan --config ./ckan.ini sysadmin add admin
+sudo docker exec -it ckan ckan --config ./ckan.ini sysadmin add <admin_username>
 ```
+
+#### Creating other users
+
+Other CKAN users can be created using the user command.  Users created in this fashion are not sysadmins and have limited control.
+
+```bash
+sudo docker exec -it ckan ckan --config ./ckan.ini user add <username>
+```
+
 
 ### Update shared secrets and app uuid
-In production.ini, update beaker.session.secret and app_instance_uuid values. These values are generate by the make-config paster command.
+In your `.env` file, update `beaker.session.secret` and `app_instance_uuid` values. These values are generate by the `ckan generate config` command.
+
+NOTE: The following commands will generate a temporary CKAN configuration file inside the docker container.
 
 ```bash
-export VOL_CKAN_HOME=`sudo docker volume inspect docker_ckan_home | jq -r -c '.[] | .Mountpoint'`
-cd ~/ckan/contrib/docker/
-sudo docker exec -it ckan ckan generate config ./temp.ini
+sudo docker exec -it ckan ckan generate config /tmp/temp.ini
 
-sudo grep 'beaker.session.secret' $VOL_CKAN_HOME/venv/src/production.ini
-sudo grep 'app_instance_uuid' $VOL_CKAN_HOME/venv/src/production.ini
+sudo docker exec -it ckan grep 'beaker.session.secret' /tmp/temp.ini
+sudo docker exec -it ckan grep 'app_instance_uuid' /tmp/temp.ini
 ```
-then update the corresponding lines in production.ini
+then update the corresponding lines in your `.env` file
 
 ```bash
-sudo nano $VOL_CKAN_HOME/venv/src/production.ini
+nano .env
 ```
 
 ## Configure admin settings
@@ -347,7 +367,7 @@ sudo apachectl restart
 ```
 
 ### Enable sitemap generation
-create a cronjob on the host machine to generate a sitemap. Daily is likely sufficent. The cron job must be run as the same user running docker. This could be root on some systems. The sitemap files will be placed into the ckan home volume via the ckan container. The sitemap will be accesable at https://[ckan_site]/sitemap/sitemap.xml
+create a cronjob on the host machine to generate a sitemap. Daily is likely sufficient. The cron job must be run as the same user running docker. This could be root on some systems. The sitemap files will be placed into the ckan home volume via the ckan container. The sitemap will be accessible at https://[ckan_site]/sitemap/sitemap.xml
 
 ```bash
 crontab -e
@@ -356,16 +376,20 @@ sudo crontab -e
 ```
 
 ```crontab
-0 * * * * docker exec -it ckan ckan --config=/etc/ckan/production.ini sitemap create
+0 * * * * docker exec -it ckan ckan --config=/srv/app/ckan.ini sitemap create
 ```
 
 ## Setup Harvesters
 
+> **IMPORTANT!** 
+> 
+> At least one organization must exist for a harvester to work.  This is necessary even if you've enabled the option for a harvester to create organizations at run time.
+
 Add Organization
-URL: `https://localhost/ckan/organization`
+URL: `https://localhost:5000/organization`
 
 Add Harvester
-URL: `https://localhost/ckan/harvest`
+URL: `https://localhost:5000/harvest`
 
 The settings for harvesters are fairly straightforward. The one exception is the configuration section. Some example configs are listed below.
 
@@ -509,7 +533,7 @@ It may become necessary to reindex harvesters, especially if they no longer repo
 > **NOTE:** If modifying the harvester config you will also need to reindex to make the new config take affect and restart the ckan_fetch_harvester container
 
 ```bash
-sudo docker exec -it ckan ckan --config=/etc/ckan/production.ini harvester reindex
+sudo docker exec -it ckan ckan --config=/srv/app/ckan.ini harvester reindex
 cd ~/ckan/contrib/docker
 sudo docker compose restart ckan_fetch_harvester
 ```
@@ -526,9 +550,9 @@ nano .env
 Change folder permissions on ckan log folder so ckan can write to it.
 sudo mkdir /var/log/ckan
 sudo chmod -R 770  /var/log/ckan
-sudo chown -R root:900 /var/log/ckan
+sudo chown -R 92:92 /var/log/ckan
 
-If updating an exsiting ckan instance you will need to copy the new entrypoint file into the ckan container. We set owner and permissions using tar stream
+If updating an existing ckan instance you will need to copy the new entrypoint file into the ckan container. We set owner and permissions using tar stream
 ```bash
 tar -cf - ckan-entrypoint.sh --mode u=rwx,g=rx,o=rx --owner root --group root | sudo docker cp - ckan:/
 ```
@@ -538,15 +562,10 @@ Then restart CKAN
 sudo docker compose restart ckan
 ```
 
-If ckan does not start becouse of failed permissions you can reset the container by forcing it to recreate.
+If ckan does not start because of failed permissions you can reset the container by forcing it to recreate.
 ```bash
 sudo docker compose up -d --force-recreate ckan
 ```
-
-## Setup fail2ban on host
-see [how to protect ssh with fail2ban on centos 7](https://www.digitalocean.com/community/tutorials/how-to-protect-ssh-with-fail2ban-on-centos-7)
-to get started. You will want to create custom ruls for ckan and
-possible wordpress depending on how your site is configured.
 
 ## Update SOLR schema
 
@@ -736,8 +755,12 @@ sudo timedatectl set-timezone America/Vancouver
 
 ### Flush email notifications
 
+To manually flush email notifications you will need to manually execute an api call using your sysadmin API token.
+
+If you don't have a token you'll need to login to the CKAN UI and generate one for your profile then substitute it in the command below.
+
 ```bash
-sudo docker exec -it ckan /usr/local/bin/ckan-paster --plugin=ckan post -c /etc/ckan/production.ini /api/action/send_email_notifications
+curl -s -H "Authorization: SYSADMIN_API_TOKEN" -d {} http://localhost:5000/api/action/send_email_notifications
 ```
 
 ### Get public IP of server
@@ -772,7 +795,7 @@ cd ~/ckan/contrib/docker
 nano docker compose.yml
 ```
 
-Add extra hosts entrie to any services.
+Add extra hosts entries to any services.
 
 In this example we add a hosts entry for **test.ckan.org** to the **ckan_gather_harvester** container.
 
@@ -794,6 +817,7 @@ sudo docker exec -u root -it ckan_gather_harvester cat /etc/hosts
 ### build project using docker hub images
 
 edit .env file and change compose file setting
+
 ​```bash
 COMPOSE_FILE=docker-cloud.yml
 ```
@@ -821,8 +845,8 @@ sudo docker compose up -d
 ### Reindex if project was already installed / running
 
 ```bash
-sudo docker exec -it ckan ckan  --config=/etc/ckan/production.ini search-index rebuild
-sudo docker exec -it ckan ckan  --config=/etc/ckan/production.ini harvester reindex
+sudo docker exec -it ckan ckan  --config=/srv/app/ckan.ini search-index rebuild
+sudo docker exec -it ckan ckan  --config=/srv/app/ckan.ini harvester reindex
 ```
 
 ### change selinux permissions on web folders
@@ -920,27 +944,6 @@ background:rgb(185, 214, 242);
 }
 ```
 
-## Enable Google Analytics
-
-edit the **production.ini** file currently in the volume.
-
-```bash
-export VOL_CKAN_HOME=`sudo docker volume inspect docker_ckan_config | jq -r -c '.[] | .Mountpoint'`
-sudo nano $VOL_CKAN_HOME/production.ini
-```
-
-uncomment the google analytics id config and update to your id and replace
-
-```bash
-# googleanalytics.ids = UA-1234567890000-1
-```
-
-with
-
-```bash
-googleanalytics.ids = [your Tracking IDs here seperated by spaces]
-```
-
 ## Troubleshooting
 
 ### Issues building/starting CKAN
@@ -960,7 +963,6 @@ sudo docker compose build
 sudo docker compose up -d db
 sudo docker compose up -d solr redis
 sudo docker compose up -d ckan
-sudo docker compose up -d datapusher
 sudo docker compose up -d ckan_gather_harvester ckan_fetch_harvester ckan_run_harvester
 ```
 
@@ -1013,7 +1015,7 @@ sudo docker exec -u root -it ckan /bin/bash -c "export TERM=xterm; exec bash"
 If you rebuilt the ckan container and no records are showing up, you need to reindex the records.
 
 ```bash
-sudo docker exec -it ckan ckan --config=/etc/ckan/production.ini search-index rebuild
+sudo docker exec -it ckan ckan --config=/srv/app/ckan.ini search-index rebuild
 ```
 
 ### Running out of hard drive space?
@@ -1057,7 +1059,7 @@ Delete and re clone the ckan repo.
 If you edit a harvester config and then reharvest the existing harvester will continue to use the in memory harvester config. To solve this you should reindex the harvesters and restart the harvester docker containers
 
 ```bash
-sudo docker exec -it ckan ckan --config=/etc/ckan/production.ini harvester reindex
+sudo docker exec -it ckan ckan --config=/srv/app/ckan.ini harvester reindex
 sudo docker compose restart ckan_run_harvester ckan_fetch_harvester ckan_gather_harvester
 ```
 
@@ -1084,8 +1086,8 @@ for a solution.
 To diagnose issue turn on debugging in the production.ini file ad restart ckan. The problem is likely caused by file permissions or a missing upload directory. Change file permissions using chown or create folder as as needed. Exact paths will be reported in ckan error log.
 
 - view ckan error log: `docker compose logs -f --tail 100 ckan`
-- create upload folder: `sudo mkdir $VOL_CKAN_STIRAGE/storage/upload`
-- change file permissions: `sudo chown 900:900 -R $VOL_CKAN_HOME $VOL_CKAN_STORAGE`
+- create upload folder: `sudo mkdir $VOL_CKAN_STORAGE/storage/upload`
+- change file permissions: `sudo chown 92:92 -R $VOL_CKAN_HOME $VOL_CKAN_STORAGE`
 
 ### Error when Starting CKAN: "from osgeo import ogr ImportError: No module named osgeo"
 
@@ -1104,15 +1106,15 @@ You may get a file permissions error after the new volume is created. reset perm
 
 ```bash
 cd ~/ckan/contrib/docker
-sudo chown 900:900 -R $VOL_CKAN_HOME/venv/src/ $VOL_CKAN_STORAGE
+sudo chown 92:92 -R $VOL_CKAN_HOME/venv/src/ $VOL_CKAN_STORAGE
 sudo docker compose up -d
 ```
 
-### reseting the config
+### Resetting the configuration
 
 If you enter an improper value into the config interface you may *accidentally* lock yourself out of it.  If this happens you'll need to update the values by using the CKAN API with an [authorization token](https://ckan.readthedocs.io/en/2.9/api/index.html#authentication-and-api-tokens).
 
-**NOTE:** If you do not have the `api_token.jwt.encode.secret`, `api_token.jwt.decode.secret` and `beaker.session.secret` fields specified in **production.ini** then you will get an error message when you try to generate a token.
+**NOTE:** If you do not have the `api_token.jwt.encode.secret`, `api_token.jwt.decode.secret` and `beaker.session.secret` fields specified in **ckan.ini** then you will get an error message when you try to generate a token.
 
 A token will still be generated but will not be displayed to you, which is less than helpful.
 
@@ -1123,7 +1125,7 @@ Substitute `[username]` with the username of the user you want to generate a tok
 Do not be surprised if the generated token is quite long.
 
 ```bash
-sudo docker exec -it ckan ckan --config /etc/ckan/production.ini user token add [username] [token_name]
+sudo docker exec -it ckan ckan --config /srv/app/ckan.ini user token add [username] [token_name]
 ```
 
 #### Updating config settings using the CKAN API

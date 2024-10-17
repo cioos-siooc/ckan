@@ -22,7 +22,7 @@ sudo docker exec  -it db  pg_dump --column-inserts --data-only --table=public.sy
 sudo docker exec  -it db  pg_dump --column-inserts --data-only --table=public.harvest_source -U ckan -d ckan > ~/ckan/contrib/docker/ckan_harvest_source.sql
 ```
 
-### Do a full db dump becouse we are that kind of developer
+### Do a full db dump because we are that kind of developer
 ```
 sudo docker exec -u root -ti db /bin/bash -c "export TERM=xterm; exec bash"
 pg_dump -U ckan --format=custom -d ckan > /tmp/ckan.dump
@@ -77,7 +77,7 @@ CKAN user is now 92 (www-data) rather then 900. you will need to change the log 
 sudo chown -R 92:92 /var/log/ckan/
 ```
 
-may need to change permission on some internal files after webassets are built during intial ckan container start
+may need to change permission on some internal files after web assets are built during initial ckan container start
 eg
 ```
 export VOL_CKAN_HOME=`sudo docker volume inspect docker_ckan_home | jq -r -c '.[] | .Mountpoint'`
@@ -93,7 +93,7 @@ sudo docker exec -u root -it ckan  /bin/bash -c 'sed -i "s@Sitemap: /sitemap/sit
 
 ## Other notes
 ### If building from source
-You can now use a cache for pip packages. if using docker-compose < 2 you will need to add enviroment variables to enable buildkit
+You can now use a cache for pip packages. if using docker-compose < 2 you will need to add environment variables to enable buildkit
 eg
 ```
 COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose build ckan
@@ -102,9 +102,9 @@ COMPOSE_DOCKER_CLI_BUILD=1 DOCKER_BUILDKIT=1 docker-compose build ckan
 ### long api calls
 If getting proxy errors due to timeous and errors about HARAKIRI in the logs then you are hitting the harakiri timeout.
 https://github.com/ckan/ckan/blob/ff9afc5a3cff5ca7a2ba96bd73bf2371ea13afe0/ckan-uwsgi.ini#L11
-consider incresing it temporarily by changing the enviroment variable in the compose file. The default timeout is 50. for 2 min timeout set to 120
+consider increasing it temporarily by changing the environment variable in the compose file. The default timeout is 50. for 2 min timeout set to 120
 
-Setting in docker-compose enviroment section of the ckan container
+Setting in docker-compose environment section of the ckan container
 ```
 UWSGI_HARAKIRI=120
 ```
