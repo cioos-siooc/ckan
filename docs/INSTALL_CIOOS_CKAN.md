@@ -39,7 +39,6 @@
   - [Update CKAN](#update-ckan)
   - [Update CKAN extensions](#update-ckan-extensions)
   - [Other helpful commands](#other-helpful-commands)
-    - [Update a system file in a running container](#update-a-system-file-in-a-running-container)
     - [Set timezone](#set-timezone)
     - [Flush email notifications](#flush-email-notifications)
     - [Get public IP of server](#get-public-ip-of-server)
@@ -201,11 +200,10 @@ git checkout cioos
 
 ### Create environment file and populate with appropriate values
 
-Copy the production_root_url.ini to ckan.ini, this is the configuration file that will be populated by the .env file above.
+The .env file will control many aspects of the CKAN instance, typically this will be the only file you need to modify before starting your containers via docker compose.
 
 ```bash
 cd ckan/contrib/docker/
-cp production_root_url.ini ckan.ini
 cp .env.template .env
 nano .env
 ```
@@ -590,7 +588,7 @@ This will recreate and container and start a index automatically.
 
 If you need to update CKAN to a new version you can either remove the docker_ckan_home volume or update the volume with the new ckan core files. After which you need to rebuild the CKAN image and any docker containers based on that image. If you are working with a live / production system the preferred method is to update the volume and rebuild which will result in the least amount of down time.
 
-enable volume environment variables to make accessing the volumes easier
+In Linux, enabling volume environment variables to make accessing the volumes easier.  Windows (WSL) doesn't support these variables as expected and you should use `docker cp` to copy files to and from volumes.
 
 ```bash
 export VOL_CKAN_HOME=`sudo docker volume inspect docker_ckan_home | jq -r -c '.[] | .Mountpoint'`
@@ -606,26 +604,10 @@ cd ~/ckan
 git pull
 ```
 
-Then copy updated ckan core files into the volume
-
-```bash
-cd ~/ckan
-sudo cp -r ./bin/ $VOL_CKAN_HOME/venv/src/ckan/bin/
-sudo cp -r ./ckan/ $VOL_CKAN_HOME/venv/src/ckan/ckan/
-sudo cp -r ./ckanext/ $VOL_CKAN_HOME/venv/src/ckan/ckanext/
-sudo cp -r ./scripts/ $VOL_CKAN_HOME/venv/src/ckan/scripts/
-sudo cp -r ./*.py ./*.txt ./*.ini ./*.rst $VOL_CKAN_HOME/venv/src/ckan/
-sudo cp -r ./contrib/docker/ckan.ini $VOL_CKAN_HOME/ckan.ini
-sudo docker cp ./contrib/docker/ckan-entrypoint.sh ckan:/ckan-entrypoint.sh
-sudo docker cp ./contrib/docker/ckan-harvester-entrypoint.sh ckan_gather_harvester:/ckan-harvester-entrypoint.sh
-sudo docker cp ./contrib/docker/ckan-harvester-entrypoint.sh ckan_fetch_harvester:/ckan-harvester-entrypoint.sh
-sudo docker cp ./contrib/docker/ckan-run-harvester-entrypoint.sh ckan_run_harvester:/ckan-run-harvester-entrypoint.sh
-```
-
 update permissions (optional but recommended)
 
 ```bash
-sudo chown 900:900 -R $VOL_CKAN_HOME/venv/src/ $VOL_CKAN_STORAGE
+sudo chown 92:92 -R $VOL_CKAN_HOME/src/ $VOL_CKAN_STORAGE
 ```
 
 or on windows run the command directly in the ckan container
@@ -658,90 +640,18 @@ git submodule sync
 git submodule update
 ```
 
-copy updated extension code to the volumes
+After submodules are updated to their desired revision, you can rebuild the ckan docker image.  Contents of the submodules are added to the ckan image via the Dockerfile.  If additional submodules or files need to be added to the image, the Dockerfile should also be updated to account for these actions prior to building.
+
 
 ```bash
-cd ~/ckan/contrib/docker
-sudo cp -r src/ckanext-cioos_theme/ $VOL_CKAN_HOME/venv/src/
-sudo cp -r src/ckanext-cioos_harvest/ $VOL_CKAN_HOME/venv/src/
-sudo cp -r src/ckanext-harvest/ $VOL_CKAN_HOME/venv/src/
-sudo cp -r src/ckanext-spatial/ $VOL_CKAN_HOME/venv/src/
-sudo cp -r src/ckanext-scheming/ $VOL_CKAN_HOME/venv/src/
-sudo cp -r src/ckanext-fluent/ $VOL_CKAN_HOME/venv/src/
-sudo cp -r src/ckanext-dcat/ $VOL_CKAN_HOME/venv/src/
-sudo cp src/cioos-siooc-schema/cioos-siooc_schema.json $VOL_CKAN_HOME/venv/src/ckanext-scheming/ckanext/scheming/cioos_siooc_schema.json
-sudo cp src/cioos-siooc-schema/organization.json $VOL_CKAN_HOME/venv/src/ckanext-scheming/ckanext/scheming/organization.json
-sudo cp src/cioos-siooc-schema/group.json $VOL_CKAN_HOME/venv/src/ckanext-scheming/ckanext/scheming/group.json
-sudo cp src/cioos-siooc-schema/ckan_license.json $VOL_CKAN_HOME/venv/src/ckanext-scheming/ckanext/scheming/ckan_license.json
-sudo cp src/cioos-siooc-schema/*.wkt $VOL_CKAN_HOME/venv/src
-```
+# build ckan image
+docker compose build ckan
 
-Exporting volumes on windows does not work so another option for copying files to the volumes is to use the `docker cp` command. You must know the path of the named volume in the container you are connecting to and the container must be running for this to work
-
-```bash
-cd ~/ckan/contrib/docker
-docker cp src/ckanext-cioos_theme/ ckan:/usr/lib/ckan/venv/src/
-docker cp src/ckanext-googleanalyticsbasic/ ckan:/usr/lib/ckan/venv/src/
-docker cp src/ckanext-cioos_harvest/ ckan:/usr/lib/ckan/venv/src/
-docker cp src/ckanext-harvest/ ckan:/usr/lib/ckan/venv/src/
-docker cp src/ckanext-spatial/ ckan:/usr/lib/ckan/venv/src/
-docker cp src/ckanext-scheming/ ckan:/usr/lib/ckan/venv/src/
-docker cp src/ckanext-fluent/ ckan:/usr/lib/ckan/venv/src/
-docker cp src/ckanext-dcat/ ckan:/usr/lib/ckan/venv/src/
-docker cp src/cioos-siooc-schema/cioos-siooc_schema.json ckan:/usr/lib/ckan/venv/src/ckanext-scheming/ckanext/scheming/cioos_siooc_schema.json
-docker cp src/cioos-siooc-schema/organization.json ckan:/usr/lib/ckan/venv/src/ckanext-scheming/ckanext/scheming/organization.json
-docker cp src/cioos-siooc-schema/ckan_license.json ckan:/usr/lib/ckan/venv/src/ckanext-scheming/ckanext/scheming/ckan_license.json
-```
-
-update permissions (optional)
-
-```bash
-sudo chown 900:900 -R $VOL_CKAN_HOME/venv/src/ $VOL_CKAN_STORAGE
-```
-
-or on windows run the command directly in the ckan container
-
-```bash
-docker exec -u root -it ckan chown 900:900 -R /usr/lib/ckan
-```
-
-restart the container affected by the change. If changing html files you may not need to restart anything
-
-```bash
-cd ~/ckan/contrib/docker
-sudo docker compose restart ckan
-sudo docker compose restart ckan_run_harvester ckan_fetch_harvester ckan_gather_harvester
+# start containers
+docker compose up -d
 ```
 
 ## Other helpful commands
-
-### Update a system file in a running container
-
-The easiest way is with the docker copy command.
-
-For example to update the crontab of the ckan_run_harvester containers you first copy the file to the container:
-
-```base
-cd ~/ckan/contrib/docker
-sudo docker cp ./crontab ckan_run_harvester:/etc/cron.d/crontab
-```
-
-Then update the crontab in the container by connecting to it's bash shell and running the crontab commands
-
-```base
-sudo docker exec -u root -it ckan_run_harvester /bin/bash -c "export TERM=xterm; exec bash"
-chown root:root /etc/cron.d/crontab
-chmod 0644 /etc/cron.d/crontab
-/usr/bin/crontab /etc/cron.d/crontab
-exit
-```
-
-In this example the entrypoint file for this container also copies the file over from the volume so you should update the file in the volume as well so that when the container is restarted the correct file contents is used.
-
-```base
-cd ~/ckan/contrib/docker
-sudo cp -r ./crontab $VOL_CKAN_HOME/venv/src/ckan/contrib/docker/crontab
-```
 
 ### Set timezone
 
@@ -759,8 +669,10 @@ To manually flush email notifications you will need to manually execute an api c
 
 If you don't have a token you'll need to login to the CKAN UI and generate one for your profile then substitute it in the command below.
 
+**NOTE:** Substitute `XXX` below with your authorization token.
+
 ```bash
-curl -s -H "Authorization: SYSADMIN_API_TOKEN" -d {} http://localhost:5000/api/action/send_email_notifications
+curl -s -H "Authorization: XXX" -d {} http://localhost:5000/api/action/send_email_notifications
 ```
 
 ### Get public IP of server
@@ -777,13 +689,6 @@ Build translation file
 pip install babel
 cd ~/ckan/contrib/docker/src/ckanext-cioos_theme
 python setup.py compile_catalog --locale fr
-```
-
-Copy to volume
-
-```bash
-cd ~/ckan/contrib/docker
-sudo cp -r src/ckanext-cioos_theme/ $VOL_CKAN_HOME/venv/src/
 ```
 
 ### Add DHCP entries to docker container
@@ -1106,7 +1011,7 @@ You may get a file permissions error after the new volume is created. reset perm
 
 ```bash
 cd ~/ckan/contrib/docker
-sudo chown 92:92 -R $VOL_CKAN_HOME/venv/src/ $VOL_CKAN_STORAGE
+sudo chown 92:92 -R $VOL_CKAN_HOME/src/ $VOL_CKAN_STORAGE
 sudo docker compose up -d
 ```
 

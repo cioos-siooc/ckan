@@ -2,7 +2,7 @@
 
 This repo was originally forked from `https://github.com/ckan/ckan` and has undergone significant modification to make it docker compatible. It now more closely resembles `https://github.com/ckan/ckan-docker` and has a similar intention, that of providing an easy ckan install encapsulated in docker containers.
 
-This repo builds a cioos ckan docker container along with associated solr, postgres, redis containers. It differs from other ckan docker builds such as `https://github.com/ckan/ckan-docker-base` in that it does not user supervisor to run the harvesters. instead 3 containers are spun up, ckan_gather_harvester, ckan_fetch_harvester, and ckan_run_harvester. In this way the harvesters are independent of the ckan main app.
+This repo builds a cioos ckan docker container along with associated solr, postgres, redis containers. It differs from other ckan docker builds such as `https://github.com/ckan/ckan-docker-base` in that it does not use supervisor to run the harvesters. Instead, 3 containers are spun up: ckan_gather_harvester, ckan_fetch_harvester, and ckan_run_harvester. In this way, the harvesters are independent of the ckan main app.
 
 Detailed documentation can be found in `/docs`. Release notes for cioos ckan version can be found in `/contrib/docker/release_notes`
 
@@ -27,9 +27,9 @@ To build images from github actions we first start a pull request to `cioos` or 
 ## How to update
 If updating a submodule simply make changes to the sub repo and generate a PR or push changes as per the usual 
 development workflow for that repo. Once changes are pushed to GitHub you can update the submodule in this repo and 
-push changes. Any push to the 'cioos' or 'cioos-dev' branches will generate a new image
+push changes. Any push to the 'cioos' or 'cioos-dev' branches will generate a new image.
 
-A new image build will automatically use the latest ckan 2.9 base image so to update to a newer base image minor version you simple need to rebuild the image
+A new image build will automatically use the latest ckan 2.9 base image so to update to a newer base image minor version you simply need to rebuild the image.
 
 If updating to a newer major version you will need to modify the Dockerfile to use a new major version and do significant testing.
 
