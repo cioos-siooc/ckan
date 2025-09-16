@@ -63,6 +63,16 @@ sudo chmod +x /usr/local/bin/docker-compose
 sudo docker-compose --version
 ```
 
+
+You will need to allow execution of the entrypoint files so that docker can run them on container start
+
+```
+cd ~/ckan/contrib/docker
+chmod 775 ./ckan-entrypoint.sh
+chmod 775 ./ckan-harvester-entrypoint.sh
+chmod 775 ./ckan-run-harvester-entrypoint.sh
+```
+
 ## Recreate CKAN container
 ```
 sudo docker kill datapusher

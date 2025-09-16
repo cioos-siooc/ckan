@@ -90,10 +90,13 @@ services:
   ckan_run_harvester:
     <<: *ckan_app
     container_name: ckan_run_harvester
-    entrypoint: /ckan-run-harvester-entrypoint.sh
+    entrypoint: /docker-entrypoint.d/ckan-run-harvester-entrypoint.sh
     user: root
     command: /bin/bash -c "echo 'ckan_run_harvester started' && cron -f 2>&1 "
     ports: []
+    volumes:
+    - ckan_home:/srv/app
+    - ./ckan-run-harvester-entrypoint.sh:/docker-entrypoint.d/ckan-run-harvester-entrypoint.sh
     depends_on:
       - ckan
       - ckan_gather_harvester

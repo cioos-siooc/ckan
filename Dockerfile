@@ -13,8 +13,9 @@ RUN --mount=type=cache,target=/root/.cache/pip apk add --no-cache .build-deps li
     linux-headers curl-dev tiff-dev zlib-dev zstd-dev lz4-dev libarchive-dev \
     libjpeg-turbo-dev libpng-dev libwebp-dev expat-dev postgresql-dev openjpeg-dev \
     # For cryptography
-    gcc musl-dev python3-dev libffi-dev openssl-dev cargo pkgconfig py3-urllib3 py3-cryptography \
-    && pip install cryptography \
+    gcc musl-dev python3-dev libffi-dev cargo pkgconfig py3-urllib3 \
+    && pip install pyopenssl==23.2.0 \
+    && pip install cryptography==38.0.4 \
     # Build PROJ
     && mkdir proj \
     && apk add --no-cache cmake \
