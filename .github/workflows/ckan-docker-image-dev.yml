@@ -66,7 +66,8 @@ jobs:
       with:
         context: .
         push: true
-        no-cache: true
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
         tags: |
           cioos/ckan:DEV_${{env.TAG}}
 
@@ -76,7 +77,8 @@ jobs:
       with:
         context: .
         push: true
-        no-cache: true
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
         tags: |
           cioos/ckan:DEV_latest
           cioos/ckan:DEV_${{env.TAG}}
