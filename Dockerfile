@@ -40,6 +40,7 @@ RUN --mount=type=cache,target=/root/.cache/pip apk add --no-cache .build-deps li
     && pip3 install gdal==3.4.3 --no-cache-dir \
     && pip3 install ckanapi --no-cache-dir \
     && pip3 install -U requests[security] --no-cache-dir \
+    && pip3 install -U 'urllib3>=2.0' --no-cache-dir \
     # for debugging
     && pip3 install 'flask_debugtoolbar==0.14.1' --no-cache-dir \
     # clean up
