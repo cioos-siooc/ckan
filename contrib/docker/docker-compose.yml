@@ -34,6 +34,7 @@ volumes:
   pg_data:
   solr_data:
   redis_data:
+  ckan_logs:
 
 services:
   ckan:
