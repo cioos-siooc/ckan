@@ -181,6 +181,9 @@ RUN mkdir -p $APP_DIR/logs
 RUN touch "$APP_DIR/logs/ckan_access.log"
 RUN touch "$APP_DIR/logs/ckan_default.log"
 
+ARG CIOOS_CKAN_TAG=local-build
+ENV CIOOS_CKAN_TAG=${CIOOS_CKAN_TAG}
+
 RUN chown -R 92:92 $APP_DIR $CKAN_STORAGE_PATH
 
 WORKDIR $APP_DIR

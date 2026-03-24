@@ -78,6 +78,8 @@ jobs:
         push: true
         cache-from: type=gha
         cache-to: type=gha,mode=max
+        build-args: |
+          CIOOS_CKAN_TAG=${{env.TAG}}
         tags: |
           cioos/ckan:${{env.TAG}}
 
@@ -89,6 +91,8 @@ jobs:
         push: true
         cache-from: type=gha
         cache-to: type=gha,mode=max
+        build-args: |
+          CIOOS_CKAN_TAG=${{env.TAG}}
         tags: |
           cioos/ckan:latest
           cioos/ckan:${{env.TAG}}
