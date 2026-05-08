@@ -61,6 +61,15 @@ when using ckan spatial harvester the following harvester config settings are av
 - spatial_filter_file: Path, relative to the src folder, to a file containing well known text formatted polygons eg "./pacific_RA.wkt"
 - spatial_filter: same as above but a literal text string in well know text format.
 - spatial_crs: define the crs of the spatial coordinates (default: 4326)
+- citation_contact_roles: list of ISO role codes (e.g. `["pointOfContact", "owner", "originator"]`) — filters the `responsible-party` extras field to only include contacts with the listed roles. Defaults to all roles. Can also be set globally for all harvest sources via the CKAN config option or environment variable:
+
+```ini
+ckanext.spatial.harvest.citation_contact_roles = pointOfContact,owner,originator
+```
+
+```bash
+CKANEXT__SPATIAL__HARVEST__CITATION_CONTACT_ROLES=pointOfContact,owner,originator
+```
 
 note that when using the ckan spatial harvester, the catalogue you are harvesting
 from must have implemented our modified /api/2/search/dataset/geo endpoint to
